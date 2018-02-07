@@ -41,7 +41,7 @@ extern "C" {
 #define CK_SKF_FUNCTION_INFO(name) \
   __PASTE(CK_,name) name;
 
-struct CK_FUNCTION_LIST {
+struct CK_SKF_FUNCTION_LIST {
     void * hHandle;
   #include "skff.h"
 };

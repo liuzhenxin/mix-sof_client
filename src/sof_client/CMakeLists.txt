@@ -3,6 +3,7 @@ include_directories(../../include)
 
 add_definitions(-DUNICODE -D_UNICODE -DNOCRYPT -DMIX_BORINGSSL)
 
+
 set(
     ARCH_SOURCES
     #cpu-arm.c
@@ -50,6 +51,7 @@ ADD_LIBRARY(
   sof_client.rc
   sof_client.def
   sof_client-lib.cpp
+  sof_client-tools.cpp
   ${common_cs} 
   ${common_cpps} 
 )

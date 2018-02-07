@@ -1,9 +1,9 @@
-/**
+﻿/**
  * Created by LQQ on 2017/11/13.
  */
 
-#ifndef _SKFN_H_
-#define _SKFN_H_
+#ifndef _SOF_CLIENTN_H_
+#define _SOF_CLIENTN_H_
 
 #define	SAR_OK							0x00000000		//成功
 #define	SAR_FAIL						0x0A000001		//失败
@@ -60,4 +60,4 @@
 #define	SAR_IO_FILE_SMALL				0x0A100001		//IO文件太小，需要创建大文件
 #define SAR_NEED_IO_FILE_PATH			0x0A100002		//需要指定IO文件路径
 
-#endif /* _SKFN_H_ */
+#endif /* _SOF_CLIENTN_H_ */

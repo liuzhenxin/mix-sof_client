@@ -1,447 +1,254 @@
-#include <jni.h>
-#include <string>
-
+﻿#include <string>
+#include "sof_client.h"
+#include "sof_client-tools.h"
 #include "skf.h"
 #include "assert.h"
 #include "FILE_LOG.h"
 
-#include "dlfcn.h"
-
-
-typedef CK_FUNCTION_LIST *CK_FUNCTION_LIST_PTR;
-
-#ifndef MIX_PREFIX_UPAPI_CLASS_STR
-#define MIX_PREFIX_UPAPI_CLASS_STR "com/wtsecure/safecard/skf/wrapper/"
-#endif
-
-#ifndef MIX_PREFIX_UPAPI_FUNC
-#define MIX_PREFIX_UPAPI_FUNC Java_com_wtsecure_safecard_skf_wrapper_SKFImplementation_
-#endif
-
-#define CLASS_SKFEXCEPTION __MIX_PREFIX_STR_PASTE(MIX_PREFIX_UPAPI_CLASS_STR,"SKFException")
-#define CLASS_SKFDEVINFO __MIX_PREFIX_STR_PASTE(MIX_PREFIX_UPAPI_CLASS_STR,"SKFDevInfo")
+typedef CK_SOF_CLIENT_FUNCTION_LIST *CK_SOF_CLIENT_FUNCTION_LIST_PTR;
+typedef CK_SKF_FUNCTION_LIST *CK_SKF_FUNCTION_LIST_PTR;
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-jlong ckAssertReturnValueOK(JNIEnv *env, ULONG returnValue, const char *callerMethodName) {
-    jclass jSKFExceptionClass;
-    jmethodID jConstructor;
-    jthrowable jSKFException;
-    jlong jErrorCode;
-
-    if (returnValue == SAR_OK) {
-        return 0L;
-    } else {
-        jSKFExceptionClass = env->FindClass(CLASS_SKFEXCEPTION);
-        assert(jSKFExceptionClass != 0);
-        jConstructor = env->GetMethodID(jSKFExceptionClass, "<init>", "(J)V");
-        assert(jConstructor != 0);
-        jErrorCode = returnValue;
-        jSKFException = (jthrowable) env->NewObject(jSKFExceptionClass, jConstructor, jErrorCode);
-        env->Throw(jSKFException);
-        FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, callerMethodName);
-        return jErrorCode;
-    }
-}
-
-void ckHandleToObject(JNIEnv *env, HANDLE ckHandle, jobject obj) {
-    jclass cls = env->GetObjectClass(obj);
-
-    jfieldID ID_value = env->GetFieldID(cls, "value", "J");
-
-    env->SetLongField(obj, ID_value, (long) ckHandle);
-
-    return;
-}
-
-HANDLE ckHandleFromObject(JNIEnv *env, jobject obj) {
-    jclass cls = env->GetObjectClass(obj);
-
-    jfieldID ID_value = env->GetFieldID(cls, "value", "J");
-
-    return (HANDLE) env->GetLongField(obj, ID_value);
-}
-
-void ckULongToObject(JNIEnv *env, ULONG ckLong, jobject obj) {
-    jclass cls = env->GetObjectClass(obj);
-
-    jfieldID ID_value = env->GetFieldID(cls, "value", "J");
-
-    env->SetLongField(obj, ID_value, ckLong);
-
-    return;
-}
-
-void ckDataToObject(JNIEnv *env, void *ckValue, size_t ckLen, jobject obj) {
-    jclass cls = env->GetObjectClass(obj);
-
-    jfieldID ID_value = env->GetFieldID(cls, "value", "[B");
-
-    jbyteArray jbyteArrayOutput = env->NewByteArray((jsize) ckLen);
-
-    jclass jByteArrayClass = env->FindClass("[B");
-    jclass jLongClass = env->FindClass("java/lang/Long");
-    jclass jDevInfoClass = env->FindClass(CLASS_SKFDEVINFO);
-
-    env->SetByteArrayRegion(jbyteArrayOutput, 0, (jsize) ckLen, (jbyte *) ckValue);
-
-    env->SetObjectField(obj, ID_value, jbyteArrayOutput);
-
-    if (env->IsInstanceOf(obj, jDevInfoClass)) {
-        jfieldID fieldID;
-        jlong jLong;
-        jbyteArray jbyteArray;
-        DEVINFO *devinfo = (DEVINFO *) ckValue;
-
-//        long		VersionMajor;					//版本号	数据结构版本号，本结构的版本号为1.0
-//        long		VersionMinor;					//版本号	数据结构版本号，本结构的版本号为1.0
-//        byte[]		Manufacturer;			//设备厂商信息	以 '\0'为结束符的ASCII字符串
-//        byte[]		Issuer;					//发行厂商信息	以 '\0'为结束符的ASCII字符串
-//        byte[]		Label;					//设备标签	以 '\0'为结束符的ASCII字符串
-//        byte[]		SerialNumber;			//序列号	以 '\0'为结束符的ASCII字符串
-//        long		HWVersionMajor;					//设备硬件版本
-//        long		HWVersionMinor;					//设备硬件版本
-//        long		FirmwareVersionMajor;			//设备本身固件版本
-//        long		FirmwareVersionMinor;			//设备本身固件版本
-//        long		AlgSymCap;					//分组密码算法标识
-//        long		AlgAsymCap;					//非对称密码算法标识
-//        long		AlgHashCap;					//密码杂凑算法标识
-//        long		DevAuthAlgId;				//设备认证使用的分组密码算法标识
-//        long		TotalSpace;					//设备总空间大小
-//        long		FreeSpace;					//用户可用空间大小
-//        long		MaxECCBufferSize;			// 能够处理的 ECC 加密数据大小
-//        long		MaxBufferSize;				//能够处理的分组运算和杂凑运算的数据大小
-//        byte[]  	Reserved;				//保留扩展
-
-        /* get ulWordsize */
-        fieldID = env->GetFieldID(jDevInfoClass, "VersionMajor", "J");
-        assert(fieldID != 0);
-        env->SetLongField(obj, fieldID, devinfo->Version.major);
-
-        fieldID = env->GetFieldID(jDevInfoClass, "VersionMinor", "J");
-        assert(fieldID != 0);
-        env->SetLongField(obj, fieldID, devinfo->Version.minor);
-
-        fieldID = env->GetFieldID(jDevInfoClass, "Manufacturer", "[B");
-        jbyteArray = env->NewByteArray(sizeof(devinfo->Manufacturer));
-        env->SetByteArrayRegion(jbyteArray, 0, sizeof(devinfo->Manufacturer),
-                                (jbyte *) devinfo->Manufacturer);
-        env->SetObjectField(obj, fieldID, jbyteArray);
 
-        fieldID = env->GetFieldID(jDevInfoClass, "Issuer", "[B");
-        jbyteArray = env->NewByteArray(sizeof(devinfo->Issuer));
-        env->SetByteArrayRegion(jbyteArray, 0, sizeof(devinfo->Issuer), (jbyte *) devinfo->Issuer);
-        env->SetObjectField(obj, fieldID, jbyteArray);
+	ULONG SOF_GetVersion(void * p_ckpFunctions, VERSION *pVersion)
+	{
+		CK_SKF_FUNCTION_LIST_PTR ckpFunctions = (CK_SKF_FUNCTION_LIST_PTR)p_ckpFunctions;
+
+		ULONG ulResult = 0;
+		DEVINFO devinfo;
+		DEVHANDLE hDevHandle = 0;
+		char buffer_devs[1024] = { 0 };
+		ULONG buffer_devs_len = sizeof(buffer_devs);
+
+		ulResult = ckpFunctions->SKF_EnumDev(TRUE, buffer_devs, &buffer_devs_len);
+		if (ulResult)
+		{
+			goto err;
+		}
+
+		ulResult = ckpFunctions->SKF_ConnectDev(buffer_devs, &hDevHandle);
+		if (ulResult)
+		{
+			goto err;
+		}
+
+		ulResult = ckpFunctions->SKF_GetDevInfo(hDevHandle,&devinfo);
+		if (ulResult)
+		{
+			goto err;
+		}
+
+		memcpy(pVersion, &(devinfo.Version), sizeof(VERSION));
+
+	err:
+
+		if (hDevHandle)
+		{
+			ckpFunctions->SKF_DisConnectDev(hDevHandle);
+		}
+
+		return ulResult;
+	}
+
+
+
+
+
+
+
+	void finalizeLibraryNative(CK_SKF_FUNCTION_LIST_PTR p_ckpFunctions) {
+		if (p_ckpFunctions) {
+			// add code here
+			MYFreeLibrary(p_ckpFunctions->hHandle);
+			p_ckpFunctions->hHandle = NULL;
+
+			delete (p_ckpFunctions);
+		}
+
+		return;
+	}
+
+	void initializeLibraryNative(char *pSKFLibraryPath, CK_SKF_FUNCTION_LIST_PTR *pp_ckpFunctions) {
+		CK_SKF_FUNCTION_LIST_PTR ckpFunctions = new CK_SKF_FUNCTION_LIST;
+
+		void * hHandle = MYLoadLibrary(pSKFLibraryPath);
+		if (NULL == hHandle) {
+			goto end;
+		}
+
+		ckpFunctions->hHandle = hHandle;
+
+		// load
+		ckpFunctions->SKF_SetPackageName = (CK_SKF_SetPackageName) MYGetProcAddress(hHandle,
+			"SKF_SetPackageName");
+		ckpFunctions->SKF_WaitForDevEvent = (CK_SKF_WaitForDevEvent) MYGetProcAddress(hHandle,
+			"SKF_WaitForDevEvent");
+		ckpFunctions->SKF_CancelWaitForDevEvent = (CK_SKF_CancelWaitForDevEvent) MYGetProcAddress(
+			hHandle, "SKF_CancelWaitForDevEvent");
+		ckpFunctions->SKF_EnumDev = (CK_SKF_EnumDev) MYGetProcAddress(hHandle, "SKF_EnumDev");
+		ckpFunctions->SKF_ConnectDev = (CK_SKF_ConnectDev) MYGetProcAddress(hHandle,
+			"SKF_ConnectDev");
+		ckpFunctions->SKF_DisConnectDev = (CK_SKF_DisConnectDev) MYGetProcAddress(hHandle,
+			"SKF_DisConnectDev");
+		ckpFunctions->SKF_GetDevState = (CK_SKF_GetDevState) MYGetProcAddress(hHandle,
+			"SKF_GetDevState");
+		ckpFunctions->SKF_SetLabel = (CK_SKF_SetLabel) MYGetProcAddress(hHandle,
+			"SKF_SetLabel");
+		ckpFunctions->SKF_GetDevInfo = (CK_SKF_GetDevInfo) MYGetProcAddress(hHandle,
+			"SKF_GetDevInfo");
+		ckpFunctions->SKF_LockDev = (CK_SKF_LockDev) MYGetProcAddress(hHandle, "SKF_LockDev");
+		ckpFunctions->SKF_UnlockDev = (CK_SKF_UnlockDev) MYGetProcAddress(hHandle,
+			"SKF_UnlockDev");
+		ckpFunctions->SKF_Transmit = (CK_SKF_Transmit) MYGetProcAddress(hHandle,
+			"SKF_Transmit");
+		ckpFunctions->SKF_ChangeDevAuthKey = (CK_SKF_ChangeDevAuthKey) MYGetProcAddress(hHandle,
+			"SKF_ChangeDevAuthKey");
+		ckpFunctions->SKF_DevAuth = (CK_SKF_DevAuth) MYGetProcAddress(hHandle, "SKF_DevAuth");
+		ckpFunctions->SKF_ChangePIN = (CK_SKF_ChangePIN) MYGetProcAddress(hHandle,
+			"SKF_ChangePIN");
+		ckpFunctions->SKF_GetPINInfo = (CK_SKF_GetPINInfo) MYGetProcAddress(hHandle,
+			"SKF_GetPINInfo");
+		ckpFunctions->SKF_VerifyPIN = (CK_SKF_VerifyPIN) MYGetProcAddress(hHandle,
+			"SKF_VerifyPIN");
+		ckpFunctions->SKF_UnblockPIN = (CK_SKF_UnblockPIN) MYGetProcAddress(hHandle,
+			"SKF_UnblockPIN");
+		ckpFunctions->SKF_ClearSecureState = (CK_SKF_ClearSecureState) MYGetProcAddress(hHandle,
+			"SKF_ClearSecureState");
+		ckpFunctions->SKF_CreateApplication = (CK_SKF_CreateApplication) MYGetProcAddress(
+			hHandle, "SKF_CreateApplication");
+		ckpFunctions->SKF_EnumApplication = (CK_SKF_EnumApplication) MYGetProcAddress(hHandle,
+			"SKF_EnumApplication");
+		ckpFunctions->SKF_DeleteApplication = (CK_SKF_DeleteApplication) MYGetProcAddress(
+			hHandle, "SKF_DeleteApplication");
+		ckpFunctions->SKF_OpenApplication = (CK_SKF_OpenApplication) MYGetProcAddress(hHandle,
+			"SKF_OpenApplication");
+		ckpFunctions->SKF_CloseApplication = (CK_SKF_CloseApplication) MYGetProcAddress(hHandle,
+			"SKF_CloseApplication");
+		ckpFunctions->SKF_CreateFile = (CK_SKF_CreateFile) MYGetProcAddress(hHandle,
+			"SKF_CreateFile");
+		ckpFunctions->SKF_DeleteFile = (CK_SKF_DeleteFile) MYGetProcAddress(hHandle,
+			"SKF_DeleteFile");
+		ckpFunctions->SKF_EnumFiles = (CK_SKF_EnumFiles) MYGetProcAddress(hHandle,
+			"SKF_EnumFiles");
+		ckpFunctions->SKF_GetFileInfo = (CK_SKF_GetFileInfo) MYGetProcAddress(hHandle,
+			"SKF_GetFileInfo");
+		ckpFunctions->SKF_ReadFile = (CK_SKF_ReadFile) MYGetProcAddress(hHandle,
+			"SKF_ReadFile");
+		ckpFunctions->SKF_WriteFile = (CK_SKF_WriteFile) MYGetProcAddress(hHandle,
+			"SKF_WriteFile");
+		ckpFunctions->SKF_CreateContainer = (CK_SKF_CreateContainer) MYGetProcAddress(hHandle,
+			"SKF_CreateContainer");
+		ckpFunctions->SKF_DeleteContainer = (CK_SKF_DeleteContainer) MYGetProcAddress(hHandle,
+			"SKF_DeleteContainer");
+		ckpFunctions->SKF_OpenContainer = (CK_SKF_OpenContainer) MYGetProcAddress(hHandle,
+			"SKF_OpenContainer");
+		ckpFunctions->SKF_CloseContainer = (CK_SKF_CloseContainer) MYGetProcAddress(hHandle,
+			"SKF_CloseContainer");
+		ckpFunctions->SKF_EnumContainer = (CK_SKF_EnumContainer) MYGetProcAddress(hHandle,
+			"SKF_EnumContainer");
+		ckpFunctions->SKF_GetContainerType = (CK_SKF_GetContainerType) MYGetProcAddress(hHandle,
+			"SKF_GetContainerType");
+		ckpFunctions->SKF_ImportCertificate = (CK_SKF_ImportCertificate) MYGetProcAddress(
+			hHandle, "SKF_ImportCertificate");
+		ckpFunctions->SKF_ExportCertificate = (CK_SKF_ExportCertificate) MYGetProcAddress(
+			hHandle, "SKF_ExportCertificate");
+		ckpFunctions->SKF_GenRandom = (CK_SKF_GenRandom) MYGetProcAddress(hHandle,
+			"SKF_GenRandom");
+		ckpFunctions->SKF_GenExtRSAKey = (CK_SKF_GenExtRSAKey) MYGetProcAddress(hHandle,
+			"SKF_GenExtRSAKey");
+		ckpFunctions->SKF_GenRSAKeyPair = (CK_SKF_GenRSAKeyPair) MYGetProcAddress(hHandle,
+			"SKF_GenRSAKeyPair");
+		ckpFunctions->SKF_ImportRSAKeyPair = (CK_SKF_ImportRSAKeyPair) MYGetProcAddress(hHandle,
+			"SKF_ImportRSAKeyPair");
+		ckpFunctions->SKF_RSASignData = (CK_SKF_RSASignData) MYGetProcAddress(hHandle,
+			"SKF_RSASignData");
+		ckpFunctions->SKF_RSAVerify = (CK_SKF_RSAVerify) MYGetProcAddress(hHandle,
+			"SKF_RSAVerify");
+		ckpFunctions->SKF_RSAExportSessionKey = (CK_SKF_RSAExportSessionKey) MYGetProcAddress(
+			hHandle, "SKF_RSAExportSessionKey");
+		ckpFunctions->SKF_ExtRSAPubKeyOperation = (CK_SKF_ExtRSAPubKeyOperation) MYGetProcAddress(
+			hHandle, "SKF_ExtRSAPubKeyOperation");
+		ckpFunctions->SKF_ExtRSAPriKeyOperation = (CK_SKF_ExtRSAPriKeyOperation) MYGetProcAddress(
+			hHandle, "SKF_ExtRSAPriKeyOperation");
+		ckpFunctions->SKF_GenECCKeyPair = (CK_SKF_GenECCKeyPair) MYGetProcAddress(hHandle,
+			"SKF_GenECCKeyPair");
+		ckpFunctions->SKF_ImportECCKeyPair = (CK_SKF_ImportECCKeyPair) MYGetProcAddress(hHandle,
+			"SKF_ImportECCKeyPair");
+		ckpFunctions->SKF_ECCSignData = (CK_SKF_ECCSignData) MYGetProcAddress(hHandle,
+			"SKF_ECCSignData");
+		ckpFunctions->SKF_ECCVerify = (CK_SKF_ECCVerify) MYGetProcAddress(hHandle,
+			"SKF_ECCVerify");
+		ckpFunctions->SKF_ECCExportSessionKey = (CK_SKF_ECCExportSessionKey) MYGetProcAddress(
+			hHandle, "SKF_ECCExportSessionKey");
+		ckpFunctions->SKF_ExtECCEncrypt = (CK_SKF_ExtECCEncrypt) MYGetProcAddress(hHandle,
+			"SKF_ExtECCEncrypt");
+		ckpFunctions->SKF_ExtECCDecrypt = (CK_SKF_ExtECCDecrypt) MYGetProcAddress(hHandle,
+			"SKF_ExtECCDecrypt");
+		ckpFunctions->SKF_ExtECCSign = (CK_SKF_ExtECCSign) MYGetProcAddress(hHandle,
+			"SKF_ExtECCSign");
+		ckpFunctions->SKF_ExtECCVerify = (CK_SKF_ExtECCVerify) MYGetProcAddress(hHandle,
+			"SKF_ExtECCVerify");
+		ckpFunctions->SKF_GenerateAgreementDataWithECC = (CK_SKF_GenerateAgreementDataWithECC) MYGetProcAddress(
+			hHandle, "SKF_GenerateAgreementDataWithECC");
+		ckpFunctions->SKF_GenerateAgreementDataAndKeyWithECC = (CK_SKF_GenerateAgreementDataAndKeyWithECC) MYGetProcAddress(
+			hHandle, "SKF_GenerateAgreementDataAndKeyWithECC");
+		ckpFunctions->SKF_GenerateKeyWithECC = (CK_SKF_GenerateKeyWithECC) MYGetProcAddress(
+			hHandle, "SKF_GenerateKeyWithECC");
+		ckpFunctions->SKF_ExportPublicKey = (CK_SKF_ExportPublicKey) MYGetProcAddress(hHandle,
+			"SKF_ExportPublicKey");
+		ckpFunctions->SKF_ImportSessionKey = (CK_SKF_ImportSessionKey) MYGetProcAddress(hHandle,
+			"SKF_ImportSessionKey");
+		ckpFunctions->SKF_SetSymmKey = (CK_SKF_SetSymmKey) MYGetProcAddress(hHandle,
+			"SKF_SetSymmKey");
+		ckpFunctions->SKF_EncryptInit = (CK_SKF_EncryptInit) MYGetProcAddress(hHandle,
+			"SKF_EncryptInit");
+		ckpFunctions->SKF_Encrypt = (CK_SKF_Encrypt) MYGetProcAddress(hHandle, "SKF_Encrypt");
+		ckpFunctions->SKF_EncryptUpdate = (CK_SKF_EncryptUpdate) MYGetProcAddress(hHandle,
+			"SKF_EncryptUpdate");
+		ckpFunctions->SKF_EncryptFinal = (CK_SKF_EncryptFinal) MYGetProcAddress(hHandle,
+			"SKF_EncryptFinal");
+		ckpFunctions->SKF_DecryptInit = (CK_SKF_DecryptInit) MYGetProcAddress(hHandle,
+			"SKF_DecryptInit");
+		ckpFunctions->SKF_Decrypt = (CK_SKF_Decrypt) MYGetProcAddress(hHandle, "SKF_Decrypt");
+		ckpFunctions->SKF_DecryptUpdate = (CK_SKF_DecryptUpdate) MYGetProcAddress(hHandle,
+			"SKF_DecryptUpdate");
+		ckpFunctions->SKF_DecryptFinal = (CK_SKF_DecryptFinal) MYGetProcAddress(hHandle,
+			"SKF_DecryptFinal");
+		ckpFunctions->SKF_DigestInit = (CK_SKF_DigestInit) MYGetProcAddress(hHandle,
+			"SKF_DigestInit");
+		ckpFunctions->SKF_Digest = (CK_SKF_Digest) MYGetProcAddress(hHandle, "SKF_Digest");
+		ckpFunctions->SKF_DigestUpdate = (CK_SKF_DigestUpdate) MYGetProcAddress(hHandle,
+			"SKF_DigestUpdate");
+		ckpFunctions->SKF_DigestFinal = (CK_SKF_DigestFinal) MYGetProcAddress(hHandle,
+			"SKF_DigestFinal");
+		ckpFunctions->SKF_MacInit = (CK_SKF_MacInit) MYGetProcAddress(hHandle, "SKF_MacInit");
+		ckpFunctions->SKF_Mac = (CK_SKF_Mac) MYGetProcAddress(hHandle, "SKF_Mac");
+		ckpFunctions->SKF_MacUpdate = (CK_SKF_MacUpdate) MYGetProcAddress(hHandle,
+			"SKF_MacUpdate");
+		ckpFunctions->SKF_MacFinal = (CK_SKF_MacFinal) MYGetProcAddress(hHandle,
+			"SKF_MacFinal");
+		ckpFunctions->SKF_CloseHandle = (CK_SKF_CloseHandle) MYGetProcAddress(hHandle,
+			"SKF_CloseHandle");
+
+		*pp_ckpFunctions = ckpFunctions;
+	end:
+		
+		return;
+	}
+
+
+
+#if 0
 
-        fieldID = env->GetFieldID(jDevInfoClass, "Label", "[B");
-        jbyteArray = env->NewByteArray(sizeof(devinfo->Label));
-        env->SetByteArrayRegion(jbyteArray, 0, sizeof(devinfo->Label), (jbyte *) devinfo->Label);
-        env->SetObjectField(obj, fieldID, jbyteArray);
-
-        fieldID = env->GetFieldID(jDevInfoClass, "SerialNumber", "[B");
-        jbyteArray = env->NewByteArray(sizeof(devinfo->SerialNumber));
-        env->SetByteArrayRegion(jbyteArray, 0, sizeof(devinfo->SerialNumber),
-                                (jbyte *) devinfo->SerialNumber);
-        env->SetObjectField(obj, fieldID, jbyteArray);
-        fieldID = env->GetFieldID(jDevInfoClass, "HWVersionMajor", "J");
-        assert(fieldID != 0);
-        env->SetLongField(obj, fieldID, devinfo->HWVersion.major);
-
-        fieldID = env->GetFieldID(jDevInfoClass, "HWVersionMinor", "J");
-        assert(fieldID != 0);
-        env->SetLongField(obj, fieldID, devinfo->HWVersion.minor);
-        fieldID = env->GetFieldID(jDevInfoClass, "FirmwareVersionMajor", "J");
-        assert(fieldID != 0);
-        env->SetLongField(obj, fieldID, devinfo->FirmwareVersion.major);
-
-        fieldID = env->GetFieldID(jDevInfoClass, "FirmwareVersionMinor", "J");
-        assert(fieldID != 0);
-        env->SetLongField(obj, fieldID, devinfo->FirmwareVersion.minor);
-        fieldID = env->GetFieldID(jDevInfoClass, "AlgSymCap", "J");
-        assert(fieldID != 0);
-        env->SetLongField(obj, fieldID, devinfo->AlgSymCap);
-
-        fieldID = env->GetFieldID(jDevInfoClass, "AlgAsymCap", "J");
-        assert(fieldID != 0);
-        env->SetLongField(obj, fieldID, devinfo->AlgAsymCap);
-
-        fieldID = env->GetFieldID(jDevInfoClass, "AlgHashCap", "J");
-        assert(fieldID != 0);
-        env->SetLongField(obj, fieldID, devinfo->AlgHashCap);
-
-        fieldID = env->GetFieldID(jDevInfoClass, "DevAuthAlgId", "J");
-        assert(fieldID != 0);
-        env->SetLongField(obj, fieldID, devinfo->DevAuthAlgId);
-
-        fieldID = env->GetFieldID(jDevInfoClass, "TotalSpace", "J");
-        assert(fieldID != 0);
-        env->SetLongField(obj, fieldID, devinfo->TotalSpace);
-
-        fieldID = env->GetFieldID(jDevInfoClass, "FreeSpace", "J");
-        assert(fieldID != 0);
-        env->SetLongField(obj, fieldID, devinfo->FreeSpace);
-    }
-
-    return;
-}
-
-void ckDataFromObject(JNIEnv *env, void *ckValue, size_t *ckLen, jobject obj) {
-    jclass cls = env->GetObjectClass(obj);
-
-    jfieldID ID_value = env->GetFieldID(cls, "value", "B");
-
-    jbyteArray jbyteArrayOutput = (jbyteArray) env->GetObjectField(obj, ID_value);
-
-    jlong jBufferInputLength = env->GetArrayLength(jbyteArrayOutput);
-    jbyte *jBufferInput = env->GetByteArrayElements(jbyteArrayOutput, NULL);
-
-    *ckLen = jBufferInputLength;
-
-    if (ckValue) {
-        memcpy(ckValue, jBufferInput, jBufferInputLength);
-    }
-
-    env->ReleaseByteArrayElements(jbyteArrayOutput, jBufferInput, 0);
-
-    return;
-}
-
-
-CK_FUNCTION_LIST_PTR getFunctionList(JNIEnv *env, jobject obj) {
-    jclass cls = env->GetObjectClass(obj);
-
-    jfieldID ID_value = env->GetFieldID(cls, "ckpFunctions", "J");
-
-    return (CK_FUNCTION_LIST_PTR) env->GetLongField(obj, ID_value);
-}
-
-
-JNIEXPORT void JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, initializeLibraryNative
-        (JNIEnv * env, jobject
-        obj, jbyteArray
-        jbyteArrayInput)) {
-    CK_FUNCTION_LIST_PTR ckpFunctions = new CK_FUNCTION_LIST;
-
-    jclass cls = env->GetObjectClass(obj);
-
-    jbyte *jBufferInput = 0;
-    jlong jBufferInputLength = 0;
-
-    jfieldID ID_value = env->GetFieldID(cls, "ckpFunctions", "J");
-
-    // add code here for strSFKLibrary load init functions;
-    void *hHandle = NULL;
-
-    if( 0 != env->GetLongField(obj, ID_value))
-    {
-        goto end;
-    }
-
-    jBufferInputLength = env->GetArrayLength(jbyteArrayInput);
-    jBufferInput = env->GetByteArrayElements(jbyteArrayInput, NULL);
-
-    hHandle = dlopen(std::string(jBufferInput, jBufferInput + jBufferInputLength).c_str(),
-                     RTLD_NOW);
-    if (NULL == hHandle) {
-        goto end;
-    }
-
-    ckpFunctions->hHandle = hHandle;
-
-    // load
-    ckpFunctions->SKF_SetPackageName = (typeof(ckpFunctions->SKF_SetPackageName)) dlsym(hHandle,
-                                                                                        "SKF_SetPackageName");
-    ckpFunctions->SKF_WaitForDevEvent = (typeof(ckpFunctions->SKF_WaitForDevEvent)) dlsym(hHandle,
-                                                                                          "SKF_WaitForDevEvent");
-    ckpFunctions->SKF_CancelWaitForDevEvent = (typeof(ckpFunctions->SKF_CancelWaitForDevEvent)) dlsym(
-            hHandle, "SKF_CancelWaitForDevEvent");
-    ckpFunctions->SKF_EnumDev = (typeof(ckpFunctions->SKF_EnumDev)) dlsym(hHandle, "SKF_EnumDev");
-    ckpFunctions->SKF_ConnectDev = (typeof(ckpFunctions->SKF_ConnectDev)) dlsym(hHandle,
-                                                                                "SKF_ConnectDev");
-    ckpFunctions->SKF_DisConnectDev = (typeof(ckpFunctions->SKF_DisConnectDev)) dlsym(hHandle,
-                                                                                      "SKF_DisConnectDev");
-    ckpFunctions->SKF_GetDevState = (typeof(ckpFunctions->SKF_GetDevState)) dlsym(hHandle,
-                                                                                  "SKF_GetDevState");
-    ckpFunctions->SKF_SetLabel = (typeof(ckpFunctions->SKF_SetLabel)) dlsym(hHandle,
-                                                                            "SKF_SetLabel");
-    ckpFunctions->SKF_GetDevInfo = (typeof(ckpFunctions->SKF_GetDevInfo)) dlsym(hHandle,
-                                                                                "SKF_GetDevInfo");
-    ckpFunctions->SKF_LockDev = (typeof(ckpFunctions->SKF_LockDev)) dlsym(hHandle, "SKF_LockDev");
-    ckpFunctions->SKF_UnlockDev = (typeof(ckpFunctions->SKF_UnlockDev)) dlsym(hHandle,
-                                                                              "SKF_UnlockDev");
-    ckpFunctions->SKF_Transmit = (typeof(ckpFunctions->SKF_Transmit)) dlsym(hHandle,
-                                                                            "SKF_Transmit");
-    ckpFunctions->SKF_ChangeDevAuthKey = (typeof(ckpFunctions->SKF_ChangeDevAuthKey)) dlsym(hHandle,
-                                                                                            "SKF_ChangeDevAuthKey");
-    ckpFunctions->SKF_DevAuth = (typeof(ckpFunctions->SKF_DevAuth)) dlsym(hHandle, "SKF_DevAuth");
-    ckpFunctions->SKF_ChangePIN = (typeof(ckpFunctions->SKF_ChangePIN)) dlsym(hHandle,
-                                                                              "SKF_ChangePIN");
-    ckpFunctions->SKF_GetPINInfo = (typeof(ckpFunctions->SKF_GetPINInfo)) dlsym(hHandle,
-                                                                                "SKF_GetPINInfo");
-    ckpFunctions->SKF_VerifyPIN = (typeof(ckpFunctions->SKF_VerifyPIN)) dlsym(hHandle,
-                                                                              "SKF_VerifyPIN");
-    ckpFunctions->SKF_UnblockPIN = (typeof(ckpFunctions->SKF_UnblockPIN)) dlsym(hHandle,
-                                                                                "SKF_UnblockPIN");
-    ckpFunctions->SKF_ClearSecureState = (typeof(ckpFunctions->SKF_ClearSecureState)) dlsym(hHandle,
-                                                                                            "SKF_ClearSecureState");
-    ckpFunctions->SKF_CreateApplication = (typeof(ckpFunctions->SKF_CreateApplication)) dlsym(
-            hHandle, "SKF_CreateApplication");
-    ckpFunctions->SKF_EnumApplication = (typeof(ckpFunctions->SKF_EnumApplication)) dlsym(hHandle,
-                                                                                          "SKF_EnumApplication");
-    ckpFunctions->SKF_DeleteApplication = (typeof(ckpFunctions->SKF_DeleteApplication)) dlsym(
-            hHandle, "SKF_DeleteApplication");
-    ckpFunctions->SKF_OpenApplication = (typeof(ckpFunctions->SKF_OpenApplication)) dlsym(hHandle,
-                                                                                          "SKF_OpenApplication");
-    ckpFunctions->SKF_CloseApplication = (typeof(ckpFunctions->SKF_CloseApplication)) dlsym(hHandle,
-                                                                                            "SKF_CloseApplication");
-    ckpFunctions->SKF_CreateFile = (typeof(ckpFunctions->SKF_CreateFile)) dlsym(hHandle,
-                                                                                "SKF_CreateFile");
-    ckpFunctions->SKF_DeleteFile = (typeof(ckpFunctions->SKF_DeleteFile)) dlsym(hHandle,
-                                                                                "SKF_DeleteFile");
-    ckpFunctions->SKF_EnumFiles = (typeof(ckpFunctions->SKF_EnumFiles)) dlsym(hHandle,
-                                                                              "SKF_EnumFiles");
-    ckpFunctions->SKF_GetFileInfo = (typeof(ckpFunctions->SKF_GetFileInfo)) dlsym(hHandle,
-                                                                                  "SKF_GetFileInfo");
-    ckpFunctions->SKF_ReadFile = (typeof(ckpFunctions->SKF_ReadFile)) dlsym(hHandle,
-                                                                            "SKF_ReadFile");
-    ckpFunctions->SKF_WriteFile = (typeof(ckpFunctions->SKF_WriteFile)) dlsym(hHandle,
-                                                                              "SKF_WriteFile");
-    ckpFunctions->SKF_CreateContainer = (typeof(ckpFunctions->SKF_CreateContainer)) dlsym(hHandle,
-                                                                                          "SKF_CreateContainer");
-    ckpFunctions->SKF_DeleteContainer = (typeof(ckpFunctions->SKF_DeleteContainer)) dlsym(hHandle,
-                                                                                          "SKF_DeleteContainer");
-    ckpFunctions->SKF_OpenContainer = (typeof(ckpFunctions->SKF_OpenContainer)) dlsym(hHandle,
-                                                                                      "SKF_OpenContainer");
-    ckpFunctions->SKF_CloseContainer = (typeof(ckpFunctions->SKF_CloseContainer)) dlsym(hHandle,
-                                                                                        "SKF_CloseContainer");
-    ckpFunctions->SKF_EnumContainer = (typeof(ckpFunctions->SKF_EnumContainer)) dlsym(hHandle,
-                                                                                      "SKF_EnumContainer");
-    ckpFunctions->SKF_GetContainerType = (typeof(ckpFunctions->SKF_GetContainerType)) dlsym(hHandle,
-                                                                                            "SKF_GetContainerType");
-    ckpFunctions->SKF_ImportCertificate = (typeof(ckpFunctions->SKF_ImportCertificate)) dlsym(
-            hHandle, "SKF_ImportCertificate");
-    ckpFunctions->SKF_ExportCertificate = (typeof(ckpFunctions->SKF_ExportCertificate)) dlsym(
-            hHandle, "SKF_ExportCertificate");
-    ckpFunctions->SKF_GenRandom = (typeof(ckpFunctions->SKF_GenRandom)) dlsym(hHandle,
-                                                                              "SKF_GenRandom");
-    ckpFunctions->SKF_GenExtRSAKey = (typeof(ckpFunctions->SKF_GenExtRSAKey)) dlsym(hHandle,
-                                                                                    "SKF_GenExtRSAKey");
-    ckpFunctions->SKF_GenRSAKeyPair = (typeof(ckpFunctions->SKF_GenRSAKeyPair)) dlsym(hHandle,
-                                                                                      "SKF_GenRSAKeyPair");
-    ckpFunctions->SKF_ImportRSAKeyPair = (typeof(ckpFunctions->SKF_ImportRSAKeyPair)) dlsym(hHandle,
-                                                                                            "SKF_ImportRSAKeyPair");
-    ckpFunctions->SKF_RSASignData = (typeof(ckpFunctions->SKF_RSASignData)) dlsym(hHandle,
-                                                                                  "SKF_RSASignData");
-    ckpFunctions->SKF_RSAVerify = (typeof(ckpFunctions->SKF_RSAVerify)) dlsym(hHandle,
-                                                                              "SKF_RSAVerify");
-    ckpFunctions->SKF_RSAExportSessionKey = (typeof(ckpFunctions->SKF_RSAExportSessionKey)) dlsym(
-            hHandle, "SKF_RSAExportSessionKey");
-    ckpFunctions->SKF_ExtRSAPubKeyOperation = (typeof(ckpFunctions->SKF_ExtRSAPubKeyOperation)) dlsym(
-            hHandle, "SKF_ExtRSAPubKeyOperation");
-    ckpFunctions->SKF_ExtRSAPriKeyOperation = (typeof(ckpFunctions->SKF_ExtRSAPriKeyOperation)) dlsym(
-            hHandle, "SKF_ExtRSAPriKeyOperation");
-    ckpFunctions->SKF_GenECCKeyPair = (typeof(ckpFunctions->SKF_GenECCKeyPair)) dlsym(hHandle,
-                                                                                      "SKF_GenECCKeyPair");
-    ckpFunctions->SKF_ImportECCKeyPair = (typeof(ckpFunctions->SKF_ImportECCKeyPair)) dlsym(hHandle,
-                                                                                            "SKF_ImportECCKeyPair");
-    ckpFunctions->SKF_ECCSignData = (typeof(ckpFunctions->SKF_ECCSignData)) dlsym(hHandle,
-                                                                                  "SKF_ECCSignData");
-    ckpFunctions->SKF_ECCVerify = (typeof(ckpFunctions->SKF_ECCVerify)) dlsym(hHandle,
-                                                                              "SKF_ECCVerify");
-    ckpFunctions->SKF_ECCExportSessionKey = (typeof(ckpFunctions->SKF_ECCExportSessionKey)) dlsym(
-            hHandle, "SKF_ECCExportSessionKey");
-    ckpFunctions->SKF_ExtECCEncrypt = (typeof(ckpFunctions->SKF_ExtECCEncrypt)) dlsym(hHandle,
-                                                                                      "SKF_ExtECCEncrypt");
-    ckpFunctions->SKF_ExtECCDecrypt = (typeof(ckpFunctions->SKF_ExtECCDecrypt)) dlsym(hHandle,
-                                                                                      "SKF_ExtECCDecrypt");
-    ckpFunctions->SKF_ExtECCSign = (typeof(ckpFunctions->SKF_ExtECCSign)) dlsym(hHandle,
-                                                                                "SKF_ExtECCSign");
-    ckpFunctions->SKF_ExtECCVerify = (typeof(ckpFunctions->SKF_ExtECCVerify)) dlsym(hHandle,
-                                                                                    "SKF_ExtECCVerify");
-    ckpFunctions->SKF_GenerateAgreementDataWithECC = (typeof(ckpFunctions->SKF_GenerateAgreementDataWithECC)) dlsym(
-            hHandle, "SKF_GenerateAgreementDataWithECC");
-    ckpFunctions->SKF_GenerateAgreementDataAndKeyWithECC = (typeof(ckpFunctions->SKF_GenerateAgreementDataAndKeyWithECC)) dlsym(
-            hHandle, "SKF_GenerateAgreementDataAndKeyWithECC");
-    ckpFunctions->SKF_GenerateKeyWithECC = (typeof(ckpFunctions->SKF_GenerateKeyWithECC)) dlsym(
-            hHandle, "SKF_GenerateKeyWithECC");
-    ckpFunctions->SKF_ExportPublicKey = (typeof(ckpFunctions->SKF_ExportPublicKey)) dlsym(hHandle,
-                                                                                          "SKF_ExportPublicKey");
-    ckpFunctions->SKF_ImportSessionKey = (typeof(ckpFunctions->SKF_ImportSessionKey)) dlsym(hHandle,
-                                                                                            "SKF_ImportSessionKey");
-    ckpFunctions->SKF_SetSymmKey = (typeof(ckpFunctions->SKF_SetSymmKey)) dlsym(hHandle,
-                                                                                "SKF_SetSymmKey");
-    ckpFunctions->SKF_EncryptInit = (typeof(ckpFunctions->SKF_EncryptInit)) dlsym(hHandle,
-                                                                                  "SKF_EncryptInit");
-    ckpFunctions->SKF_Encrypt = (typeof(ckpFunctions->SKF_Encrypt)) dlsym(hHandle, "SKF_Encrypt");
-    ckpFunctions->SKF_EncryptUpdate = (typeof(ckpFunctions->SKF_EncryptUpdate)) dlsym(hHandle,
-                                                                                      "SKF_EncryptUpdate");
-    ckpFunctions->SKF_EncryptFinal = (typeof(ckpFunctions->SKF_EncryptFinal)) dlsym(hHandle,
-                                                                                    "SKF_EncryptFinal");
-    ckpFunctions->SKF_DecryptInit = (typeof(ckpFunctions->SKF_DecryptInit)) dlsym(hHandle,
-                                                                                  "SKF_DecryptInit");
-    ckpFunctions->SKF_Decrypt = (typeof(ckpFunctions->SKF_Decrypt)) dlsym(hHandle, "SKF_Decrypt");
-    ckpFunctions->SKF_DecryptUpdate = (typeof(ckpFunctions->SKF_DecryptUpdate)) dlsym(hHandle,
-                                                                                      "SKF_DecryptUpdate");
-    ckpFunctions->SKF_DecryptFinal = (typeof(ckpFunctions->SKF_DecryptFinal)) dlsym(hHandle,
-                                                                                    "SKF_DecryptFinal");
-    ckpFunctions->SKF_DigestInit = (typeof(ckpFunctions->SKF_DigestInit)) dlsym(hHandle,
-                                                                                "SKF_DigestInit");
-    ckpFunctions->SKF_Digest = (typeof(ckpFunctions->SKF_Digest)) dlsym(hHandle, "SKF_Digest");
-    ckpFunctions->SKF_DigestUpdate = (typeof(ckpFunctions->SKF_DigestUpdate)) dlsym(hHandle,
-                                                                                    "SKF_DigestUpdate");
-    ckpFunctions->SKF_DigestFinal = (typeof(ckpFunctions->SKF_DigestFinal)) dlsym(hHandle,
-                                                                                  "SKF_DigestFinal");
-    ckpFunctions->SKF_MacInit = (typeof(ckpFunctions->SKF_MacInit)) dlsym(hHandle, "SKF_MacInit");
-    ckpFunctions->SKF_Mac = (typeof(ckpFunctions->SKF_Mac)) dlsym(hHandle, "SKF_Mac");
-    ckpFunctions->SKF_MacUpdate = (typeof(ckpFunctions->SKF_MacUpdate)) dlsym(hHandle,
-                                                                              "SKF_MacUpdate");
-    ckpFunctions->SKF_MacFinal = (typeof(ckpFunctions->SKF_MacFinal)) dlsym(hHandle,
-                                                                            "SKF_MacFinal");
-    ckpFunctions->SKF_CloseHandle = (typeof(ckpFunctions->SKF_CloseHandle)) dlsym(hHandle,
-                                                                                  "SKF_CloseHandle");
-
-    env->SetLongField(obj, ID_value, (long) ckpFunctions);
-    end:
-    if (jBufferInput) {
-        env->ReleaseByteArrayElements(jbyteArrayInput, jBufferInput, 0);
-    }
-
-    return;
-}
-
-JNIEXPORT void JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, finalizeLibraryNative
-        (JNIEnv * env, jobject
-        obj, jbyteArray
-        jbyteArrayInput)) {
-    CK_FUNCTION_LIST_PTR ckpFunctions = 0;
-
-    jclass cls = env->GetObjectClass(obj);
-
-    jfieldID ID_value = env->GetFieldID(cls, "ckpFunctions", "J");
-
-    ckpFunctions = (CK_FUNCTION_LIST_PTR) env->GetLongField(obj, ID_value);
-
-    if (ckpFunctions) {
-        // add code here
-        dlclose(ckpFunctions->hHandle);
-        ckpFunctions->hHandle = NULL;
-
-        delete (ckpFunctions);
-    }
-
-    // reset to null
-    env->SetLongField(obj, ID_value, 0);
-
-    return;
-}
 
 
 /*
- * Class:     com_wtsecure_safecard_skf_wrapper_SKFImplementation
+ * Class:     com_wtsecure_safecard_sof_client_wrapper_SKFImplementation
  * Method:    SKF_WaitForDevEvent
- * Signature: (Lcom/wtsecure/safecard/skf/wrapper/SKFUlong;)[B
+ * Signature: (Lcom/wtsecure/safecard/sof_client/wrapper/SKFUlong;)[B
  */
 JNIEXPORT void JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1SetPackageName
         (JNIEnv * env, jobject
@@ -476,9 +283,9 @@ JNIEXPORT void JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1SetPa
 }
 
 /*
- * Class:     com_wtsecure_safecard_skf_wrapper_SKFImplementation
+ * Class:     com_wtsecure_safecard_sof_client_wrapper_SKFImplementation
  * Method:    SKF_WaitForDevEvent
- * Signature: (Lcom/wtsecure/safecard/skf/wrapper/SKFUlong;)[B
+ * Signature: (Lcom/wtsecure/safecard/sof_client/wrapper/SKFUlong;)[B
  */
 JNIEXPORT jbyteArray JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1WaitForDevEvent
         (JNIEnv * env, jobject
@@ -531,7 +338,7 @@ JNIEXPORT jbyteArray JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_
 
 
 /*
- * Class:     com_wtsecure_safecard_skf_wrapper_SKFImplementation
+ * Class:     com_wtsecure_safecard_sof_client_wrapper_SKFImplementation
  * Method:    SKF_CancelWaitForDevEvent
  * Signature: ()V
  */
@@ -560,7 +367,7 @@ JNIEXPORT void JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1Cance
 
 
 /*
- * Class:     com_wtsecure_safecard_skf_wrapper_SKFImplementation
+ * Class:     com_wtsecure_safecard_sof_client_wrapper_SKFImplementation
  * Method:    SKF_EnumDev
  * Signature: (Z)[B
  */
@@ -612,9 +419,9 @@ JNIEXPORT jbyteArray JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_
 
 
 /*
- * Class:     com_wtsecure_safecard_skf_wrapper_SKFImplementation
+ * Class:     com_wtsecure_safecard_sof_client_wrapper_SKFImplementation
  * Method:    SKF_ConnectDev
- * Signature: ([BLcom/wtsecure/safecard/skf/wrapper/SKFHandle;)V
+ * Signature: ([BLcom/wtsecure/safecard/sof_client/wrapper/SKFHandle;)V
  */
 JNIEXPORT void JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1ConnectDev
         (JNIEnv * env, jobject
@@ -654,9 +461,9 @@ JNIEXPORT void JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1Conne
 
 
 /*
- * Class:     com_wtsecure_safecard_skf_wrapper_SKFImplementation
+ * Class:     com_wtsecure_safecard_sof_client_wrapper_SKFImplementation
  * Method:    SKF_DisConnectDev
- * Signature: (Lcom/wtsecure/safecard/skf/wrapper/SKFHandle;)V
+ * Signature: (Lcom/wtsecure/safecard/sof_client/wrapper/SKFHandle;)V
  */
 JNIEXPORT void JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1DisConnectDev
         (JNIEnv * env, jobject
@@ -682,7 +489,7 @@ JNIEXPORT void JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1DisCo
 
 
 /*
- * Class:     com_wtsecure_safecard_skf_wrapper_SKFImplementation
+ * Class:     com_wtsecure_safecard_sof_client_wrapper_SKFImplementation
  * Method:    SKF_GetDevState
  * Signature: ([B)J
  */
@@ -723,9 +530,9 @@ JNIEXPORT void JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1GetDe
 
 
 /*
- * Class:     com_wtsecure_safecard_skf_wrapper_SKFImplementation
+ * Class:     com_wtsecure_safecard_sof_client_wrapper_SKFImplementation
  * Method:    SKF_SetLabel
- * Signature: (Lcom/wtsecure/safecard/skf/wrapper/SKFHandle;[B)V
+ * Signature: (Lcom/wtsecure/safecard/sof_client/wrapper/SKFHandle;[B)V
  */
 JNIEXPORT void JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1SetLabel
         (JNIEnv * env, jobject
@@ -761,9 +568,9 @@ JNIEXPORT void JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1SetLa
 
 
 /*
- * Class:     com_wtsecure_safecard_skf_wrapper_SKFImplementation
+ * Class:     com_wtsecure_safecard_sof_client_wrapper_SKFImplementation
  * Method:    SKF_GetSKFDevInfo
- * Signature: (Lcom/wtsecure/safecard/skf/wrapper/SKFHandle;Lcom/wtsecure/safecard/skf/wrapper/SKFDevInfo;)V
+ * Signature: (Lcom/wtsecure/safecard/sof_client/wrapper/SKFHandle;Lcom/wtsecure/safecard/sof_client/wrapper/SKFDevInfo;)V
  */
 JNIEXPORT void JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1GetDevInfo
         (JNIEnv * env, jobject
@@ -795,9 +602,9 @@ JNIEXPORT void JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1GetDe
 
 
 /*
- * Class:     com_wtsecure_safecard_skf_wrapper_SKFImplementation
+ * Class:     com_wtsecure_safecard_sof_client_wrapper_SKFImplementation
  * Method:    SKF_LockDev
- * Signature: (Lcom/wtsecure/safecard/skf/wrapper/SKFHandle;J)V
+ * Signature: (Lcom/wtsecure/safecard/sof_client/wrapper/SKFHandle;J)V
  */
 JNIEXPORT void JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1LockDev
         (JNIEnv * env, jobject
@@ -825,9 +632,9 @@ JNIEXPORT void JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1LockD
 
 
 /*
- * Class:     com_wtsecure_safecard_skf_wrapper_SKFImplementation
+ * Class:     com_wtsecure_safecard_sof_client_wrapper_SKFImplementation
  * Method:    SKF_UnlockDev
- * Signature: (Lcom/wtsecure/safecard/skf/wrapper/SKFHandle;)V
+ * Signature: (Lcom/wtsecure/safecard/sof_client/wrapper/SKFHandle;)V
  */
 JNIEXPORT void JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1UnlockDev
         (JNIEnv * env, jobject
@@ -853,9 +660,9 @@ JNIEXPORT void JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1Unloc
 
 
 /*
- * Class:     com_wtsecure_safecard_skf_wrapper_SKFImplementation
+ * Class:     com_wtsecure_safecard_sof_client_wrapper_SKFImplementation
  * Method:    SKF_Transmit
- * Signature: (Lcom/wtsecure/safecard/skf/wrapper/SKFHandle;[B)[B
+ * Signature: (Lcom/wtsecure/safecard/sof_client/wrapper/SKFHandle;[B)[B
  */
 JNIEXPORT jbyteArray JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1Transmit
         (JNIEnv * env, jobject
@@ -913,9 +720,9 @@ JNIEXPORT jbyteArray JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_
 
 
 /*
- * Class:     com_wtsecure_safecard_skf_wrapper_SKFImplementation
+ * Class:     com_wtsecure_safecard_sof_client_wrapper_SKFImplementation
  * Method:    SKF_ChangeDevAuthKey
- * Signature: (Lcom/wtsecure/safecard/skf/wrapper/SKFHandle;[B)V
+ * Signature: (Lcom/wtsecure/safecard/sof_client/wrapper/SKFHandle;[B)V
  */
 JNIEXPORT void JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1ChangeDevAuthKey
         (JNIEnv * env, jobject
@@ -953,9 +760,9 @@ JNIEXPORT void JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1Chang
 
 
 /*
- * Class:     com_wtsecure_safecard_skf_wrapper_SKFImplementation
+ * Class:     com_wtsecure_safecard_sof_client_wrapper_SKFImplementation
  * Method:    SKF_DevAuth
- * Signature: (Lcom/wtsecure/safecard/skf/wrapper/SKFHandle;[B)V
+ * Signature: (Lcom/wtsecure/safecard/sof_client/wrapper/SKFHandle;[B)V
  */
 JNIEXPORT void JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1DevAuth
         (JNIEnv * env, jobject
@@ -994,9 +801,9 @@ JNIEXPORT void JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1DevAu
 
 
 /*
- * Class:     com_wtsecure_safecard_skf_wrapper_SKFImplementation
+ * Class:     com_wtsecure_safecard_sof_client_wrapper_SKFImplementation
  * Method:    SKF_ChangePIN
- * Signature: (Lcom/wtsecure/safecard/skf/wrapper/SKFHandle;J[B[BLcom/wtsecure/safecard/skf/wrapper/SKFUlong;)V
+ * Signature: (Lcom/wtsecure/safecard/sof_client/wrapper/SKFHandle;J[B[BLcom/wtsecure/safecard/sof_client/wrapper/SKFUlong;)V
  */
 JNIEXPORT void JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1ChangePIN
         (JNIEnv * env, jobject
@@ -1056,9 +863,9 @@ JNIEXPORT void JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1Chang
 
 
 /*
- * Class:     com_wtsecure_safecard_skf_wrapper_SKFImplementation
+ * Class:     com_wtsecure_safecard_sof_client_wrapper_SKFImplementation
  * Method:    SKF_GetPINInfo
- * Signature: (Lcom/wtsecure/safecard/skf/wrapper/SKFHandle;JLcom/wtsecure/safecard/skf/wrapper/SKFPinInfo;)V
+ * Signature: (Lcom/wtsecure/safecard/sof_client/wrapper/SKFHandle;JLcom/wtsecure/safecard/sof_client/wrapper/SKFPinInfo;)V
  */
 JNIEXPORT void JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1GetPINInfo
         (JNIEnv * env, jobject
@@ -1100,9 +907,9 @@ JNIEXPORT void JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1GetPI
 
 
 /*
- * Class:     com_wtsecure_safecard_skf_wrapper_SKFImplementation
+ * Class:     com_wtsecure_safecard_sof_client_wrapper_SKFImplementation
  * Method:    SKF_VerifyPIN
- * Signature: (Lcom/wtsecure/safecard/skf/wrapper/SKFHandle;J[BLcom/wtsecure/safecard/skf/wrapper/SKFUlong;)V
+ * Signature: (Lcom/wtsecure/safecard/sof_client/wrapper/SKFHandle;J[BLcom/wtsecure/safecard/sof_client/wrapper/SKFUlong;)V
  */
 JNIEXPORT void JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1VerifyPIN
         (JNIEnv * env, jobject
@@ -1148,9 +955,9 @@ JNIEXPORT void JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1Verif
 
 
 /*
- * Class:     com_wtsecure_safecard_skf_wrapper_SKFImplementation
+ * Class:     com_wtsecure_safecard_sof_client_wrapper_SKFImplementation
  * Method:    SKF_UnblockPIN
- * Signature: (Lcom/wtsecure/safecard/skf/wrapper/SKFHandle;[B[BLcom/wtsecure/safecard/skf/wrapper/SKFUlong;)V
+ * Signature: (Lcom/wtsecure/safecard/sof_client/wrapper/SKFHandle;[B[BLcom/wtsecure/safecard/sof_client/wrapper/SKFUlong;)V
  */
 JNIEXPORT void JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1UnblockPIN
         (JNIEnv * env, jobject
@@ -1209,9 +1016,9 @@ JNIEXPORT void JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1Unblo
 
 
 /*
- * Class:     com_wtsecure_safecard_skf_wrapper_SKFImplementation
+ * Class:     com_wtsecure_safecard_sof_client_wrapper_SKFImplementation
  * Method:    SKF_ClearSecureState
- * Signature: (Lcom/wtsecure/safecard/skf/wrapper/SKFHandle;)V
+ * Signature: (Lcom/wtsecure/safecard/sof_client/wrapper/SKFHandle;)V
  */
 JNIEXPORT void JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1ClearSecureState
         (JNIEnv * env, jobject
@@ -1239,9 +1046,9 @@ JNIEXPORT void JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1Clear
 
 
 /*
- * Class:     com_wtsecure_safecard_skf_wrapper_SKFImplementation
+ * Class:     com_wtsecure_safecard_sof_client_wrapper_SKFImplementation
  * Method:    SKF_CreateApplication
- * Signature: (Lcom/wtsecure/safecard/skf/wrapper/SKFHandle;[B[BJ[BJJLcom/wtsecure/safecard/skf/wrapper/SKFHandle;)V
+ * Signature: (Lcom/wtsecure/safecard/sof_client/wrapper/SKFHandle;[B[BJ[BJJLcom/wtsecure/safecard/sof_client/wrapper/SKFHandle;)V
  */
 JNIEXPORT void JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1CreateApplication
         (JNIEnv * env, jobject
@@ -1317,9 +1124,9 @@ JNIEXPORT void JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1Creat
 
 
 /*
- * Class:     com_wtsecure_safecard_skf_wrapper_SKFImplementation
+ * Class:     com_wtsecure_safecard_sof_client_wrapper_SKFImplementation
  * Method:    SKF_EnumApplication
- * Signature: (Lcom/wtsecure/safecard/skf/wrapper/SKFHandle;)[B
+ * Signature: (Lcom/wtsecure/safecard/sof_client/wrapper/SKFHandle;)[B
  */
 JNIEXPORT jbyteArray JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1EnumApplication
         (JNIEnv * env, jobject
@@ -1366,9 +1173,9 @@ JNIEXPORT jbyteArray JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_
 
 
 /*
- * Class:     com_wtsecure_safecard_skf_wrapper_SKFImplementation
+ * Class:     com_wtsecure_safecard_sof_client_wrapper_SKFImplementation
  * Method:    SKF_DeleteApplication
- * Signature: (Lcom/wtsecure/safecard/skf/wrapper/SKFHandle;[B)V
+ * Signature: (Lcom/wtsecure/safecard/sof_client/wrapper/SKFHandle;[B)V
  */
 JNIEXPORT void JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1DeleteApplication
         (JNIEnv * env, jobject
@@ -1407,9 +1214,9 @@ JNIEXPORT void JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1Delet
 
 
 /*
- * Class:     com_wtsecure_safecard_skf_wrapper_SKFImplementation
+ * Class:     com_wtsecure_safecard_sof_client_wrapper_SKFImplementation
  * Method:    SKF_OpenApplication
- * Signature: (Lcom/wtsecure/safecard/skf/wrapper/SKFHandle;[BLcom/wtsecure/safecard/skf/wrapper/SKFHandle;)V
+ * Signature: (Lcom/wtsecure/safecard/sof_client/wrapper/SKFHandle;[BLcom/wtsecure/safecard/sof_client/wrapper/SKFHandle;)V
  */
 JNIEXPORT void JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1OpenApplication
         (JNIEnv * env, jobject
@@ -1454,9 +1261,9 @@ JNIEXPORT void JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1OpenA
 
 
 /*
- * Class:     com_wtsecure_safecard_skf_wrapper_SKFImplementation
+ * Class:     com_wtsecure_safecard_sof_client_wrapper_SKFImplementation
  * Method:    SKF_CloseApplication
- * Signature: (Lcom/wtsecure/safecard/skf/wrapper/SKFHandle;)V
+ * Signature: (Lcom/wtsecure/safecard/sof_client/wrapper/SKFHandle;)V
  */
 JNIEXPORT void JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1CloseApplication
         (JNIEnv * env, jobject
@@ -1484,9 +1291,9 @@ JNIEXPORT void JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1Close
 
 
 /*
- * Class:     com_wtsecure_safecard_skf_wrapper_SKFImplementation
+ * Class:     com_wtsecure_safecard_sof_client_wrapper_SKFImplementation
  * Method:    SKF_CreateFile
- * Signature: (Lcom/wtsecure/safecard/skf/wrapper/SKFHandle;[BJJ)V
+ * Signature: (Lcom/wtsecure/safecard/sof_client/wrapper/SKFHandle;[BJJ)V
  */
 JNIEXPORT void JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1CreateFile
         (JNIEnv * env, jobject
@@ -1530,9 +1337,9 @@ JNIEXPORT void JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1Creat
 
 
 /*
- * Class:     com_wtsecure_safecard_skf_wrapper_SKFImplementation
+ * Class:     com_wtsecure_safecard_sof_client_wrapper_SKFImplementation
  * Method:    SKF_DeleteFile
- * Signature: (Lcom/wtsecure/safecard/skf/wrapper/SKFHandle;[B)V
+ * Signature: (Lcom/wtsecure/safecard/sof_client/wrapper/SKFHandle;[B)V
  */
 JNIEXPORT void JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1DeleteFile
         (JNIEnv * env, jobject
@@ -1572,9 +1379,9 @@ JNIEXPORT void JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1Delet
 
 
 /*
- * Class:     com_wtsecure_safecard_skf_wrapper_SKFImplementation
+ * Class:     com_wtsecure_safecard_sof_client_wrapper_SKFImplementation
  * Method:    SKF_EnumFiles
- * Signature: (Lcom/wtsecure/safecard/skf/wrapper/SKFHandle;)[B
+ * Signature: (Lcom/wtsecure/safecard/sof_client/wrapper/SKFHandle;)[B
  */
 JNIEXPORT jbyteArray JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1EnumFiles
         (JNIEnv * env, jobject
@@ -1621,9 +1428,9 @@ JNIEXPORT jbyteArray JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_
 
 
 /*
- * Class:     com_wtsecure_safecard_skf_wrapper_SKFImplementation
+ * Class:     com_wtsecure_safecard_sof_client_wrapper_SKFImplementation
  * Method:    SKF_GetFileInfo
- * Signature: (Lcom/wtsecure/safecard/skf/wrapper/SKFHandle;[BLcom/wtsecure/safecard/skf/wrapper/SKFFileAttribute;)V
+ * Signature: (Lcom/wtsecure/safecard/sof_client/wrapper/SKFHandle;[BLcom/wtsecure/safecard/sof_client/wrapper/SKFFileAttribute;)V
  */
 JNIEXPORT void JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1GetFileInfo
         (JNIEnv * env, jobject
@@ -1666,9 +1473,9 @@ JNIEXPORT void JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1GetFi
 
 
 /*
- * Class:     com_wtsecure_safecard_skf_wrapper_SKFImplementation
+ * Class:     com_wtsecure_safecard_sof_client_wrapper_SKFImplementation
  * Method:    SKF_ReadFile
- * Signature: (Lcom/wtsecure/safecard/skf/wrapper/SKFHandle;[BJJ)[B
+ * Signature: (Lcom/wtsecure/safecard/sof_client/wrapper/SKFHandle;[BJJ)[B
  */
 JNIEXPORT void JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1ReadFile
         (JNIEnv * env, jobject
@@ -1722,9 +1529,9 @@ JNIEXPORT void JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1ReadF
 
 
 /*
- * Class:     com_wtsecure_safecard_skf_wrapper_SKFImplementation
+ * Class:     com_wtsecure_safecard_sof_client_wrapper_SKFImplementation
  * Method:    SKF_WriteFile
- * Signature: (Lcom/wtsecure/safecard/skf/wrapper/SKFHandle;[BJ[B)V
+ * Signature: (Lcom/wtsecure/safecard/sof_client/wrapper/SKFHandle;[BJ[B)V
  */
 JNIEXPORT void JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1WriteFile
         (JNIEnv * env, jobject
@@ -1777,9 +1584,9 @@ JNIEXPORT void JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1Write
 
 
 /*
- * Class:     com_wtsecure_safecard_skf_wrapper_SKFImplementation
+ * Class:     com_wtsecure_safecard_sof_client_wrapper_SKFImplementation
  * Method:    SKF_CreateContainer
- * Signature: (Lcom/wtsecure/safecard/skf/wrapper/SKFHandle;[BLcom/wtsecure/safecard/skf/wrapper/SKFHandle;)V
+ * Signature: (Lcom/wtsecure/safecard/sof_client/wrapper/SKFHandle;[BLcom/wtsecure/safecard/sof_client/wrapper/SKFHandle;)V
  */
 JNIEXPORT void JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1CreateContainer
         (JNIEnv * env, jobject
@@ -1826,9 +1633,9 @@ JNIEXPORT void JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1Creat
 
 
 /*
- * Class:     com_wtsecure_safecard_skf_wrapper_SKFImplementation
+ * Class:     com_wtsecure_safecard_sof_client_wrapper_SKFImplementation
  * Method:    SKF_DeleteContainer
- * Signature: (Lcom/wtsecure/safecard/skf/wrapper/SKFHandle;[B)V
+ * Signature: (Lcom/wtsecure/safecard/sof_client/wrapper/SKFHandle;[B)V
  */
 JNIEXPORT void JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1DeleteContainer
         (JNIEnv * env, jobject
@@ -1867,9 +1674,9 @@ JNIEXPORT void JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1Delet
 
 
 /*
- * Class:     com_wtsecure_safecard_skf_wrapper_SKFImplementation
+ * Class:     com_wtsecure_safecard_sof_client_wrapper_SKFImplementation
  * Method:    SKF_OpenContainer
- * Signature: (Lcom/wtsecure/safecard/skf/wrapper/SKFHandle;[BLcom/wtsecure/safecard/skf/wrapper/SKFHandle;)V
+ * Signature: (Lcom/wtsecure/safecard/sof_client/wrapper/SKFHandle;[BLcom/wtsecure/safecard/sof_client/wrapper/SKFHandle;)V
  */
 JNIEXPORT void JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1OpenContainer
         (JNIEnv * env, jobject
@@ -1914,9 +1721,9 @@ JNIEXPORT void JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1OpenC
 
 
 /*
- * Class:     com_wtsecure_safecard_skf_wrapper_SKFImplementation
+ * Class:     com_wtsecure_safecard_sof_client_wrapper_SKFImplementation
  * Method:    SKF_CloseContainer
- * Signature: (Lcom/wtsecure/safecard/skf/wrapper/SKFHandle;)V
+ * Signature: (Lcom/wtsecure/safecard/sof_client/wrapper/SKFHandle;)V
  */
 JNIEXPORT void JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1CloseContainer
         (JNIEnv * env, jobject
@@ -1944,9 +1751,9 @@ JNIEXPORT void JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1Close
 
 
 /*
- * Class:     com_wtsecure_safecard_skf_wrapper_SKFImplementation
+ * Class:     com_wtsecure_safecard_sof_client_wrapper_SKFImplementation
  * Method:    SKF_EnumContainer
- * Signature: (Lcom/wtsecure/safecard/skf/wrapper/SKFHandle;)[B
+ * Signature: (Lcom/wtsecure/safecard/sof_client/wrapper/SKFHandle;)[B
  */
 JNIEXPORT jbyteArray JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1EnumContainer
         (JNIEnv * env, jobject
@@ -1993,9 +1800,9 @@ JNIEXPORT jbyteArray JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_
 
 
 /*
- * Class:     com_wtsecure_safecard_skf_wrapper_SKFImplementation
+ * Class:     com_wtsecure_safecard_sof_client_wrapper_SKFImplementation
  * Method:    SKF_GetContainerType
- * Signature: (Lcom/wtsecure/safecard/skf/wrapper/SKFHandle;)J
+ * Signature: (Lcom/wtsecure/safecard/sof_client/wrapper/SKFHandle;)J
  */
 JNIEXPORT void JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1GetContainerType
         (JNIEnv * env, jobject
@@ -2029,9 +1836,9 @@ JNIEXPORT void JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1GetCo
 
 
 /*
- * Class:     com_wtsecure_safecard_skf_wrapper_SKFImplementation
+ * Class:     com_wtsecure_safecard_sof_client_wrapper_SKFImplementation
  * Method:    SKF_ImportCertificate
- * Signature: (Lcom/wtsecure/safecard/skf/wrapper/SKFHandle;Z[B)V
+ * Signature: (Lcom/wtsecure/safecard/sof_client/wrapper/SKFHandle;Z[B)V
  */
 JNIEXPORT void JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1ImportCertificate
         (JNIEnv * env, jobject
@@ -2070,9 +1877,9 @@ JNIEXPORT void JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1Impor
 
 
 /*
- * Class:     com_wtsecure_safecard_skf_wrapper_SKFImplementation
+ * Class:     com_wtsecure_safecard_sof_client_wrapper_SKFImplementation
  * Method:    SKF_ExportCertificate
- * Signature: (Lcom/wtsecure/safecard/skf/wrapper/SKFHandle;Z)[B
+ * Signature: (Lcom/wtsecure/safecard/sof_client/wrapper/SKFHandle;Z)[B
  */
 JNIEXPORT jbyteArray JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1ExportCertificate
         (JNIEnv * env, jobject
@@ -2121,9 +1928,9 @@ JNIEXPORT jbyteArray JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_
 
 
 /*
- * Class:     com_wtsecure_safecard_skf_wrapper_SKFImplementation
+ * Class:     com_wtsecure_safecard_sof_client_wrapper_SKFImplementation
  * Method:    SKF_GenRandom
- * Signature: (Lcom/wtsecure/safecard/skf/wrapper/SKFHandle;[B)V
+ * Signature: (Lcom/wtsecure/safecard/sof_client/wrapper/SKFHandle;[B)V
  */
 JNIEXPORT void  JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1GenRandom
         (JNIEnv * env, jobject
@@ -2158,9 +1965,9 @@ JNIEXPORT void  JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1GenR
 
 
 /*
- * Class:     com_wtsecure_safecard_skf_wrapper_SKFImplementation
+ * Class:     com_wtsecure_safecard_sof_client_wrapper_SKFImplementation
  * Method:    SKF_GenExtRSAKey
- * Signature: (Lcom/wtsecure/safecard/skf/wrapper/SKFHandle;JLcom/wtsecure/safecard/skf/wrapper/SKFRsaPrivateKeyBlob;)V
+ * Signature: (Lcom/wtsecure/safecard/sof_client/wrapper/SKFHandle;JLcom/wtsecure/safecard/sof_client/wrapper/SKFRsaPrivateKeyBlob;)V
  */
 JNIEXPORT void JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1GenExtRSAKey
         (JNIEnv * env, jobject
@@ -2194,9 +2001,9 @@ JNIEXPORT void JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1GenEx
 
 
 /*
- * Class:     com_wtsecure_safecard_skf_wrapper_SKFImplementation
+ * Class:     com_wtsecure_safecard_sof_client_wrapper_SKFImplementation
  * Method:    SKF_GenRSAKeyPair
- * Signature: (Lcom/wtsecure/safecard/skf/wrapper/SKFHandle;JLcom/wtsecure/safecard/skf/wrapper/SKFRsaPublicKeyBlob;)V
+ * Signature: (Lcom/wtsecure/safecard/sof_client/wrapper/SKFHandle;JLcom/wtsecure/safecard/sof_client/wrapper/SKFRsaPublicKeyBlob;)V
  */
 JNIEXPORT void JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1GenRSAKeyPair
         (JNIEnv * env, jobject
@@ -2229,9 +2036,9 @@ JNIEXPORT void JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1GenRS
 
 
 /*
- * Class:     com_wtsecure_safecard_skf_wrapper_SKFImplementation
+ * Class:     com_wtsecure_safecard_sof_client_wrapper_SKFImplementation
  * Method:    SKF_ImportRSAKeyPair
- * Signature: (Lcom/wtsecure/safecard/skf/wrapper/SKFHandle;J[B[B)V
+ * Signature: (Lcom/wtsecure/safecard/sof_client/wrapper/SKFHandle;J[B[B)V
  */
 JNIEXPORT void JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1ImportRSAKeyPair
         (JNIEnv * env, jobject
@@ -2285,9 +2092,9 @@ JNIEXPORT void JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1Impor
 
 
 /*
- * Class:     com_wtsecure_safecard_skf_wrapper_SKFImplementation
+ * Class:     com_wtsecure_safecard_sof_client_wrapper_SKFImplementation
  * Method:    SKF_RSASignData
- * Signature: (Lcom/wtsecure/safecard/skf/wrapper/SKFHandle;[B)[B
+ * Signature: (Lcom/wtsecure/safecard/sof_client/wrapper/SKFHandle;[B)[B
  */
 JNIEXPORT jbyteArray JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1RSASignData
         (JNIEnv * env, jobject
@@ -2346,9 +2153,9 @@ JNIEXPORT jbyteArray JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_
 
 
 /*
- * Class:     com_wtsecure_safecard_skf_wrapper_SKFImplementation
+ * Class:     com_wtsecure_safecard_sof_client_wrapper_SKFImplementation
  * Method:    SKF_RSAVerify
- * Signature: (Lcom/wtsecure/safecard/skf/wrapper/SKFHandle;Lcom/wtsecure/safecard/skf/wrapper/SKFRsaPublicKeyBlob;[B[B)V
+ * Signature: (Lcom/wtsecure/safecard/sof_client/wrapper/SKFHandle;Lcom/wtsecure/safecard/sof_client/wrapper/SKFRsaPublicKeyBlob;[B[B)V
  */
 JNIEXPORT void JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1RSAVerify
         (JNIEnv * env, jobject
@@ -2412,9 +2219,9 @@ JNIEXPORT void JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1RSAVe
 
 
 /*
- * Class:     com_wtsecure_safecard_skf_wrapper_SKFImplementation
+ * Class:     com_wtsecure_safecard_sof_client_wrapper_SKFImplementation
  * Method:    SKF_RSAExportSessionKey
- * Signature: (Lcom/wtsecure/safecard/skf/wrapper/SKFHandle;JLcom/wtsecure/safecard/skf/wrapper/SKFRsaPublicKeyBlob;Lcom/wtsecure/safecard/skf/wrapper/SKFHandle;)[B
+ * Signature: (Lcom/wtsecure/safecard/sof_client/wrapper/SKFHandle;JLcom/wtsecure/safecard/sof_client/wrapper/SKFRsaPublicKeyBlob;Lcom/wtsecure/safecard/sof_client/wrapper/SKFHandle;)[B
  */
 JNIEXPORT jbyteArray JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1RSAExportSessionKey
         (JNIEnv * env, jobject
@@ -2482,9 +2289,9 @@ JNIEXPORT jbyteArray JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_
 
 
 /*
- * Class:     com_wtsecure_safecard_skf_wrapper_SKFImplementation
+ * Class:     com_wtsecure_safecard_sof_client_wrapper_SKFImplementation
  * Method:    SKF_ExtRSAPubKeyOperation
- * Signature: (Lcom/wtsecure/safecard/skf/wrapper/SKFHandle;Lcom/wtsecure/safecard/skf/wrapper/SKFRsaPublicKeyBlob;[B)[B
+ * Signature: (Lcom/wtsecure/safecard/sof_client/wrapper/SKFHandle;Lcom/wtsecure/safecard/sof_client/wrapper/SKFRsaPublicKeyBlob;[B)[B
  */
 JNIEXPORT jbyteArray JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC,
                                                      SKF_1ExtRSAPubKeyOperation
@@ -2560,9 +2367,9 @@ JNIEXPORT jbyteArray JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC,
 
 
 /*
- * Class:     com_wtsecure_safecard_skf_wrapper_SKFImplementation
+ * Class:     com_wtsecure_safecard_sof_client_wrapper_SKFImplementation
  * Method:    SKF_ExtRSAPriKeyOperation
- * Signature: (Lcom/wtsecure/safecard/skf/wrapper/SKFHandle;Lcom/wtsecure/safecard/skf/wrapper/SKFRsaPrivateKeyBlob;[B)[B
+ * Signature: (Lcom/wtsecure/safecard/sof_client/wrapper/SKFHandle;Lcom/wtsecure/safecard/sof_client/wrapper/SKFRsaPrivateKeyBlob;[B)[B
  */
 JNIEXPORT jbyteArray JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC,
                                                      SKF_1ExtRSAPriKeyOperation
@@ -2637,9 +2444,9 @@ JNIEXPORT jbyteArray JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC,
 
 
 /*
- * Class:     com_wtsecure_safecard_skf_wrapper_SKFImplementation
+ * Class:     com_wtsecure_safecard_sof_client_wrapper_SKFImplementation
  * Method:    SKF_GenECCKeyPair
- * Signature: (Lcom/wtsecure/safecard/skf/wrapper/SKFHandle;JLcom/wtsecure/safecard/skf/wrapper/SKFEccPublicKeyBlob;)V
+ * Signature: (Lcom/wtsecure/safecard/sof_client/wrapper/SKFHandle;JLcom/wtsecure/safecard/sof_client/wrapper/SKFEccPublicKeyBlob;)V
  */
 JNIEXPORT void JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1GenECCKeyPair
         (JNIEnv * env, jobject
@@ -2672,9 +2479,9 @@ JNIEXPORT void JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1GenEC
 
 
 /*
- * Class:     com_wtsecure_safecard_skf_wrapper_SKFImplementation
+ * Class:     com_wtsecure_safecard_sof_client_wrapper_SKFImplementation
  * Method:    SKF_ImportECCKeyPair
- * Signature: (Lcom/wtsecure/safecard/skf/wrapper/SKFHandle;Lcom/wtsecure/safecard/skf/wrapper/SKFEnvelopedKeyBlob;)V
+ * Signature: (Lcom/wtsecure/safecard/sof_client/wrapper/SKFHandle;Lcom/wtsecure/safecard/sof_client/wrapper/SKFEnvelopedKeyBlob;)V
  */
 JNIEXPORT void JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1ImportECCKeyPair
         (JNIEnv * env, jobject
@@ -2717,9 +2524,9 @@ JNIEXPORT void JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1Impor
 
 
 /*
- * Class:     com_wtsecure_safecard_skf_wrapper_SKFImplementation
+ * Class:     com_wtsecure_safecard_sof_client_wrapper_SKFImplementation
  * Method:    SKF_ECCSignData
- * Signature: (Lcom/wtsecure/safecard/skf/wrapper/SKFHandle;[BLcom/wtsecure/safecard/skf/wrapper/SKFEccSignatureBlob;)V
+ * Signature: (Lcom/wtsecure/safecard/sof_client/wrapper/SKFHandle;[BLcom/wtsecure/safecard/sof_client/wrapper/SKFEccSignatureBlob;)V
  */
 JNIEXPORT void JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1ECCSignData
         (JNIEnv * env, jobject
@@ -2763,9 +2570,9 @@ JNIEXPORT void JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1ECCSi
 
 
 /*
- * Class:     com_wtsecure_safecard_skf_wrapper_SKFImplementation
+ * Class:     com_wtsecure_safecard_sof_client_wrapper_SKFImplementation
  * Method:    SKF_ECCVerify
- * Signature: (Lcom/wtsecure/safecard/skf/wrapper/SKFHandle;Lcom/wtsecure/safecard/skf/wrapper/SKFEccPublicKeyBlob;[BLcom/wtsecure/safecard/skf/wrapper/SKFEccSignatureBlob;)V
+ * Signature: (Lcom/wtsecure/safecard/sof_client/wrapper/SKFHandle;Lcom/wtsecure/safecard/sof_client/wrapper/SKFEccPublicKeyBlob;[BLcom/wtsecure/safecard/sof_client/wrapper/SKFEccSignatureBlob;)V
  */
 JNIEXPORT void JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1ECCVerify
         (JNIEnv * env, jobject
@@ -2825,9 +2632,9 @@ JNIEXPORT void JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1ECCVe
 
 
 /*
- * Class:     com_wtsecure_safecard_skf_wrapper_SKFImplementation
+ * Class:     com_wtsecure_safecard_sof_client_wrapper_SKFImplementation
  * Method:    SKF_ECCExportSessionKey
- * Signature: (Lcom/wtsecure/safecard/skf/wrapper/SKFHandle;JLcom/wtsecure/safecard/skf/wrapper/SKFEccPublicKeyBlob;Lcom/wtsecure/safecard/skf/wrapper/SKFEccCipherBlob;Lcom/wtsecure/safecard/skf/wrapper/SKFHandle;)V
+ * Signature: (Lcom/wtsecure/safecard/sof_client/wrapper/SKFHandle;JLcom/wtsecure/safecard/sof_client/wrapper/SKFEccPublicKeyBlob;Lcom/wtsecure/safecard/sof_client/wrapper/SKFEccCipherBlob;Lcom/wtsecure/safecard/sof_client/wrapper/SKFHandle;)V
  */
 JNIEXPORT void JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1ECCExportSessionKey
         (JNIEnv * env, jobject
@@ -2877,9 +2684,9 @@ JNIEXPORT void JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1ECCEx
 
 
 /*
- * Class:     com_wtsecure_safecard_skf_wrapper_SKFImplementation
+ * Class:     com_wtsecure_safecard_sof_client_wrapper_SKFImplementation
  * Method:    SKF_ExtECCEncrypt
- * Signature: (Lcom/wtsecure/safecard/skf/wrapper/SKFHandle;Lcom/wtsecure/safecard/skf/wrapper/SKFEccPublicKeyBlob;[BLcom/wtsecure/safecard/skf/wrapper/SKFEccCipherBlob;)V
+ * Signature: (Lcom/wtsecure/safecard/sof_client/wrapper/SKFHandle;Lcom/wtsecure/safecard/sof_client/wrapper/SKFEccPublicKeyBlob;[BLcom/wtsecure/safecard/sof_client/wrapper/SKFEccCipherBlob;)V
  */
 JNIEXPORT void JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1ExtECCEncrypt
         (JNIEnv * env, jobject
@@ -2936,9 +2743,9 @@ JNIEXPORT void JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1ExtEC
 
 
 /*
- * Class:     com_wtsecure_safecard_skf_wrapper_SKFImplementation
+ * Class:     com_wtsecure_safecard_sof_client_wrapper_SKFImplementation
  * Method:    SKF_ExtECCDecrypt
- * Signature: (Lcom/wtsecure/safecard/skf/wrapper/SKFHandle;Lcom/wtsecure/safecard/skf/wrapper/SKFEccPrivateKeyBlob;Lcom/wtsecure/safecard/skf/wrapper/SKFEccCipherBlob;)[B
+ * Signature: (Lcom/wtsecure/safecard/sof_client/wrapper/SKFHandle;Lcom/wtsecure/safecard/sof_client/wrapper/SKFEccPrivateKeyBlob;Lcom/wtsecure/safecard/sof_client/wrapper/SKFEccCipherBlob;)[B
  */
 JNIEXPORT jbyteArray JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1ExtECCDecrypt
         (JNIEnv * env, jobject
@@ -3010,9 +2817,9 @@ JNIEXPORT jbyteArray JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_
 
 
 /*
- * Class:     com_wtsecure_safecard_skf_wrapper_SKFImplementation
+ * Class:     com_wtsecure_safecard_sof_client_wrapper_SKFImplementation
  * Method:    SKF_ExtECCSign
- * Signature: (Lcom/wtsecure/safecard/skf/wrapper/SKFHandle;Lcom/wtsecure/safecard/skf/wrapper/SKFEccPrivateKeyBlob;[BLcom/wtsecure/safecard/skf/wrapper/SKFEccSignatureBlob;)V
+ * Signature: (Lcom/wtsecure/safecard/sof_client/wrapper/SKFHandle;Lcom/wtsecure/safecard/sof_client/wrapper/SKFEccPrivateKeyBlob;[BLcom/wtsecure/safecard/sof_client/wrapper/SKFEccSignatureBlob;)V
  */
 JNIEXPORT void JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1ExtECCSign
         (JNIEnv * env, jobject
@@ -3069,9 +2876,9 @@ JNIEXPORT void JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1ExtEC
 
 
 /*
- * Class:     com_wtsecure_safecard_skf_wrapper_SKFImplementation
+ * Class:     com_wtsecure_safecard_sof_client_wrapper_SKFImplementation
  * Method:    SKF_ExtECCVerify
- * Signature: (Lcom/wtsecure/safecard/skf/wrapper/SKFHandle;Lcom/wtsecure/safecard/skf/wrapper/SKFEccPublicKeyBlob;[BLcom/wtsecure/safecard/skf/wrapper/SKFEccSignatureBlob;)V
+ * Signature: (Lcom/wtsecure/safecard/sof_client/wrapper/SKFHandle;Lcom/wtsecure/safecard/sof_client/wrapper/SKFEccPublicKeyBlob;[BLcom/wtsecure/safecard/sof_client/wrapper/SKFEccSignatureBlob;)V
  */
 JNIEXPORT void JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1ExtECCVerify
         (JNIEnv * env, jobject
@@ -3136,9 +2943,9 @@ JNIEXPORT void JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1ExtEC
 
 
 /*
- * Class:     com_wtsecure_safecard_skf_wrapper_SKFImplementation
+ * Class:     com_wtsecure_safecard_sof_client_wrapper_SKFImplementation
  * Method:    SKF_GenerateAgreementDataWithECC
- * Signature: (Lcom/wtsecure/safecard/skf/wrapper/SKFHandle;JLcom/wtsecure/safecard/skf/wrapper/SKFEccPublicKeyBlob;[BLcom/wtsecure/safecard/skf/wrapper/SKFHandle;)V
+ * Signature: (Lcom/wtsecure/safecard/sof_client/wrapper/SKFHandle;JLcom/wtsecure/safecard/sof_client/wrapper/SKFEccPublicKeyBlob;[BLcom/wtsecure/safecard/sof_client/wrapper/SKFHandle;)V
  */
 JNIEXPORT void JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC,
                                                SKF_1GenerateAgreementDataWithECC
@@ -3201,9 +3008,9 @@ JNIEXPORT void JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC,
 
 
 /*
- * Class:     com_wtsecure_safecard_skf_wrapper_SKFImplementation
+ * Class:     com_wtsecure_safecard_sof_client_wrapper_SKFImplementation
  * Method:    SKF_GenerateAgreementDataAndKeyWithECC
- * Signature: (Lcom/wtsecure/safecard/skf/wrapper/SKFHandle;JLcom/wtsecure/safecard/skf/wrapper/SKFEccPublicKeyBlob;Lcom/wtsecure/safecard/skf/wrapper/SKFEccPublicKeyBlob;Lcom/wtsecure/safecard/skf/wrapper/SKFEccPublicKeyBlob;[B[BLcom/wtsecure/safecard/skf/wrapper/SKFHandle;)V
+ * Signature: (Lcom/wtsecure/safecard/sof_client/wrapper/SKFHandle;JLcom/wtsecure/safecard/sof_client/wrapper/SKFEccPublicKeyBlob;Lcom/wtsecure/safecard/sof_client/wrapper/SKFEccPublicKeyBlob;Lcom/wtsecure/safecard/sof_client/wrapper/SKFEccPublicKeyBlob;[B[BLcom/wtsecure/safecard/sof_client/wrapper/SKFHandle;)V
  */
 JNIEXPORT void JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC,
                                                SKF_1GenerateAgreementDataAndKeyWithECC
@@ -3298,9 +3105,9 @@ JNIEXPORT void JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC,
 
 
 /*
- * Class:     com_wtsecure_safecard_skf_wrapper_SKFImplementation
+ * Class:     com_wtsecure_safecard_sof_client_wrapper_SKFImplementation
  * Method:    SKF_GenerateKeyWithECC
- * Signature: (Lcom/wtsecure/safecard/skf/wrapper/SKFHandle;Lcom/wtsecure/safecard/skf/wrapper/SKFEccPublicKeyBlob;Lcom/wtsecure/safecard/skf/wrapper/SKFEccPublicKeyBlob;[BLcom/wtsecure/safecard/skf/wrapper/SKFHandle;)V
+ * Signature: (Lcom/wtsecure/safecard/sof_client/wrapper/SKFHandle;Lcom/wtsecure/safecard/sof_client/wrapper/SKFEccPublicKeyBlob;Lcom/wtsecure/safecard/sof_client/wrapper/SKFEccPublicKeyBlob;[BLcom/wtsecure/safecard/sof_client/wrapper/SKFHandle;)V
  */
 JNIEXPORT void JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1GenerateKeyWithECC
         (JNIEnv * env, jobject
@@ -3369,9 +3176,9 @@ JNIEXPORT void JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1Gener
 
 
 /*
- * Class:     com_wtsecure_safecard_skf_wrapper_SKFImplementation
+ * Class:     com_wtsecure_safecard_sof_client_wrapper_SKFImplementation
  * Method:    SKF_ExportPublicKey
- * Signature: (Lcom/wtsecure/safecard/skf/wrapper/SKFHandle;Z)[B
+ * Signature: (Lcom/wtsecure/safecard/sof_client/wrapper/SKFHandle;Z)[B
  */
 JNIEXPORT jbyteArray JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1ExportPublicKey
         (JNIEnv * env, jobject
@@ -3419,9 +3226,9 @@ JNIEXPORT jbyteArray JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_
 
 
 /*
- * Class:     com_wtsecure_safecard_skf_wrapper_SKFImplementation
+ * Class:     com_wtsecure_safecard_sof_client_wrapper_SKFImplementation
  * Method:    SKF_ImportSessionKey
- * Signature: (Lcom/wtsecure/safecard/skf/wrapper/SKFHandle;J[BLcom/wtsecure/safecard/skf/wrapper/SKFHandle;)V
+ * Signature: (Lcom/wtsecure/safecard/sof_client/wrapper/SKFHandle;J[BLcom/wtsecure/safecard/sof_client/wrapper/SKFHandle;)V
  */
 JNIEXPORT void JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1ImportSessionKey
         (JNIEnv * env, jobject
@@ -3466,9 +3273,9 @@ JNIEXPORT void JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1Impor
 
 
 /*
- * Class:     com_wtsecure_safecard_skf_wrapper_SKFImplementation
+ * Class:     com_wtsecure_safecard_sof_client_wrapper_SKFImplementation
  * Method:    SKF_SetSymmKey
- * Signature: (Lcom/wtsecure/safecard/skf/wrapper/SKFHandle;[BJLcom/wtsecure/safecard/skf/wrapper/SKFHandle;)V
+ * Signature: (Lcom/wtsecure/safecard/sof_client/wrapper/SKFHandle;[BJLcom/wtsecure/safecard/sof_client/wrapper/SKFHandle;)V
  */
 JNIEXPORT void JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1SetSymmKey
         (JNIEnv * env, jobject
@@ -3510,9 +3317,9 @@ JNIEXPORT void JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1SetSy
 
 
 /*
- * Class:     com_wtsecure_safecard_skf_wrapper_SKFImplementation
+ * Class:     com_wtsecure_safecard_sof_client_wrapper_SKFImplementation
  * Method:    SKF_EncryptInit
- * Signature: (Lcom/wtsecure/safecard/skf/wrapper/SKFHandle;Lcom/wtsecure/safecard/skf/wrapper/SKFBlockCipherParam;)V
+ * Signature: (Lcom/wtsecure/safecard/sof_client/wrapper/SKFHandle;Lcom/wtsecure/safecard/sof_client/wrapper/SKFBlockCipherParam;)V
  */
 JNIEXPORT void JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1EncryptInit
         (JNIEnv * env, jobject
@@ -3553,9 +3360,9 @@ JNIEXPORT void JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1Encry
 
 
 /*
- * Class:     com_wtsecure_safecard_skf_wrapper_SKFImplementation
+ * Class:     com_wtsecure_safecard_sof_client_wrapper_SKFImplementation
  * Method:    SKF_Encrypt
- * Signature: (Lcom/wtsecure/safecard/skf/wrapper/SKFHandle;[B)[B
+ * Signature: (Lcom/wtsecure/safecard/sof_client/wrapper/SKFHandle;[B)[B
  */
 JNIEXPORT jbyteArray JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1Encrypt
         (JNIEnv * env, jobject
@@ -3614,9 +3421,9 @@ JNIEXPORT jbyteArray JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_
 
 
 /*
- * Class:     com_wtsecure_safecard_skf_wrapper_SKFImplementation
+ * Class:     com_wtsecure_safecard_sof_client_wrapper_SKFImplementation
  * Method:    SKF_EncryptUpdate
- * Signature: (Lcom/wtsecure/safecard/skf/wrapper/SKFHandle;[B)[B
+ * Signature: (Lcom/wtsecure/safecard/sof_client/wrapper/SKFHandle;[B)[B
  */
 JNIEXPORT jbyteArray JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1EncryptUpdate
         (JNIEnv * env, jobject
@@ -3674,9 +3481,9 @@ JNIEXPORT jbyteArray JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_
 
 
 /*
- * Class:     com_wtsecure_safecard_skf_wrapper_SKFImplementation
+ * Class:     com_wtsecure_safecard_sof_client_wrapper_SKFImplementation
  * Method:    SKF_EncryptFinal
- * Signature: (Lcom/wtsecure/safecard/skf/wrapper/SKFHandle;)[B
+ * Signature: (Lcom/wtsecure/safecard/sof_client/wrapper/SKFHandle;)[B
  */
 JNIEXPORT jbyteArray JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1EncryptFinal
         (JNIEnv * env, jobject
@@ -3723,9 +3530,9 @@ JNIEXPORT jbyteArray JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_
 
 
 /*
- * Class:     com_wtsecure_safecard_skf_wrapper_SKFImplementation
+ * Class:     com_wtsecure_safecard_sof_client_wrapper_SKFImplementation
  * Method:    SKF_DecryptInit
- * Signature: (Lcom/wtsecure/safecard/skf/wrapper/SKFHandle;Lcom/wtsecure/safecard/skf/wrapper/SKFBlockCipherParam;)V
+ * Signature: (Lcom/wtsecure/safecard/sof_client/wrapper/SKFHandle;Lcom/wtsecure/safecard/sof_client/wrapper/SKFBlockCipherParam;)V
  */
 JNIEXPORT void JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1DecryptInit
         (JNIEnv * env, jobject
@@ -3765,9 +3572,9 @@ JNIEXPORT void JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1Decry
 
 
 /*
- * Class:     com_wtsecure_safecard_skf_wrapper_SKFImplementation
+ * Class:     com_wtsecure_safecard_sof_client_wrapper_SKFImplementation
  * Method:    SKF_Decrypt
- * Signature: (Lcom/wtsecure/safecard/skf/wrapper/SKFHandle;[B)[B
+ * Signature: (Lcom/wtsecure/safecard/sof_client/wrapper/SKFHandle;[B)[B
  */
 JNIEXPORT jbyteArray JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1Decrypt
         (JNIEnv * env, jobject
@@ -3826,9 +3633,9 @@ JNIEXPORT jbyteArray JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_
 
 
 /*
- * Class:     com_wtsecure_safecard_skf_wrapper_SKFImplementation
+ * Class:     com_wtsecure_safecard_sof_client_wrapper_SKFImplementation
  * Method:    SKF_DecryptUpdate
- * Signature: (Lcom/wtsecure/safecard/skf/wrapper/SKFHandle;[B)[B
+ * Signature: (Lcom/wtsecure/safecard/sof_client/wrapper/SKFHandle;[B)[B
  */
 JNIEXPORT jbyteArray JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1DecryptUpdate
         (JNIEnv * env, jobject
@@ -3886,9 +3693,9 @@ JNIEXPORT jbyteArray JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_
 
 
 /*
- * Class:     com_wtsecure_safecard_skf_wrapper_SKFImplementation
+ * Class:     com_wtsecure_safecard_sof_client_wrapper_SKFImplementation
  * Method:    SKF_DecryptFinal
- * Signature: (Lcom/wtsecure/safecard/skf/wrapper/SKFHandle;)[B
+ * Signature: (Lcom/wtsecure/safecard/sof_client/wrapper/SKFHandle;)[B
  */
 JNIEXPORT jbyteArray JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1DecryptFinal
         (JNIEnv * env, jobject
@@ -3935,9 +3742,9 @@ JNIEXPORT jbyteArray JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_
 
 
 /*
- * Class:     com_wtsecure_safecard_skf_wrapper_SKFImplementation
+ * Class:     com_wtsecure_safecard_sof_client_wrapper_SKFImplementation
  * Method:    SKF_DigestInit
- * Signature: (Lcom/wtsecure/safecard/skf/wrapper/SKFHandle;JLcom/wtsecure/safecard/skf/wrapper/SKFEccPublicKeyBlob;[BLcom/wtsecure/safecard/skf/wrapper/SKFHandle;)V
+ * Signature: (Lcom/wtsecure/safecard/sof_client/wrapper/SKFHandle;JLcom/wtsecure/safecard/sof_client/wrapper/SKFEccPublicKeyBlob;[BLcom/wtsecure/safecard/sof_client/wrapper/SKFHandle;)V
  */
 JNIEXPORT void JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1DigestInit
         (JNIEnv * env, jobject
@@ -3996,9 +3803,9 @@ JNIEXPORT void JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1Diges
 
 
 /*
- * Class:     com_wtsecure_safecard_skf_wrapper_SKFImplementation
+ * Class:     com_wtsecure_safecard_sof_client_wrapper_SKFImplementation
  * Method:    SKF_Digest
- * Signature: (Lcom/wtsecure/safecard/skf/wrapper/SKFHandle;[B)[B
+ * Signature: (Lcom/wtsecure/safecard/sof_client/wrapper/SKFHandle;[B)[B
  */
 JNIEXPORT jbyteArray JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1Digest
         (JNIEnv * env, jobject
@@ -4057,9 +3864,9 @@ JNIEXPORT jbyteArray JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_
 
 
 /*
- * Class:     com_wtsecure_safecard_skf_wrapper_SKFImplementation
+ * Class:     com_wtsecure_safecard_sof_client_wrapper_SKFImplementation
  * Method:    SKF_DigestUpdate
- * Signature: (Lcom/wtsecure/safecard/skf/wrapper/SKFHandle;[B)V
+ * Signature: (Lcom/wtsecure/safecard/sof_client/wrapper/SKFHandle;[B)V
  */
 JNIEXPORT void JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1DigestUpdate
         (JNIEnv * env, jobject
@@ -4097,9 +3904,9 @@ JNIEXPORT void JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1Diges
 
 
 /*
- * Class:     com_wtsecure_safecard_skf_wrapper_SKFImplementation
+ * Class:     com_wtsecure_safecard_sof_client_wrapper_SKFImplementation
  * Method:    SKF_DigestFinal
- * Signature: (Lcom/wtsecure/safecard/skf/wrapper/SKFHandle;)[B
+ * Signature: (Lcom/wtsecure/safecard/sof_client/wrapper/SKFHandle;)[B
  */
 JNIEXPORT jbyteArray JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1DigestFinal
         (JNIEnv * env, jobject
@@ -4146,9 +3953,9 @@ JNIEXPORT jbyteArray JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_
 
 
 /*
- * Class:     com_wtsecure_safecard_skf_wrapper_SKFImplementation
+ * Class:     com_wtsecure_safecard_sof_client_wrapper_SKFImplementation
  * Method:    SKF_MacInit
- * Signature: (Lcom/wtsecure/safecard/skf/wrapper/SKFHandle;Lcom/wtsecure/safecard/skf/wrapper/SKFBlockCipherParam;Lcom/wtsecure/safecard/skf/wrapper/SKFHandle;)V
+ * Signature: (Lcom/wtsecure/safecard/sof_client/wrapper/SKFHandle;Lcom/wtsecure/safecard/sof_client/wrapper/SKFBlockCipherParam;Lcom/wtsecure/safecard/sof_client/wrapper/SKFHandle;)V
  */
 JNIEXPORT void JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1MacInit
         (JNIEnv * env, jobject
@@ -4194,9 +4001,9 @@ JNIEXPORT void JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1MacIn
 
 
 /*
- * Class:     com_wtsecure_safecard_skf_wrapper_SKFImplementation
+ * Class:     com_wtsecure_safecard_sof_client_wrapper_SKFImplementation
  * Method:    SKF_Mac
- * Signature: (Lcom/wtsecure/safecard/skf/wrapper/SKFHandle;[B)[B
+ * Signature: (Lcom/wtsecure/safecard/sof_client/wrapper/SKFHandle;[B)[B
  */
 JNIEXPORT jbyteArray JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1Mac
         (JNIEnv * env, jobject
@@ -4252,9 +4059,9 @@ JNIEXPORT jbyteArray JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_
 
 
 /*
- * Class:     com_wtsecure_safecard_skf_wrapper_SKFImplementation
+ * Class:     com_wtsecure_safecard_sof_client_wrapper_SKFImplementation
  * Method:    SKF_MacUpdate
- * Signature: (Lcom/wtsecure/safecard/skf/wrapper/SKFHandle;[B)V
+ * Signature: (Lcom/wtsecure/safecard/sof_client/wrapper/SKFHandle;[B)V
  */
 JNIEXPORT void JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1MacUpdate
         (JNIEnv * env, jobject
@@ -4292,9 +4099,9 @@ JNIEXPORT void JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1MacUp
 
 
 /*
- * Class:     com_wtsecure_safecard_skf_wrapper_SKFImplementation
+ * Class:     com_wtsecure_safecard_sof_client_wrapper_SKFImplementation
  * Method:    SKF_MacFinal
- * Signature: (Lcom/wtsecure/safecard/skf/wrapper/SKFHandle;)[B
+ * Signature: (Lcom/wtsecure/safecard/sof_client/wrapper/SKFHandle;)[B
  */
 JNIEXPORT jbyteArray JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1MacFinal
         (JNIEnv * env, jobject
@@ -4341,14 +4148,14 @@ JNIEXPORT jbyteArray JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_
 
 
 /*
- * Class:     com_wtsecure_safecard_skf_wrapper_SKFImplementation
+ * Class:     com_wtsecure_safecard_sof_client_wrapper_SKFImplementation
  * Method:    SKF_CloseHandle
- * Signature: (Lcom/wtsecure/safecard/skf/wrapper/SKFHandle;)V
+ * Signature: (Lcom/wtsecure/safecard/sof_client/wrapper/SKFHandle;)V
  */
 JNIEXPORT void JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1CloseHandle
         (JNIEnv * env, jobject
         obj, jobject
-        hHandle)) {
+        hHandle) {
     ULONG rv = 0;
     CK_FUNCTION_LIST_PTR ckpFunctions = 0;
 
@@ -4358,7 +4165,7 @@ JNIEXPORT void JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1Close
 
     if (ckpFunctions == NULL) { return; }
 
-    rv = (*ckpFunctions->SKF_CloseHandle)(ckHandleFromObject(env, hHandle));
+    rv = (*ckpFunctions->SKF_CloseHandle)(ckHandleFromObject(env, hHandle);
 
     ckAssertReturnValueOK(env, rv, __FUNCTION__);
     if (0 != rv) { goto end; }
@@ -4368,6 +4175,8 @@ JNIEXPORT void JNICALL __MIX_PREFIX_FUNC_PASTE(MIX_PREFIX_UPAPI_FUNC, SKF_1Close
 
     return;
 }
+
+#endif
 
 #ifdef __cplusplus
 }
