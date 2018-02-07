@@ -49,6 +49,7 @@ ADD_LIBRARY(
   
   sof_client.rc
   sof_client.def
+  sof_client-lib.cpp
   ${common_cs} 
   ${common_cpps} 
 )
