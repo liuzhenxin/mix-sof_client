@@ -26,17 +26,17 @@ LINK_DIRECTORIES(
 
 FILE(GLOB 
   common_cs 
-  ${CMAKE_SOURCE_DIR}/common/FILE_LOG.c 
-  ${CMAKE_SOURCE_DIR}/common/modp_b64.c 
-  ${CMAKE_SOURCE_DIR}/common/o_all_func_def.c 
-  ${CMAKE_SOURCE_DIR}/common/openssl_func_def.c 
+  ${CMAKE_SOURCE_DIR}/sof_client/FILE_LOG.c 
+  ${CMAKE_SOURCE_DIR}/sof_client/modp_b64.c 
+  ${CMAKE_SOURCE_DIR}/sof_client/o_all_func_def.c 
+  ${CMAKE_SOURCE_DIR}/sof_client/openssl_func_def.c 
   )
 
 FILE(GLOB 
   common_cpps
-  ${CMAKE_SOURCE_DIR}/common/smcert.cpp
-  ${CMAKE_SOURCE_DIR}/common/encode_switch.cpp
-  ${CMAKE_SOURCE_DIR}/common/certificate_items_parse.cpp
+  ${CMAKE_SOURCE_DIR}/sof_client/smcert.cpp
+  ${CMAKE_SOURCE_DIR}/sof_client/encode_switch.cpp
+  ${CMAKE_SOURCE_DIR}/sof_client/certificate_items_parse.cpp
  )
 
 LINK_DIRECTORIES(
@@ -47,13 +47,13 @@ LINK_DIRECTORIES(
 ADD_LIBRARY(
   sof_client SHARED
   
-  smb_base.rc
-  smb_base.def
+  sof_client.rc
+  sof_client.def
   ${common_cs} 
   ${common_cpps} 
 )
 
-target_link_libraries(sof_client sqlite3)
+target_link_libraries(sof_client mix_bssl)
 
 
 
