@@ -9,6 +9,12 @@
 #include "certificate_items_parse.h"
 #include "smb_cs.h"
 #include "smcert.h"
+#include "openssl_func_def.h"
+#include <iostream>
+#include <fstream>
+#include <iostream>
+#include <fstream>
+
 
 typedef CK_SOF_CLIENT_FUNCTION_LIST *CK_SOF_CLIENT_FUNCTION_LIST_PTR;
 typedef CK_SKF_FUNCTION_LIST *CK_SKF_FUNCTION_LIST_PTR;
@@ -204,7 +210,7 @@ extern "C" {
 			*pulUserListLen = data_info_len;
 			ulResult = SOR_OK;
 		}
-		if (data_info_len >  *pulUserListLen)
+		else if (data_info_len >  *pulUserListLen)
 		{
 			*pulUserListLen = data_info_len;
 			ulResult = SOR_MEMORYERR;
@@ -551,7 +557,7 @@ extern "C" {
 			*pulInfoLen = data_info_len;
 			ulResult = SOR_OK;
 		}
-		if (data_info_len >  *pulInfoLen)
+		else if (data_info_len >  *pulInfoLen)
 		{
 			*pulInfoLen = data_info_len;
 			ulResult = SOR_MEMORYERR;
@@ -710,7 +716,7 @@ extern "C" {
 			*pulInfoLen = data_info_len;
 			ulResult = SOR_OK;
 		}
-		if (data_info_len >  *pulInfoLen)
+		else if (data_info_len >  *pulInfoLen)
 		{
 			*pulInfoLen = data_info_len;
 			ulResult = SOR_MEMORYERR;
@@ -788,28 +794,188 @@ extern "C" {
 
 	ULONG SOF_SignData(void * p_ckpFunctions, LPSTR pContainerName, BYTE *pbDataIn, ULONG ulDataInLen, BYTE *pbDataOut, ULONG *pulDataOutLen)
 	{
-		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "entering");
-		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting");
-		ErrorCodeConvert(SOR_OK);
+		CK_SKF_FUNCTION_LIST_PTR ckpFunctions = (CK_SKF_FUNCTION_LIST_PTR)p_ckpFunctions;
+		HANDLE hContainer = NULL;
 
-		return SOR_OK;
+		ULONG ulResult = 0;
+		ULONG ulContainerType = 0;
+
+		ECCSIGNATUREBLOB blob;
+
+		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "entering");
+
+		ulResult = ckpFunctions->SKF_OpenContainer(global_data.hAppHandle, pContainerName, &hContainer);
+		if (ulResult)
+		{
+			goto end;
+		}
+		//1表示为RSA容器，为2表示为ECC容器
+		ulResult = ckpFunctions->SKF_GetContainerType(hContainer, &ulContainerType);
+		if (ulResult)
+		{
+			goto end;
+		}
+
+		if ( ulContainerType == 1)
+		{
+			ulResult = ckpFunctions->SKF_RSASignData(hContainer, pbDataIn, ulDataInLen, pbDataOut, pulDataOutLen);
+
+		}
+		else if (ulContainerType == 2)
+		{
+			ulResult = ckpFunctions->SKF_ECCSignData(hContainer, pbDataIn, ulDataInLen, &blob);
+
+			if (NULL == pbDataOut)
+			{
+				*pulDataOutLen = sizeof(blob);
+				ulResult = SOR_OK;
+			}
+			else if (sizeof(blob) >  *pulDataOutLen)
+			{
+				*pulDataOutLen = sizeof(blob);
+				ulResult = SOR_MEMORYERR;
+			}
+			else
+			{
+				*pulDataOutLen = sizeof(blob);
+				memcpy(pbDataOut, &blob, sizeof(blob));
+				ulResult = SOR_OK;
+			}
+		}
+		else
+		{
+			ulResult = SOR_NOTSUPPORTYETERR;
+			goto end;
+		}
+	end:
+
+		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting");
+
+		ulResult = ErrorCodeConvert(ulResult);
+
+		return ulResult;
 	}
 
 
 	ULONG SOF_VerifySignedData(void * p_ckpFunctions, BYTE *pbCert, ULONG ulCertLen, BYTE *pbDataIn, ULONG ulDataInLen, BYTE *pbDataOut, ULONG ulDataOutLen)
 	{
-		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "entering");
-		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting");
-		ErrorCodeConvert(SOR_OK);
+		CK_SKF_FUNCTION_LIST_PTR ckpFunctions = (CK_SKF_FUNCTION_LIST_PTR)p_ckpFunctions;
+		HANDLE hContainer = NULL;
 
-		return SOR_OK;
+		ULONG ulResult = 0;
+		ULONG ulContainerType = 0;
+
+		RSA *rsa = NULL;
+
+		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "entering");
+
+		RSAPUBLICKEYBLOB rsaPublicKeyBlob = { 0 };
+		ECCPUBLICKEYBLOB eccPublicKeyBlob = { 0 };
+
+		CertificateItemParse certParse;
+
+		certParse.setCertificate(pbCert, ulCertLen);
+
+		if (0 != certParse.parse())
+		{
+			ulResult = SOR_INDATAERR;
+			goto end;
+		}
+
+		if (ECertificate_KEY_ALG_RSA == certParse.m_iKeyAlg)
+		{
+			X509 * x509 = NULL;
+			unsigned char pbModulus[256];
+			int ulModulusLen = 0;
+
+			x509 = d2i_X509(NULL, &pbCert, ulCertLen);
+
+			if (x509)
+			{
+				RSA *rsa = EVP_PKEY_get1_RSA(X509_get_pubkey(x509));
+				
+				if (rsa != NULL)
+				{
+					ulModulusLen = BN_bn2bin(rsa->n, pbModulus);
+				}
+				
+				rsaPublicKeyBlob.BitLen = ulModulusLen * 8;
+
+				memcpy(rsaPublicKeyBlob.PublicExponent, "\x00\x01\x00\x01", 4);
+
+				memcpy(rsaPublicKeyBlob.Modulus + 256 - ulModulusLen, pbModulus, ulModulusLen);
+				X509_free(x509);
+			}
+
+			ulResult = ckpFunctions->SKF_RSAVerify(global_data.hDevHandle, &rsaPublicKeyBlob, pbDataIn, ulDataInLen, pbDataOut, ulDataOutLen);
+		}
+		else if (ECertificate_KEY_ALG_EC == certParse.m_iKeyAlg)
+		{
+			unsigned char pk_data[32 * 2 + 1] = { 0 };
+			unsigned int pk_len = 65;
+
+			eccPublicKeyBlob.BitLen = 256;
+
+			OpenSSL_CertGetPubkey(pbCert, ulCertLen, pk_data, &pk_len);
+
+			memcpy(eccPublicKeyBlob.XCoordinate + 32, pk_data + 1, 32);
+			memcpy(eccPublicKeyBlob.YCoordinate + 32, pk_data + 1 +32, 32);
+
+			ulResult = ckpFunctions->SKF_ECCVerify(global_data.hDevHandle, &eccPublicKeyBlob, pbDataIn, ulDataInLen, (ECCSIGNATUREBLOB*)pbDataOut);
+		}
+		else
+		{
+			ulResult = SOR_NOTSUPPORTYETERR;
+			goto end;
+		}
+
+	end:
+
+		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting");
+
+		ulResult = ErrorCodeConvert(ulResult);
+
+		return ulResult;
 	}
 
 
 	ULONG SOF_SignFile(void * p_ckpFunctions, LPSTR pContainerName, LPSTR pFileIn, LPSTR pFileOut)
 	{
+		std::fstream _file;
+
+		_file.open(pFileIn, std::ios::binary | std::ios::in);
+
+		if (_file)
+		{
+			std::ios::pos_type length;
+			unsigned int ulAlgType = 0;
+			char * pbSqlData = NULL;
+			int pos = 0;
+
+			// get length of file:
+			_file.seekg(0, std::ios::end);
+			length = _file.tellg();
+			_file.seekg(0, std::ios::beg);
+
+			pbSqlData = new char[length];
+
+			// read data as a block:
+			_file.read(pbSqlData + pos, length);
+
+
+			delete[]pbSqlData;
+
+			_file.close();
+		}
+		else
+		{
+
+		}
+		
+
 		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "entering");
 		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting");
+
 		ErrorCodeConvert(SOR_OK);
 
 		return SOR_OK;
