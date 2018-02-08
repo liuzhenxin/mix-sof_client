@@ -350,14 +350,17 @@ extern "C" {
 
 	ULONG SOF_GenRandom(void * p_ckpFunctions, UINT16 u16Type, BYTE *pbDataIn, ULONG ulDataInLen)
 	{
+		ULONG ulResult = SOR_OK;
+		CK_SKF_FUNCTION_LIST_PTR ckpFunctions = (CK_SKF_FUNCTION_LIST_PTR)p_ckpFunctions;
+
 		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "entering");
 
-
+		ulResult = ckpFunctions->SKF_GenRandom(global_data.hDevHandle, pbDataIn, ulDataInLen);
 
 		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting");
-		ErrorCodeConvert(SOR_OK);
+		ulResult = ErrorCodeConvert(ulResult);
 
-		return SOR_OK;
+		return ulResult;
 	}
 
 	ULONG SOF_GetLastError(void * p_ckpFunctions)
