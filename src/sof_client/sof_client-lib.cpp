@@ -8,10 +8,20 @@
 typedef CK_SOF_CLIENT_FUNCTION_LIST *CK_SOF_CLIENT_FUNCTION_LIST_PTR;
 typedef CK_SKF_FUNCTION_LIST *CK_SKF_FUNCTION_LIST_PTR;
 
+ULONG ErrorCodeConvert(ULONG &errCode)
+{
+	if (errCode >= SAR_FAIL || errCode<= SAR_REACH_MAX_CONTAINER_COUNT)
+	{
+		return errCode;
+	}
+
+	return errCode;
+}
+
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
 
 	ULONG SOF_GetVersion(void * p_ckpFunctions, VERSION *pVersion)
 	{
@@ -26,18 +36,21 @@ extern "C" {
 		ulResult = ckpFunctions->SKF_EnumDev(TRUE, buffer_devs, &buffer_devs_len);
 		if (ulResult)
 		{
+			ulResult = ErrorCodeConvert(ulResult);
 			goto err;
 		}
 
 		ulResult = ckpFunctions->SKF_ConnectDev(buffer_devs, &hDevHandle);
 		if (ulResult)
 		{
+			ulResult = ErrorCodeConvert(ulResult);
 			goto err;
 		}
 
 		ulResult = ckpFunctions->SKF_GetDevInfo(hDevHandle,&devinfo);
 		if (ulResult)
 		{
+			ulResult = ErrorCodeConvert(ulResult);
 			goto err;
 		}
 
@@ -54,10 +67,158 @@ extern "C" {
 	}
 
 
+	ULONG SOF_SetSignMethod(void * p_ckpFunctions, ULONG ulMethod)
+	{
+		return 0;
+	}
+
+	ULONG SOF_GetSignMethod(void * p_ckpFunctions, ULONG *pulMethod)
+	{
+		return 0;
+	}
+
+	ULONG SOF_SetEncryptMethod(void * p_ckpFunctions, ULONG ulMethod)
+	{
+		return 0;
+	}
+
+	ULONG SOF_GetEncryptMethod(void * p_ckpFunctions, ULONG *pulMethod)
+	{
+		return 0;
+	}
+
+	ULONG SOF_GetUserList(void * p_ckpFunctions, BYTE *pbUserList, ULONG *pulUserListLen)
+	{
+		return 0;
+	}
+
+	ULONG SOF_ExportUserCert(void * p_ckpFunctions, LPSTR pContainerName, BYTE *pbCert, ULONG *pulCertLen)
+	{
+		return 0;
+	}
+
+	ULONG SOF_Login(void * p_ckpFunctions, LPSTR pContainerName, LPSTR pPIN)
+	{
+		return 0;
+	}
+
+	ULONG SOF_GetPinRetryCount(void * p_ckpFunctions, LPSTR pContainerName, ULONG *pulRetryCount)
+	{
+		return 0;
+	}
+
+	ULONG SOF_ChangePassWd(void * p_ckpFunctions, LPSTR pContainerName, LPSTR pPINOld, LPSTR pPINNew)
+	{
+		return 0;
+	}
+
+	ULONG SOF_ExportExChangeUserCert(void * p_ckpFunctions, LPSTR pContainerName, BYTE *pbCert, ULONG *pulCertLen)
+	{
+		return 0;
+	}
+
+	ULONG SOF_GetCertInfo(void * p_ckpFunctions, BYTE *pbCert, ULONG ulCertLen, UINT16 u16Type, BYTE *pbInfo, ULONG *pulInfoLen)
+	{
+		return 0;
+	}
 
 
+	ULONG SOF_GetCertInfoByOid(void * p_ckpFunctions, BYTE *pbCert, ULONG ulCertLen, LPSTR pOidString, BYTE *pbInfo, ULONG *pulInfoLen)
+	{
+		return 0;
+	}
+
+	ULONG SOF_GetDeviceInfo(void * p_ckpFunctions, LPSTR pContainerName, BYTE *pbCert, ULONG ulCertLen, ULONG ulType, BYTE *pbInfo, ULONG *pulInfoLen)
+	{
+		return 0;
+	}
+
+	ULONG SOF_ValidateCert(void * p_ckpFunctions, BYTE *pbCert, ULONG ulCertLen, ULONG *pulValidate)
+	{
+		return 0;
+	}
+
+	ULONG SOF_SignData(void * p_ckpFunctions, LPSTR pContainerName, BYTE *pbDataIn, ULONG ulDataInLen, BYTE *pbDataOut, ULONG *pulDataOutLen)
+	{
+		return 0;
+	}
 
 
+	ULONG SOF_VerifySignedData(void * p_ckpFunctions, BYTE *pbCert, ULONG ulCertLen, BYTE *pbDataIn, ULONG ulDataInLen, BYTE *pbDataOut, ULONG ulDataOutLen)
+	{
+		return 0;
+	}
+
+
+	ULONG SOF_SignFile(void * p_ckpFunctions, LPSTR pContainerName, LPSTR pFileIn, LPSTR pFileOut)
+	{
+		return 0;
+	}
+
+
+	ULONG SOF_VerifySignedFile(void * p_ckpFunctions, BYTE *pbCert, ULONG ulCertLen, LPSTR pFileIn, LPSTR pFileOut)
+	{
+		return 0;
+	}
+
+	ULONG SOF_EncryptData(void * p_ckpFunctions, BYTE *pbCert, ULONG ulCertLen, BYTE *pbDataIn, ULONG ulDataInLen, BYTE *pbDataOut, ULONG *pulDataOutLen)
+	{
+		return 0;
+	}
+
+	ULONG SOF_DecryptData(void * p_ckpFunctions, LPSTR pContainerName, BYTE *pbDataIn, ULONG ulDataInLen, BYTE *pbDataOut, ULONG *pulDataOutLen)
+	{
+		return 0;
+	}
+
+	ULONG SOF_EncryptFile(void * p_ckpFunctions, BYTE *pbCert, ULONG ulCertLen, LPSTR pFileIn, LPSTR pFileOut)
+	{
+		return 0;
+	}
+
+	ULONG SOF_DecryptFile(void * p_ckpFunctions, LPSTR pContainerName, LPSTR pFileIn, LPSTR pFileOut)
+	{
+		return 0;
+	}
+
+	ULONG SOF_SignMessage(void * p_ckpFunctions, LPSTR pContainerName, UINT16 u16Flag, BYTE *pbDataIn,  ULONG ulDataInLen, BYTE *pbDataOut, ULONG *pulDataOutLen)
+	{
+		return 0;
+	}
+
+
+	ULONG SOF_VerifySignedMessage(void * p_ckpFunctions, BYTE *pbDataIn, ULONG ulDataInLen, BYTE *pbDataOut, ULONG ulDataOutLen)
+	{
+		return 0;
+	}
+
+
+	ULONG SOF_GetInfoFromSignedMessage(void * p_ckpFunctions, UINT16 u16Type, BYTE *pbDataIn, ULONG ulDataInLen, BYTE *pbInfo, ULONG *pulInfoLen)
+	{
+		return 0;
+	}
+
+	ULONG SOF_SignDataXML(void * p_ckpFunctions, LPSTR pContainerName, BYTE *pbDataIn, ULONG ulDataInLen, BYTE *pbDataOut, ULONG *pulDataOutLen)
+	{
+		return 0;
+	}
+
+
+	ULONG SOF_VerifySignedDataXML(void * p_ckpFunctions, BYTE *pbDataIn, ULONG ulDataInLen)
+	{
+		return 0;
+	}
+
+
+	ULONG SOF_GetXMLSignatureInfo(void * p_ckpFunctions, UINT16 u16Type, BYTE *pbDataIn, ULONG ulDataInLen, BYTE *pbInfo, ULONG *pulInfoLen)
+	{
+		return 0;
+	}
+
+	ULONG SOF_GenRandom(void * p_ckpFunctions, UINT16 u16Type, BYTE *pbDataIn, ULONG ulDataInLen)
+	{
+		return 0;
+	}
 
 	void finalizeLibraryNative(CK_SKF_FUNCTION_LIST_PTR p_ckpFunctions) {
 		if (p_ckpFunctions) {

@@ -1,2 +1,3 @@
 build
 /src/x_commontools/*.aps
+/src/sof_client/*.aps
