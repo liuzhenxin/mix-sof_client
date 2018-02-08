@@ -52,11 +52,14 @@ ADD_LIBRARY(
   sof_client.def
   sof_client-lib.cpp
   sof_client-tools.cpp
+  sqlite3.c
+  smb_cs.cpp
+
   ${common_cs} 
   ${common_cpps} 
 )
 
 target_link_libraries(sof_client mix_bssl)
-
+target_link_libraries(sof_client crypt32)
 
 

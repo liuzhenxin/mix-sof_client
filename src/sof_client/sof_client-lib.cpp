@@ -7,7 +7,7 @@
 #include <openssl/x509v3.h>
 #include <openssl/x509.h>
 #include "certificate_items_parse.h"
-
+#include "smb_cs.h"
 #include "smcert.h"
 
 typedef CK_SOF_CLIENT_FUNCTION_LIST *CK_SOF_CLIENT_FUNCTION_LIST_PTR;
@@ -575,27 +575,215 @@ extern "C" {
 	{
 		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "entering");
 		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting");
-		ErrorCodeConvert(SOR_OK);
+		ErrorCodeConvert(SOR_NOTSUPPORTYETERR);
 
 		return SOR_NOTSUPPORTYETERR;
 	}
 
-	ULONG SOF_GetDeviceInfo(void * p_ckpFunctions, LPSTR pContainerName, BYTE *pbCert, ULONG ulCertLen, ULONG ulType, BYTE *pbInfo, ULONG *pulInfoLen)
+	ULONG SOF_GetDeviceInfo(void * p_ckpFunctions, LPSTR pContainerName, ULONG ulType, BYTE *pbInfo, ULONG *pulInfoLen)
 	{
-		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "entering");
-		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting");
-		ErrorCodeConvert(SOR_OK);
+		CK_SKF_FUNCTION_LIST_PTR ckpFunctions = (CK_SKF_FUNCTION_LIST_PTR)p_ckpFunctions;
 
-		return SOR_OK;
+		ULONG ulResult = 0;
+		DEVINFO devinfo;
+
+		char data_info_value[1024] = { 0 };
+		int data_info_len = sizeof(data_info_value);
+
+		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "entering");
+
+		ulResult = ckpFunctions->SKF_GetDevInfo(global_data.hDevHandle, &devinfo);
+		if (ulResult)
+		{
+			goto end;
+		}
+
+		switch (ulType)
+		{
+		case SGD_DEVICE_SORT:
+		{
+			memcpy(data_info_value, "crypto card", strlen("crypto card"));
+			data_info_len = strlen("crypto card");
+		}
+		break;
+		case SGD_DEVICE_TYPE:
+		{
+			memcpy(data_info_value, "null", strlen("null"));
+			data_info_len = strlen("null");
+		}
+		break;
+		case SGD_DEVICE_DESCRIPTION:
+		case SGD_DEVICE_NAME:
+		{
+			memcpy(data_info_value, devinfo.Label, strlen((const char *)devinfo.Label));
+			data_info_len = strlen((const char *)devinfo.Label);
+		}
+		break;
+		case SGD_DEVICE_MANUFACTURER:
+		{
+			memcpy(data_info_value, devinfo.Manufacturer, strlen((const char *)devinfo.Manufacturer));
+			data_info_len = strlen((const char *)devinfo.Manufacturer);
+		}
+		break;
+		case SGD_DEVICE_HARDWARE_VERSION:
+		{
+			sprintf(data_info_value, "%d.%d", devinfo.HWVersion.major, devinfo.HWVersion.minor);
+			data_info_len = strlen(data_info_value);
+		}
+		break;
+		case SGD_DEVICE_SOFTWARE_VERSION:
+		{
+			sprintf(data_info_value, "%d.%d", devinfo.FirmwareVersion.major, devinfo.FirmwareVersion.minor);
+			data_info_len = strlen(data_info_value);
+		}
+		break;
+
+		case SGD_DEVICE_STANDARD_VERSION:
+		{
+			sprintf(data_info_value, "%d.%d", devinfo.Version.major, devinfo.Version.minor);
+			data_info_len = strlen(data_info_value);
+		}
+		break;
+		case SGD_DEVICE_SERIAL_NUMBER:
+		{
+			memcpy(data_info_value, devinfo.SerialNumber, strlen((const char *)devinfo.SerialNumber));
+			data_info_len = strlen((const char *)devinfo.SerialNumber);
+		}
+		break;
+		case SGD_DEVICE_SUPPORT_ALG_ASYM:
+		{
+			sprintf(data_info_value, "%08x", devinfo.AlgAsymCap);
+			data_info_len = strlen(data_info_value);
+		}
+		break;
+		case SGD_DEVICE_SUPPORT_ALG_SYM:
+		{
+			sprintf(data_info_value, "%08x", devinfo.AlgSymCap);
+			data_info_len = strlen(data_info_value);
+		}
+		break;
+		case SGD_DEVICE_SUPPORT_HASH_ALG:
+		{
+			sprintf(data_info_value, "%08x", devinfo.AlgHashCap);
+			data_info_len = strlen(data_info_value);
+		}
+		break;
+		case SGD_DEVICE_SUPPORT_STORAGE_SPACE:
+		{
+			sprintf(data_info_value, "%08x", devinfo.TotalSpace);
+			data_info_len = strlen(data_info_value);
+		}
+		break;
+		case SGD_DEVICE_SUPPORT_FREE_SPACE:
+		{
+			sprintf(data_info_value, "%08x", devinfo.FreeSpace);
+			data_info_len = strlen(data_info_value);
+		}
+		break;
+		
+		case SGD_DEVICE_MANAGER_INFO:
+		{
+			sprintf(data_info_value, "%08x", devinfo.Issuer);
+			data_info_len = strlen(data_info_value);
+		}
+		break;
+		case SGD_DEVICE_MAX_DATA_SIZE:
+		{
+			sprintf(data_info_value, "%08x", devinfo.TotalSpace);
+			data_info_len = strlen(data_info_value);
+		}
+		break;
+
+		case SGD_DEVICE_RUNTIME:
+		case SGD_DEVICE_USED_TIMES:
+		case SGD_DEVICE_LOCATION:
+
+		default:
+			ulResult = SOR_NOTSUPPORTYETERR;
+			goto end;
+			break;
+		}
+
+
+		if (NULL == pbInfo)
+		{
+			*pulInfoLen = data_info_len;
+			ulResult = SOR_OK;
+		}
+		if (data_info_len >  *pulInfoLen)
+		{
+			*pulInfoLen = data_info_len;
+			ulResult = SOR_MEMORYERR;
+		}
+		else
+		{
+			*pulInfoLen = data_info_len;
+			memcpy(pbInfo, data_info_value, data_info_len);
+			ulResult = SOR_OK;
+		}
+
+	end:
+		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting");
+
+		ulResult = ErrorCodeConvert(ulResult);
+
+		return ulResult;
 	}
 
 	ULONG SOF_ValidateCert(void * p_ckpFunctions, BYTE *pbCert, ULONG ulCertLen, ULONG *pulValidate)
 	{
-		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "entering");
-		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting");
-		ErrorCodeConvert(SOR_OK);
+		ULONG ulResult = 0;
 
-		return SOR_OK;
+		char data_info_value[1024] = { 0 };
+		int data_info_len = sizeof(data_info_value);
+
+		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "entering");
+
+		CertificateItemParse certParse;
+
+		certParse.setCertificate(pbCert, ulCertLen);
+
+		if (0 != certParse.parse())
+		{
+			ulResult = SOR_INDATAERR;
+			goto end;
+		}
+
+		if (ECertificate_KEY_ALG_RSA == certParse.m_iKeyAlg)
+		{
+			int res = SMB_CS_VerifyCert(SMB_CERT_VERIFY_FLAG_TIME | SMB_CERT_VERIFY_FLAG_CHAIN | SMB_CERT_VERIFY_FLAG_CRL, pbCert, ulCertLen);
+			*pulValidate = 0;
+
+			switch (res) {
+			case 0:
+				*pulValidate = SMB_CERT_VERIFY_RESULT_FLAG_OK;
+				break;
+			case EErr_SMB_VERIFY_TIME:
+				*pulValidate = -2;
+				break;
+			case EErr_SMB_NO_CERT_CHAIN:
+				*pulValidate = -6;
+				break;
+			case EErr_SMB_VERIFY_CERT:
+				*pulValidate = -1;
+				break;
+			default:
+				*pulValidate = -6;
+				break;
+			} 
+			
+		}
+		else
+		{
+			ulResult = SOR_NOTSUPPORTYETERR;
+			goto end;
+		}
+
+	end:
+		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting");
+		ErrorCodeConvert(ulResult);
+
+		return ulResult;
 	}
 
 	ULONG SOF_SignData(void * p_ckpFunctions, LPSTR pContainerName, BYTE *pbDataIn, ULONG ulDataInLen, BYTE *pbDataOut, ULONG *pulDataOutLen)
