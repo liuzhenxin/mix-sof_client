@@ -4,6 +4,10 @@
 #include "skf.h"
 #include "assert.h"
 #include "FILE_LOG.h"
+#include <openssl/x509v3.h>
+#include <openssl/x509.h>
+
+#include "smcert.h"
 
 typedef CK_SOF_CLIENT_FUNCTION_LIST *CK_SOF_CLIENT_FUNCTION_LIST_PTR;
 typedef CK_SKF_FUNCTION_LIST *CK_SKF_FUNCTION_LIST_PTR;
@@ -22,6 +26,7 @@ extern "C" {
 		ULONG sign_method;
 		ULONG encrypt_method;
 		ULONG last_error;
+		ULONG retry;
 
 	}ST_GlobalData;
 
@@ -126,34 +131,151 @@ extern "C" {
 
 	ULONG SOF_GetUserList(void * p_ckpFunctions, BYTE *pbUserList, ULONG *pulUserListLen)
 	{
-		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "entering");
-		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting");
-		ErrorCodeConvert(SOR_OK);
+		CK_SKF_FUNCTION_LIST_PTR ckpFunctions = (CK_SKF_FUNCTION_LIST_PTR)p_ckpFunctions;
+		char * ptr = NULL;
+		std::string strUserList;
 
-		return SOR_OK;
+		char buffer_containers[1024] = { 0 };
+		char data_info_value[1024] = { 0 };
+		ULONG buffer_containers_len = sizeof(buffer_containers);
+
+		unsigned char buffer_cert[1024 *4] = { 0 };
+		ULONG buffer_cert_len = sizeof(buffer_cert);
+
+		int data_info_len = sizeof(data_info_value);
+
+		HANDLE hContainer = NULL;
+
+		ULONG ulResult = 0;
+
+		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "entering");
+
+		ulResult = ckpFunctions->SKF_EnumContainer(global_data.hAppHandle, buffer_containers, &buffer_containers_len);
+		if (ulResult)
+		{
+			goto end;
+		}
+
+		for (ptr = buffer_containers; *ptr !=0 && (ptr < buffer_containers + buffer_containers_len); )
+		{
+			ulResult = ckpFunctions->SKF_OpenContainer(global_data.hAppHandle, ptr, &hContainer);
+			if (ulResult)
+			{
+				goto end;
+			}
+
+
+			buffer_cert_len = sizeof(buffer_cert);
+
+			ulResult = ckpFunctions->SKF_ExportCertificate(hContainer,TRUE, buffer_cert, &buffer_cert_len);
+			if (ulResult)
+			{
+				goto end;
+			}
+
+			WT_SetMyCert(buffer_cert, buffer_cert_len);
+			memset(data_info_value, 0, 1024);
+			WT_GetCertInfo(CERT_SUBJECT_DN, NID_COMMONNAME, data_info_value, &data_info_len);
+			WT_ClearCert();
+
+			if (strUserList.size() > 0)
+			{
+				strUserList.append("&&&");
+			}
+			else
+			{
+
+			}
+
+			strUserList.append(data_info_value);
+			strUserList.append("||");
+			strUserList.append(ptr);
+			ckpFunctions->SKF_CloseContainer(hContainer);
+			hContainer = 0;
+
+			ptr += strlen(ptr);
+			ptr += 1;
+		}
+
+	end:
+
+		if (hContainer)
+		{
+			ckpFunctions->SKF_CloseContainer(hContainer);
+		}
+
+		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting");
+
+		ulResult = ErrorCodeConvert(ulResult);
+
+		return ulResult;
 	}
 
 	ULONG SOF_ExportUserCert(void * p_ckpFunctions, LPSTR pContainerName, BYTE *pbCert, ULONG *pulCertLen)
 	{
-		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "entering");
-		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting");
-		ErrorCodeConvert(SOR_OK);
+		CK_SKF_FUNCTION_LIST_PTR ckpFunctions = (CK_SKF_FUNCTION_LIST_PTR)p_ckpFunctions;
+		HANDLE hContainer = NULL;
 
-		return SOR_OK;
+		ULONG ulResult = 0;
+
+		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "entering");
+
+		ulResult = ckpFunctions->SKF_OpenContainer(global_data.hAppHandle, pContainerName, &hContainer);
+		if (ulResult)
+		{
+			goto end;
+		}
+
+		ulResult = ckpFunctions->SKF_ExportCertificate(hContainer, TRUE, pbCert, pulCertLen);
+		if (ulResult)
+		{
+			goto end;
+		}
+
+		ulResult = ckpFunctions->SKF_CloseContainer(hContainer);
+		hContainer = 0;
+	end:
+
+		if (hContainer)
+		{
+			ckpFunctions->SKF_CloseContainer(hContainer);
+		}
+
+		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting");
+
+		ulResult = ErrorCodeConvert(ulResult);
+
+		return ulResult;
 	}
 
 	ULONG SOF_Login(void * p_ckpFunctions, LPSTR pContainerName, LPSTR pPIN)
 	{
-		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "entering");
-		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting");
-		ErrorCodeConvert(SOR_OK);
+		CK_SKF_FUNCTION_LIST_PTR ckpFunctions = (CK_SKF_FUNCTION_LIST_PTR)p_ckpFunctions;
+		HANDLE hContainer = NULL;
 
-		return SOR_OK;
+		ULONG ulResult = 0;
+
+		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "entering");
+
+		ulResult = ckpFunctions->SKF_VerifyPIN(global_data.hAppHandle, USER_TYPE, pPIN, &global_data.retry);
+		if (ulResult)
+		{
+			goto end;
+		}
+
+	end:
+
+		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting");
+
+		ulResult = ErrorCodeConvert(ulResult);
+
+		return ulResult;
 	}
 
 	ULONG SOF_GetPinRetryCount(void * p_ckpFunctions, LPSTR pContainerName, ULONG *pulRetryCount)
 	{
 		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "entering");
+		*pulRetryCount = global_data.retry;
 		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting");
 		ErrorCodeConvert(SOR_OK);
 
@@ -162,20 +284,63 @@ extern "C" {
 
 	ULONG SOF_ChangePassWd(void * p_ckpFunctions, LPSTR pContainerName, LPSTR pPINOld, LPSTR pPINNew)
 	{
-		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "entering");
-		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting");
-		ErrorCodeConvert(SOR_OK);
+		CK_SKF_FUNCTION_LIST_PTR ckpFunctions = (CK_SKF_FUNCTION_LIST_PTR)p_ckpFunctions;
+		HANDLE hContainer = NULL;
 
-		return SOR_OK;
+		ULONG ulResult = 0;
+
+		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "entering");
+
+		ulResult = ckpFunctions->SKF_ChangePIN(global_data.hAppHandle, USER_TYPE, pPINOld, pPINNew, &global_data.retry);
+		if (ulResult)
+		{
+			goto end;
+		}
+
+	end:
+
+		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting");
+
+		ulResult = ErrorCodeConvert(ulResult);
+
+		return ulResult;
 	}
 
 	ULONG SOF_ExportExChangeUserCert(void * p_ckpFunctions, LPSTR pContainerName, BYTE *pbCert, ULONG *pulCertLen)
 	{
-		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "entering");
-		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting");
-		ErrorCodeConvert(SOR_OK);
+		CK_SKF_FUNCTION_LIST_PTR ckpFunctions = (CK_SKF_FUNCTION_LIST_PTR)p_ckpFunctions;
+		HANDLE hContainer = NULL;
 
-		return SOR_OK;
+		ULONG ulResult = 0;
+
+		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "entering");
+
+		ulResult = ckpFunctions->SKF_OpenContainer(global_data.hAppHandle, pContainerName, &hContainer);
+		if (ulResult)
+		{
+			goto end;
+		}
+
+		ulResult = ckpFunctions->SKF_ExportCertificate(hContainer, FALSE, pbCert, pulCertLen);
+		if (ulResult)
+		{
+			goto end;
+		}
+
+		ulResult = ckpFunctions->SKF_CloseContainer(hContainer);
+		hContainer = 0;
+	end:
+
+		if (hContainer)
+		{
+			ckpFunctions->SKF_CloseContainer(hContainer);
+		}
+
+		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting");
+
+		ulResult = ErrorCodeConvert(ulResult);
+
+		return ulResult;
 	}
 
 	ULONG SOF_GetCertInfo(void * p_ckpFunctions, BYTE *pbCert, ULONG ulCertLen, UINT16 u16Type, BYTE *pbInfo, ULONG *pulInfoLen)
