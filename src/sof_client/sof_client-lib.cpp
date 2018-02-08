@@ -6,6 +6,7 @@
 #include "FILE_LOG.h"
 #include <openssl/x509v3.h>
 #include <openssl/x509.h>
+#include "certificate_items_parse.h"
 
 #include "smcert.h"
 
@@ -197,6 +198,24 @@ extern "C" {
 			ptr += 1;
 		}
 
+
+		if (NULL == pbUserList)
+		{
+			*pulUserListLen = data_info_len;
+			ulResult = SOR_OK;
+		}
+		if (data_info_len >  *pulUserListLen)
+		{
+			*pulUserListLen = data_info_len;
+			ulResult = SOR_MEMORYERR;
+		}
+		else
+		{
+			*pulUserListLen = data_info_len;
+			memcpy(pbUserList, data_info_value, data_info_len);
+			ulResult = SOR_OK;
+		}
+
 	end:
 
 		if (hContainer)
@@ -345,11 +364,210 @@ extern "C" {
 
 	ULONG SOF_GetCertInfo(void * p_ckpFunctions, BYTE *pbCert, ULONG ulCertLen, UINT16 u16Type, BYTE *pbInfo, ULONG *pulInfoLen)
 	{
-		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "entering");
-		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting");
-		ErrorCodeConvert(SOR_OK);
+		ULONG ulResult = 0;
 
-		return SOR_OK;
+		char data_info_value[1024] = { 0 };
+		int data_info_len = sizeof(data_info_value);
+
+		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "entering");
+
+		CertificateItemParse certParse;
+
+		certParse.setCertificate(pbCert, ulCertLen);
+		
+		if ( 0 != certParse.parse())
+		{
+			ulResult = SOR_INDATAERR;
+			goto end;
+		}
+
+		switch (u16Type)
+		{
+		case  SGD_CERT_VERSION:
+		{
+			WT_SetMyCert(pbCert, ulCertLen);
+			memset(data_info_value, 0, 1024);
+			data_info_len = sizeof(data_info_value);
+			WT_GetCertInfo(CERT_VERSION, 0, data_info_value, &data_info_len);
+			WT_ClearCert();
+		}
+		break;
+		case  SGD_CERT_SERIAL:
+		{
+			WT_SetMyCert(pbCert, ulCertLen);
+			memset(data_info_value, 0, 1024);
+			data_info_len = sizeof(data_info_value);
+			WT_GetCertInfo(CERT_SERIALNUMBER, 0, data_info_value, &data_info_len);
+			WT_ClearCert();
+		}
+		break;
+		case  SGD_CERT_ISSUER:
+		{
+			WT_SetMyCert(pbCert, ulCertLen);
+			memset(data_info_value, 0, 1024);
+			data_info_len = sizeof(data_info_value);
+			WT_GetCertInfo(CERT_ISSUER_DN, -1, data_info_value, &data_info_len);
+			WT_ClearCert();
+		}
+		break;
+		case  SGD_CERT_VALID_TIME:
+		{
+			memcpy(data_info_value, certParse.m_strNotBefore.c_str(), certParse.m_strNotBefore.size());
+			memcpy(data_info_value + certParse.m_strNotBefore.size(), "~", 1);
+			memcpy(data_info_value + certParse.m_strNotBefore.size() +1, certParse.m_strNotAfter.c_str(), certParse.m_strNotAfter.size());
+			data_info_len = certParse.m_strNotBefore.size()+1+certParse.m_strNotAfter.size();
+		}
+		break;
+
+		case  SGD_CERT_SUBJECT:
+		{
+			WT_SetMyCert(pbCert, ulCertLen);
+			memset(data_info_value, 0, 1024);
+			data_info_len = sizeof(data_info_value);
+			WT_GetCertInfo(CERT_SUBJECT_DN, -1, data_info_value, &data_info_len);
+			WT_ClearCert();
+		}
+		break;
+		case  SGD_CERT_DER_PUBLIC_KEY:
+		{
+			WT_SetMyCert(pbCert, ulCertLen);
+			memset(data_info_value, 0, 1024);
+			data_info_len = sizeof(data_info_value);
+			WT_GetCertInfo(CERT_SUBJECTPUBLICKEYINFO, 0, data_info_value, &data_info_len);
+			WT_ClearCert();
+		}
+		break;
+		
+		case  SGD_EXT_AUTHORITYKEYIDENTIFIER_INFO:
+		{
+			memcpy(data_info_value, certParse.m_strIssueKeyID.c_str(), certParse.m_strIssueKeyID.size());
+			data_info_len = certParse.m_strIssueKeyID.size();
+		}
+		break;
+
+		case  SGD_EXT_SUBJECTKEYIDENTIFIER_INFO:
+		{
+			memcpy(data_info_value, certParse.m_strSubjectKeyID.c_str(), certParse.m_strSubjectKeyID.size());
+			data_info_len = certParse.m_strSubjectKeyID.size();
+		}
+		break;
+
+		case  SGD_EXT_KEYUSAGE_INFO:
+		{
+			WT_SetMyCert(pbCert, ulCertLen);
+			memset(data_info_value, 0, 1024);
+			data_info_len = sizeof(data_info_value);
+			WT_GetCertInfo(CERT_KEYUSAGE, 0, data_info_value, &data_info_len);
+			WT_ClearCert();
+		}
+		break;
+		case  SGD_CERT_ISSUER_CN:
+		{
+			WT_SetMyCert(pbCert, ulCertLen);
+			memset(data_info_value, 0, 1024);
+			data_info_len = sizeof(data_info_value);
+			WT_GetCertInfo(CERT_ISSUER_DN, NID_COMMONNAME, data_info_value, &data_info_len);
+			WT_ClearCert();
+		}
+		break;
+
+		case  SGD_CERT_ISSUER_O:
+		{
+			WT_SetMyCert(pbCert, ulCertLen);
+			memset(data_info_value, 0, 1024);
+			data_info_len = sizeof(data_info_value);
+			WT_GetCertInfo(CERT_ISSUER_DN, NID_ORGANIZATIONNAME, data_info_value, &data_info_len);
+			WT_ClearCert();
+		}
+		break;
+		case  SGD_CERT_ISSUER_OU:
+		{
+			WT_SetMyCert(pbCert, ulCertLen);
+			memset(data_info_value, 0, 1024);
+			data_info_len = sizeof(data_info_value);
+			WT_GetCertInfo(CERT_ISSUER_DN, NID_ORGANIZATIONALUNITNAME, data_info_value, &data_info_len);
+			WT_ClearCert();
+		}
+		break;
+
+		case  SGD_CERT_SUBJECT_CN:
+		{
+			WT_SetMyCert(pbCert, ulCertLen);
+			memset(data_info_value, 0, 1024);
+			data_info_len = sizeof(data_info_value);
+			WT_GetCertInfo(CERT_SUBJECT_DN, NID_COMMONNAME, data_info_value, &data_info_len);
+			WT_ClearCert();
+		}
+		break;
+		
+		case  SGD_CERT_SUBJECT_O:
+		{
+			WT_SetMyCert(pbCert, ulCertLen);
+			memset(data_info_value, 0, 1024);
+			data_info_len = sizeof(data_info_value);
+			WT_GetCertInfo(CERT_SUBJECT_DN, NID_ORGANIZATIONNAME, data_info_value, &data_info_len);
+			WT_ClearCert();
+		}
+		break;
+		case  SGD_CERT_SUBJECT_OU:
+		{
+			WT_SetMyCert(pbCert, ulCertLen);
+			memset(data_info_value, 0, 1024);
+			data_info_len = sizeof(data_info_value);
+			WT_GetCertInfo(CERT_SUBJECT_DN, NID_ORGANIZATIONALUNITNAME, data_info_value, &data_info_len);
+			WT_ClearCert();
+		}
+		break;
+		case  SGD_CERT_SUBJECT_EMAIL:
+		{
+			WT_SetMyCert(pbCert, ulCertLen);
+			memset(data_info_value, 0, 1024);
+			data_info_len = sizeof(data_info_value);
+			WT_GetCertInfo(CERT_SUBJECT_DN, NID_PKCS9_EMAILADDRESS, data_info_value, &data_info_len);
+			WT_ClearCert();
+		}
+		break;
+
+
+		case  SGD_CERT_EXTENSIONS:
+		case  SGD_EXT_PRIVATEKEYUSAGEPERIOD_INFO:
+		case  SGD_EXT_CERTIFICATEPOLICIES_INFO:
+		case  SGD_EXT_POLICYMAPPINGS_INFO:
+		case  SGD_EXT_BASICCONSTRAINTS_INFO:
+		case  SGD_EXT_PROLICYCONSTRAINS_INFO:
+		case  SGD_EXT_EXTKEYUSAGE_INFO:
+		case  SGD_EXT_CRLDISTRIBUTIONPOINTS_INFO:
+		case  SGD_EXT_NETSCAPE_CERT_TYPE_INFO:
+		case  SGD_EXT_SELFDEFINED_EXTENSION_INFO:
+		default:
+			ulResult = SOR_NOTSUPPORTYETERR;
+			goto end;
+			break;
+
+		}
+
+		if (NULL == pbInfo)
+		{
+			*pulInfoLen = data_info_len;
+			ulResult = SOR_OK;
+		}
+		if (data_info_len >  *pulInfoLen)
+		{
+			*pulInfoLen = data_info_len;
+			ulResult = SOR_MEMORYERR;
+		}
+		else
+		{
+			*pulInfoLen = data_info_len;
+			memcpy(pbInfo, data_info_value, data_info_len);
+			ulResult = SOR_OK;
+		}
+
+	end:
+		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting");
+		ErrorCodeConvert(ulResult);
+
+		return ulResult;
 	}
 
 
