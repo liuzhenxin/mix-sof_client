@@ -577,7 +577,7 @@ extern "C" {
 		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting");
 		ErrorCodeConvert(SOR_OK);
 
-		return SOR_OK;
+		return SOR_NOTSUPPORTYETERR;
 	}
 
 	ULONG SOF_GetDeviceInfo(void * p_ckpFunctions, LPSTR pContainerName, BYTE *pbCert, ULONG ulCertLen, ULONG ulType, BYTE *pbInfo, ULONG *pulInfoLen)
