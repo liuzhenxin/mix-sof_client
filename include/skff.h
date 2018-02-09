@@ -886,3 +886,24 @@ CK_SKF_FUNCTION_INFO(SKF_CloseHandle)
 );
 #endif
 
+CK_SKF_FUNCTION_INFO(SKF_ECCDecrypt)
+#ifdef CK_NEED_ARG_LIST
+(
+	HCONTAINER hContainer, 
+	BYTE *pbCiphertext, 
+	ULONG ulCiphertextLen, 
+	BYTE *pbPlaintext, 
+	ULONG *pulPlaintextLen);
+#endif
+
+CK_SKF_FUNCTION_INFO(SKF_RSAPriKeyOperation)
+#ifdef CK_NEED_ARG_LIST
+(
+	HCONTAINER hContainer,
+	BYTE *pbIn,
+	ULONG ulInLen,
+	BYTE *pbOut,
+	ULONG *pulOutLen,
+	BOOL bSignFlag
+);
+#endif

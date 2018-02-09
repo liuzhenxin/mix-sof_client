@@ -276,7 +276,6 @@ extern "C" {
 	ULONG SOF_Login(void * p_ckpFunctions, LPSTR pContainerName, LPSTR pPIN)
 	{
 		CK_SKF_FUNCTION_LIST_PTR ckpFunctions = (CK_SKF_FUNCTION_LIST_PTR)p_ckpFunctions;
-		HANDLE hContainer = NULL;
 
 		ULONG ulResult = 0;
 
@@ -310,7 +309,6 @@ extern "C" {
 	ULONG SOF_ChangePassWd(void * p_ckpFunctions, LPSTR pContainerName, LPSTR pPINOld, LPSTR pPINNew)
 	{
 		CK_SKF_FUNCTION_LIST_PTR ckpFunctions = (CK_SKF_FUNCTION_LIST_PTR)p_ckpFunctions;
-		HANDLE hContainer = NULL;
 
 		ULONG ulResult = 0;
 
@@ -849,6 +847,11 @@ extern "C" {
 		}
 	end:
 
+		if (hContainer)
+		{
+			ckpFunctions->SKF_CloseContainer(hContainer);
+		}
+
 		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting");
 
 		ulResult = ErrorCodeConvert(ulResult);
@@ -1135,8 +1138,6 @@ extern "C" {
 			goto end;
 		}
 
-		_fileOut.write(pbFileOutData, ulFileOutDataLen);
-
 	end:
 
 		if (_fileIn)
@@ -1168,38 +1169,379 @@ extern "C" {
 
 	ULONG SOF_EncryptData(void * p_ckpFunctions, BYTE *pbCert, ULONG ulCertLen, BYTE *pbDataIn, ULONG ulDataInLen, BYTE *pbDataOut, ULONG *pulDataOutLen)
 	{
-		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "entering");
-		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting");
-		ErrorCodeConvert(SOR_OK);
+		CK_SKF_FUNCTION_LIST_PTR ckpFunctions = (CK_SKF_FUNCTION_LIST_PTR)p_ckpFunctions;
+		HANDLE hContainer = NULL;
 
-		return SOR_OK;
+		ULONG ulResult = 0;
+		ULONG ulContainerType = 0;
+
+		ECCCIPHERBLOB blob;
+
+		RSA *rsa = NULL;
+
+		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "entering");
+
+		RSAPUBLICKEYBLOB rsaPublicKeyBlob = { 0 };
+		ECCPUBLICKEYBLOB eccPublicKeyBlob = { 0 };
+
+		CertificateItemParse certParse;
+
+		certParse.setCertificate(pbCert, ulCertLen);
+
+		if (0 != certParse.parse())
+		{
+			ulResult = SOR_INDATAERR;
+			goto end;
+		}
+
+		if (ECertificate_KEY_ALG_RSA == certParse.m_iKeyAlg)
+		{
+			X509 * x509 = NULL;
+			unsigned char pbModulus[256];
+			int ulModulusLen = 0;
+			const unsigned char *ptr = NULL;
+			ptr = pbCert;
+
+			x509 = d2i_X509(NULL, &ptr, ulCertLen);
+
+			if (x509)
+			{
+				RSA *rsa = EVP_PKEY_get1_RSA(X509_get_pubkey(x509));
+
+				if (rsa != NULL)
+				{
+					ulModulusLen = BN_bn2bin(rsa->n, pbModulus);
+				}
+
+				rsaPublicKeyBlob.BitLen = ulModulusLen * 8;
+
+				memcpy(rsaPublicKeyBlob.PublicExponent, "\x00\x01\x00\x01", 4);
+
+				memcpy(rsaPublicKeyBlob.Modulus + 256 - ulModulusLen, pbModulus, ulModulusLen);
+				X509_free(x509);
+			}
+
+			ulResult = ckpFunctions->SKF_ExtRSAPubKeyOperation(global_data.hDevHandle, &rsaPublicKeyBlob, pbDataIn, ulDataInLen, pbDataOut, pulDataOutLen);
+		}
+		else if (ECertificate_KEY_ALG_EC == certParse.m_iKeyAlg)
+		{
+			unsigned char pk_data[32 * 2 + 1] = { 0 };
+			unsigned int pk_len = 65;
+
+			eccPublicKeyBlob.BitLen = 256;
+
+			OpenSSL_CertGetPubkey(pbCert, ulCertLen, pk_data, &pk_len);
+
+			memcpy(eccPublicKeyBlob.XCoordinate + 32, pk_data + 1, 32);
+			memcpy(eccPublicKeyBlob.YCoordinate + 32, pk_data + 1 + 32, 32);
+
+			ulResult = ckpFunctions->SKF_ExtECCEncrypt(global_data.hDevHandle, &eccPublicKeyBlob, pbDataIn, ulDataInLen, (PECCCIPHERBLOB)&blob);
+
+			if (NULL == pbDataOut)
+			{
+				*pulDataOutLen = sizeof(blob);
+				ulResult = SOR_OK;
+			}
+			else if (sizeof(blob) >  *pulDataOutLen)
+			{
+				*pulDataOutLen = sizeof(blob);
+				ulResult = SOR_MEMORYERR;
+			}
+			else
+			{
+				*pulDataOutLen = sizeof(blob);
+				memcpy(pbDataOut, &blob, sizeof(blob));
+				ulResult = SOR_OK;
+			}
+		}
+		else
+		{
+			ulResult = SOR_NOTSUPPORTYETERR;
+			goto end;
+		}
+
+	end:
+
+		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting");
+
+		ulResult = ErrorCodeConvert(ulResult);
+
+		return ulResult;
 	}
 
 	ULONG SOF_DecryptData(void * p_ckpFunctions, LPSTR pContainerName, BYTE *pbDataIn, ULONG ulDataInLen, BYTE *pbDataOut, ULONG *pulDataOutLen)
 	{
-		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "entering");
-		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting");
-		ErrorCodeConvert(SOR_OK);
+		CK_SKF_FUNCTION_LIST_PTR ckpFunctions = (CK_SKF_FUNCTION_LIST_PTR)p_ckpFunctions;
+		HANDLE hContainer = NULL;
 
-		return SOR_OK;
+		ULONG ulResult = 0;
+		ULONG ulContainerType = 0;
+
+		ECCSIGNATUREBLOB blob;
+
+		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "entering");
+
+		ulResult = ckpFunctions->SKF_OpenContainer(global_data.hAppHandle, pContainerName, &hContainer);
+		if (ulResult)
+		{
+			goto end;
+		}
+		//1表示为RSA容器，为2表示为ECC容器
+		ulResult = ckpFunctions->SKF_GetContainerType(hContainer, &ulContainerType);
+		if (ulResult)
+		{
+			goto end;
+		}
+
+		if (ulContainerType == 1)
+		{
+			ulResult = ckpFunctions->SKF_RSAPriKeyOperation(hContainer, pbDataIn, ulDataInLen, pbDataOut, pulDataOutLen, FALSE);
+
+		}
+		else if (ulContainerType == 2)
+		{
+			ulResult = ckpFunctions->SKF_ECCDecrypt(hContainer, pbDataIn, ulDataInLen, pbDataOut, pulDataOutLen);
+
+			if (NULL == pbDataOut)
+			{
+				*pulDataOutLen = sizeof(blob);
+				ulResult = SOR_OK;
+			}
+			else if (sizeof(blob) >  *pulDataOutLen)
+			{
+				*pulDataOutLen = sizeof(blob);
+				ulResult = SOR_MEMORYERR;
+			}
+			else
+			{
+				*pulDataOutLen = sizeof(blob);
+				memcpy(pbDataOut, &blob, sizeof(blob));
+				ulResult = SOR_OK;
+			}
+		}
+		else
+		{
+			ulResult = SOR_NOTSUPPORTYETERR;
+			goto end;
+		}
+	end:
+
+		if (hContainer)
+		{
+			ckpFunctions->SKF_CloseContainer(hContainer);
+		}
+
+		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting");
+
+		ulResult = ErrorCodeConvert(ulResult);
+
+		return ulResult;
 	}
 
 	ULONG SOF_EncryptFile(void * p_ckpFunctions, BYTE *pbCert, ULONG ulCertLen, LPSTR pFileIn, LPSTR pFileOut)
 	{
-		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "entering");
-		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting");
-		ErrorCodeConvert(SOR_OK);
+		std::fstream _fileIn;
+		std::fstream _fileOut;
+		ULONG ulResult = 0;
+		std::ios::pos_type ulFileInDataLen;
+		char * pbFileInData = NULL;
+		char * pbFileOutData = NULL;
+		size_t pos = 0;
+		size_t i = 0;
+		int block = 1024;
+		ULONG ulFileOutDataLen = 0;
 
-		return SOR_OK;
+		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "entering");
+
+		_fileIn.open(pFileIn, std::ios::binary | std::ios::in);
+		_fileOut.open(pFileOut, std::ios::binary | std::ios::out);
+
+		if (_fileIn)
+		{
+
+		}
+		else
+		{
+			ulResult = SOR_READFILEERR;
+			goto end;
+		}
+
+		if (_fileOut)
+		{
+
+		}
+		else
+		{
+			ulResult = SOR_WRITEFILEERR;
+			goto end;
+		}
+
+		// get length of file:
+		_fileIn.seekg(0, std::ios::end);
+		ulFileInDataLen = _fileIn.tellg();
+		_fileIn.seekg(0, std::ios::beg);
+
+		pbFileInData = new char[ulFileInDataLen];
+
+		// read data as a block:
+		for (pos = 0; pos < ulFileInDataLen; )
+		{
+			if (pos + 1024 < ulFileInDataLen)
+			{
+				block = 1024;
+			}
+			else
+			{
+				block = (size_t)ulFileInDataLen - pos;
+			}
+
+			_fileIn.read(pbFileInData + pos, block);
+			pos += block;
+		}
+
+		pbFileOutData = new char[(size_t)ulFileInDataLen + 2048];
+
+		ulFileOutDataLen = (ULONG)ulFileInDataLen + 2048;
+
+		ulResult = SOF_EncryptData(p_ckpFunctions, pbCert, ulCertLen, (BYTE *)pbFileInData, (ULONG)ulFileInDataLen, (BYTE *)pbFileOutData, &ulFileOutDataLen);
+
+		if (ulResult)
+		{
+			goto end;
+		}
+
+		_fileOut.write(pbFileOutData, ulFileOutDataLen);
+
+	end:
+
+		if (_fileIn)
+		{
+			_fileIn.close();
+		}
+
+		if (_fileOut)
+		{
+			_fileOut.close();
+		}
+
+		if (pbFileInData)
+		{
+			delete[] pbFileInData;
+		}
+
+		if (pbFileOutData)
+		{
+			delete[] pbFileOutData;
+		}
+
+		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting");
+
+		ulResult = ErrorCodeConvert(ulResult);
+
+		return ulResult;
 	}
 
 	ULONG SOF_DecryptFile(void * p_ckpFunctions, LPSTR pContainerName, LPSTR pFileIn, LPSTR pFileOut)
 	{
-		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "entering");
-		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting");
-		ErrorCodeConvert(SOR_OK);
+		std::fstream _fileIn;
+		std::fstream _fileOut;
+		ULONG ulResult = 0;
+		std::ios::pos_type ulFileInDataLen;
+		char * pbFileInData = NULL;
+		char * pbFileOutData = NULL;
+		size_t pos = 0;
+		size_t i = 0;
+		int block = 1024;
+		ULONG ulFileOutDataLen = 0;
 
-		return SOR_OK;
+		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "entering");
+
+		_fileIn.open(pFileIn, std::ios::binary | std::ios::in);
+		_fileOut.open(pFileOut, std::ios::binary | std::ios::out);
+
+		if (_fileIn)
+		{
+
+		}
+		else
+		{
+			ulResult = SOR_READFILEERR;
+			goto end;
+		}
+
+		if (_fileOut)
+		{
+
+		}
+		else
+		{
+			ulResult = SOR_WRITEFILEERR;
+			goto end;
+		}
+
+		// get length of file:
+		_fileIn.seekg(0, std::ios::end);
+		ulFileInDataLen = _fileIn.tellg();
+		_fileIn.seekg(0, std::ios::beg);
+
+		pbFileInData = new char[ulFileInDataLen];
+
+		// read data as a block:
+		for (pos = 0; pos < ulFileInDataLen; )
+		{
+			if (pos + 1024 < ulFileInDataLen)
+			{
+				block = 1024;
+			}
+			else
+			{
+				block = (size_t)ulFileInDataLen - pos;
+			}
+
+			_fileIn.read(pbFileInData + pos, block);
+			pos += block;
+		}
+
+		pbFileOutData = new char[(size_t)ulFileInDataLen + 2048];
+
+		ulFileOutDataLen = (ULONG)ulFileInDataLen + 2048;
+
+		ulResult = SOF_DecryptData(p_ckpFunctions, pContainerName, (BYTE *)pbFileInData, (ULONG)ulFileInDataLen, (BYTE *)pbFileOutData, &ulFileOutDataLen);
+
+		if (ulResult)
+		{
+			goto end;
+		}
+
+		_fileOut.write(pbFileOutData, ulFileOutDataLen);
+
+	end:
+
+		if (_fileIn)
+		{
+			_fileIn.close();
+		}
+
+		if (_fileOut)
+		{
+			_fileOut.close();
+		}
+
+		if (pbFileInData)
+		{
+			delete[] pbFileInData;
+		}
+
+		if (pbFileOutData)
+		{
+			delete[] pbFileOutData;
+		}
+
+		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting");
+
+		ulResult = ErrorCodeConvert(ulResult);
+
+		return ulResult;
 	}
 
 	ULONG SOF_SignMessage(void * p_ckpFunctions, LPSTR pContainerName, UINT16 u16Flag, BYTE *pbDataIn,  ULONG ulDataInLen, BYTE *pbDataOut, ULONG *pulDataOutLen)
@@ -1489,6 +1831,12 @@ extern "C" {
 			"SKF_MacFinal");
 		ckpFunctions->SKF_CloseHandle = (CK_SKF_CloseHandle) MYGetProcAddress(hHandle,
 			"SKF_CloseHandle");
+
+		ckpFunctions->SKF_ECCDecrypt = (CK_SKF_ECCDecrypt)MYGetProcAddress(hHandle,
+			"SKF_ECCDecrypt");
+
+		ckpFunctions->SKF_RSAPriKeyOperation = (CK_SKF_RSAPriKeyOperation)MYGetProcAddress(hHandle,
+			"SKF_RSAPriKeyOperation");
 
 		*pp_ckpFunctions = ckpFunctions;
 
