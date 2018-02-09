@@ -39,6 +39,28 @@
 /*0x00000080~0x000000FF 为其他证书解析项预留*/
 
 
+
+#define SGD_DEVICE_SORT                          0x00000201       //设备类型
+#define SGD_DEVICE_TYPE                          0x00000202       //设备型号
+#define SGD_DEVICE_NAME							 0x00000203		  //设备名称
+#define SGD_DEVICE_MANUFACTURER					 0x00000204		  //生成厂商
+#define SGD_DEVICE_HARDWARE_VERSION				 0x00000205		  //硬件版本
+#define SGD_DEVICE_SOFTWARE_VERSION				 0x00000206		  //软件版本
+#define SGD_DEVICE_STANDARD_VERSION				 0x00000207		  //符合标准版本
+#define SGD_DEVICE_SERIAL_NUMBER				 0x00000208		  //设备编号
+#define SGD_DEVICE_SUPPORT_ALG_ASYM			     0x00000209		  //设备能力非对称
+#define SGD_DEVICE_SUPPORT_ALG_SYM				 0x0000020A		  //设备能力对称
+#define SGD_DEVICE_SUPPORT_HASH_ALG				 0x0000020B		  //设备能力杂凑
+#define SGD_DEVICE_SUPPORT_STORAGE_SPACE		 0x0000020C		  //设备能力最大文件存储空间
+#define SGD_DEVICE_SUPPORT_FREE_SPACE			 0x0000020D		  //设备能力空闲文件存储空间
+#define SGD_DEVICE_RUNTIME						 0x0000020E		  //已运行时间
+#define SGD_DEVICE_USED_TIMES					 0x0000020F		  //设备被调用次数
+#define SGD_DEVICE_LOCATION						 0x00000210		  //设备物理位置
+#define SGD_DEVICE_DESCRIPTION					 0x00000211		  //设备描述
+#define SGD_DEVICE_MANAGER_INFO					 0x00000212		  //设备管理者描述信息
+#define SGD_DEVICE_MAX_DATA_SIZE				 0x00000213		  //设备一次能处理的数据容量
+
+
 //errorCode
 #include "sof_clientn.h"
 
