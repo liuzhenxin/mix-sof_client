@@ -6,10 +6,6 @@
 #ifndef _SOF_CLIENTT_H_
 #define _SOF_CLIENTT_H_ 1
 
-#include "skft.h"
-
-
-
 #define SGD_CERT_VERSION                         0x00000001      //证书版本
 #define SGD_CERT_SERIAL                          0x00000002      //证书序列号
 #define SGD_CERT_ISSUER							 0x00000005      //证书颁发者信息

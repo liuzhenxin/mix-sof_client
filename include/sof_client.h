@@ -4,6 +4,8 @@
 #ifndef _SOF_CLIENT_H_
 #define _SOF_CLIENT_H_ 1
 
+#include "skf.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
