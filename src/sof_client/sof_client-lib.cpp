@@ -14,6 +14,7 @@
 #include <fstream>
 #include <iostream>
 #include <fstream>
+#include <sm2_boringssl.h>
 
 
 typedef CK_SOF_CLIENT_FUNCTION_LIST *CK_SOF_CLIENT_FUNCTION_LIST_PTR;
@@ -37,7 +38,7 @@ extern "C" {
 
 	}ST_GlobalData;
 
-	ST_GlobalData global_data = { 0 };
+	static ST_GlobalData global_data = { 0 };
 
 
 	unsigned int CAPI_GetMulStringCount(char * pszMulString, int * pulCount)
@@ -798,7 +799,10 @@ extern "C" {
 		ULONG ulResult = 0;
 		ULONG ulContainerType = 0;
 
-		ECCSIGNATUREBLOB blob;
+		ECCSIGNATUREBLOB blob = { 0 };
+
+		char data_info_value[1024] = { 0 };
+		int data_info_len = sizeof(data_info_value);
 
 		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "entering");
 
@@ -822,21 +826,32 @@ extern "C" {
 		else if (ulContainerType == 2)
 		{
 			ulResult = ckpFunctions->SKF_ECCSignData(hContainer, pbDataIn, ulDataInLen, &blob);
+			if (ulResult)
+			{
+				goto end;
+			}
+
+			ulResult = SM2SignAsn1Convert(blob.r +32,32, blob.s + 32, 32, (unsigned char *)data_info_value, &data_info_len);
+			if (ulResult)
+			{
+				ulResult = SOR_UNKNOWNERR;
+				goto end;
+			}
 
 			if (NULL == pbDataOut)
 			{
-				*pulDataOutLen = sizeof(blob);
+				*pulDataOutLen = data_info_len;
 				ulResult = SOR_OK;
 			}
 			else if (sizeof(blob) >  *pulDataOutLen)
 			{
-				*pulDataOutLen = sizeof(blob);
+				*pulDataOutLen = data_info_len;
 				ulResult = SOR_MEMORYERR;
 			}
 			else
 			{
-				*pulDataOutLen = sizeof(blob);
-				memcpy(pbDataOut, &blob, sizeof(blob));
+				*pulDataOutLen = data_info_len;
+				memcpy(pbDataOut, data_info_value, data_info_len);
 				ulResult = SOR_OK;
 			}
 		}
@@ -916,17 +931,28 @@ extern "C" {
 		}
 		else if (ECertificate_KEY_ALG_EC == certParse.m_iKeyAlg)
 		{
-			unsigned char pk_data[32 * 2 + 1] = { 0 };
-			unsigned int pk_len = 65;
-
+			unsigned char tmp_data[32 * 2 + 1] = { 0 };
+			unsigned int tmp_len = 65;
+			ECCSIGNATUREBLOB blob = {0};
+			
 			eccPublicKeyBlob.BitLen = 256;
 
-			OpenSSL_CertGetPubkey(pbCert, ulCertLen, pk_data, &pk_len);
+			OpenSSL_CertGetPubkey(pbCert, ulCertLen, tmp_data, &tmp_len);
 
-			memcpy(eccPublicKeyBlob.XCoordinate + 32, pk_data + 1, 32);
-			memcpy(eccPublicKeyBlob.YCoordinate + 32, pk_data + 1 +32, 32);
+			memcpy(eccPublicKeyBlob.XCoordinate + 32, tmp_data + 1, 32);
+			memcpy(eccPublicKeyBlob.YCoordinate + 32, tmp_data + 1 +32, 32);
 
-			ulResult = ckpFunctions->SKF_ECCVerify(global_data.hDevHandle, &eccPublicKeyBlob, pbDataIn, ulDataInLen, (ECCSIGNATUREBLOB*)pbDataOut);
+			ulResult = SM2SignD2i(pbDataOut, ulDataOutLen, tmp_data, (int *)&tmp_len);
+			if (ulResult)
+			{
+				ulResult = SOR_INDATAERR;
+				goto end;
+			}
+
+			memcpy(blob.r + 32, tmp_data, 32);
+			memcpy(blob.s + 32, tmp_data+32, 32);
+
+			ulResult = ckpFunctions->SKF_ECCVerify(global_data.hDevHandle, &eccPublicKeyBlob, pbDataIn, ulDataInLen, &blob);
 		}
 		else
 		{
@@ -944,23 +970,19 @@ extern "C" {
 	}
 
 
-	ULONG SOF_SignFile(void * p_ckpFunctions, LPSTR pContainerName, LPSTR pFileIn, LPSTR pFileOut)
+	ULONG SOF_SignFile(void * p_ckpFunctions, LPSTR pContainerName, LPSTR pFileIn, BYTE *pbDataOut, ULONG *pulDataOutLen)
 	{
 		std::fstream _fileIn;
-		std::fstream _fileOut;
 		ULONG ulResult = 0;
 		std::ios::pos_type ulFileInDataLen;
 		char * pbFileInData = NULL;
-		char * pbFileOutData = NULL;
 		size_t pos = 0;
 		size_t i = 0;
 		int block = 1024;
-		ULONG ulFileOutDataLen = 0;
 
 		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "entering");
 
 		_fileIn.open(pFileIn, std::ios::binary | std::ios::in);
-		_fileOut.open(pFileOut, std::ios::binary | std::ios::out);
 
 		if (_fileIn)
 		{
@@ -972,16 +994,6 @@ extern "C" {
 			goto end;
 		}
 
-		if (_fileOut)
-		{
-
-		}
-		else
-		{
-			ulResult = SOR_WRITEFILEERR;
-			goto end;
-		}
-
 		// get length of file:
 		_fileIn.seekg(0, std::ios::end);
 		ulFileInDataLen = _fileIn.tellg();
@@ -1005,18 +1017,12 @@ extern "C" {
 			pos += block;
 		}
 
-		pbFileOutData = new char[(size_t)ulFileInDataLen + 2048];
-
-		ulFileOutDataLen = (ULONG)ulFileInDataLen + 2048;
-
-		ulResult = SOF_SignData(p_ckpFunctions, pContainerName, (BYTE *)pbFileInData, (ULONG)ulFileInDataLen, (BYTE *)pbFileOutData, &ulFileOutDataLen);
+		ulResult = SOF_SignData(p_ckpFunctions, pContainerName, (BYTE *)pbFileInData, (ULONG)ulFileInDataLen, (BYTE *)pbDataOut, pulDataOutLen);
 
 		if (ulResult)
 		{
 			goto end;
 		}
-
-		_fileOut.write(pbFileOutData, ulFileOutDataLen);
 
 	end:
 
@@ -1025,19 +1031,9 @@ extern "C" {
 			_fileIn.close();
 		}
 
-		if (_fileOut)
-		{
-			_fileOut.close();
-		}
-
 		if (pbFileInData)
 		{
 			delete[] pbFileInData;
-		}
-
-		if (pbFileOutData)
-		{
-			delete[] pbFileOutData;
 		}
 
 		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting");
@@ -1048,14 +1044,12 @@ extern "C" {
 	}
 
 
-	ULONG SOF_VerifySignedFile(void * p_ckpFunctions, BYTE *pbCert, ULONG ulCertLen, LPSTR pFileIn, LPSTR pFileOut)
+	ULONG SOF_VerifySignedFile(void * p_ckpFunctions, BYTE *pbCert, ULONG ulCertLen, LPSTR pFileIn, BYTE *pbDataOut, ULONG ulDataOutLen)
 	{
-		std::fstream _fileIn;
-		std::fstream _fileOut;
+		std::fstream _fileIn; 
 		ULONG ulResult = 0;
 		std::ios::pos_type ulFileInDataLen;
 		char * pbFileInData = NULL;
-		char * pbFileOutData = NULL;
 		size_t pos = 0;
 		size_t i = 0;
 		int block = 1024;
@@ -1064,7 +1058,6 @@ extern "C" {
 		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "entering");
 
 		_fileIn.open(pFileIn, std::ios::binary | std::ios::in);
-		_fileOut.open(pFileOut, std::ios::binary | std::ios::in);
 
 		if (_fileIn)
 		{
@@ -1076,28 +1069,13 @@ extern "C" {
 			goto end;
 		}
 
-		if (_fileOut)
-		{
-
-		}
-		else
-		{
-			ulResult = SOR_READFILEERR;
-			goto end;
-		}
-
+		
 		// get length of file:
 		_fileIn.seekg(0, std::ios::end);
 		ulFileInDataLen = _fileIn.tellg();
 		_fileIn.seekg(0, std::ios::beg);
 
-
-		_fileOut.seekg(0, std::ios::end);
-		ulFileOutDataLen = _fileIn.tellg();
-		_fileOut.seekg(0, std::ios::beg);
-
 		pbFileInData = new char[ulFileInDataLen];
-		pbFileOutData = new char[ulFileOutDataLen];
 
 		// read data as a block:
 		for (pos = 0; pos < ulFileInDataLen; )
@@ -1115,23 +1093,7 @@ extern "C" {
 			pos += block;
 		}
 
-
-		for (pos = 0; pos < ulFileOutDataLen; )
-		{
-			if (pos + 1024 < ulFileOutDataLen)
-			{
-				block = 1024;
-			}
-			else
-			{
-				block = (size_t)ulFileOutDataLen - pos;
-			}
-
-			_fileOut.read(pbFileOutData + pos, block);
-			pos += block;
-		}
-
-		ulResult = SOF_VerifySignedData(p_ckpFunctions, pbCert, ulCertLen,(BYTE *)pbFileInData, (ULONG)ulFileInDataLen, (BYTE *)pbFileOutData, (ULONG)ulFileOutDataLen);
+		ulResult = SOF_VerifySignedData(p_ckpFunctions, pbCert, ulCertLen,(BYTE *)pbFileInData, (ULONG)ulFileInDataLen, pbDataOut, ulDataOutLen);
 
 		if (ulResult)
 		{
@@ -1145,19 +1107,9 @@ extern "C" {
 			_fileIn.close();
 		}
 
-		if (_fileOut)
-		{
-			_fileOut.close();
-		}
-
 		if (pbFileInData)
 		{
 			delete[] pbFileInData;
-		}
-
-		if (pbFileOutData)
-		{
-			delete[] pbFileOutData;
 		}
 
 		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting");
