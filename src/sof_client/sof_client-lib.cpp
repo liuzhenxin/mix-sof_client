@@ -887,8 +887,10 @@ extern "C" {
 			X509 * x509 = NULL;
 			unsigned char pbModulus[256];
 			int ulModulusLen = 0;
+			const unsigned char *ptr = NULL;
+			ptr = pbCert;
 
-			x509 = d2i_X509(NULL, &pbCert, ulCertLen);
+			x509 = d2i_X509(NULL, &ptr, ulCertLen);
 
 			if (x509)
 			{
@@ -941,54 +943,227 @@ extern "C" {
 
 	ULONG SOF_SignFile(void * p_ckpFunctions, LPSTR pContainerName, LPSTR pFileIn, LPSTR pFileOut)
 	{
-		std::fstream _file;
+		std::fstream _fileIn;
+		std::fstream _fileOut;
+		ULONG ulResult = 0;
+		std::ios::pos_type ulFileInDataLen;
+		char * pbFileInData = NULL;
+		char * pbFileOutData = NULL;
+		size_t pos = 0;
+		size_t i = 0;
+		int block = 1024;
+		ULONG ulFileOutDataLen = 0;
 
-		_file.open(pFileIn, std::ios::binary | std::ios::in);
+		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "entering");
 
-		if (_file)
+		_fileIn.open(pFileIn, std::ios::binary | std::ios::in);
+		_fileOut.open(pFileOut, std::ios::binary | std::ios::out);
+
+		if (_fileIn)
 		{
-			std::ios::pos_type length;
-			unsigned int ulAlgType = 0;
-			char * pbSqlData = NULL;
-			int pos = 0;
-
-			// get length of file:
-			_file.seekg(0, std::ios::end);
-			length = _file.tellg();
-			_file.seekg(0, std::ios::beg);
-
-			pbSqlData = new char[length];
-
-			// read data as a block:
-			_file.read(pbSqlData + pos, length);
-
-
-			delete[]pbSqlData;
-
-			_file.close();
+			
 		}
 		else
 		{
+			ulResult = SOR_READFILEERR;
+			goto end;
+		}
+
+		if (_fileOut)
+		{
 
 		}
-		
+		else
+		{
+			ulResult = SOR_WRITEFILEERR;
+			goto end;
+		}
 
-		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "entering");
+		// get length of file:
+		_fileIn.seekg(0, std::ios::end);
+		ulFileInDataLen = _fileIn.tellg();
+		_fileIn.seekg(0, std::ios::beg);
+
+		pbFileInData = new char[ulFileInDataLen];
+
+		// read data as a block:
+		for (pos = 0; pos < ulFileInDataLen; )
+		{
+			if (pos + 1024 < ulFileInDataLen)
+			{
+				block = 1024;
+			}
+			else
+			{
+				block = (size_t)ulFileInDataLen - pos;
+			}
+
+			_fileIn.read(pbFileInData + pos, block);
+			pos += block;
+		}
+
+		pbFileOutData = new char[(size_t)ulFileInDataLen + 2048];
+
+		ulFileOutDataLen = (ULONG)ulFileInDataLen + 2048;
+
+		ulResult = SOF_SignData(p_ckpFunctions, pContainerName, (BYTE *)pbFileInData, (ULONG)ulFileInDataLen, (BYTE *)pbFileOutData, &ulFileOutDataLen);
+
+		if (ulResult)
+		{
+			goto end;
+		}
+
+		_fileOut.write(pbFileOutData, ulFileOutDataLen);
+
+	end:
+
+		if (_fileIn)
+		{
+			_fileIn.close();
+		}
+
+		if (_fileOut)
+		{
+			_fileOut.close();
+		}
+
+		if (pbFileInData)
+		{
+			delete[] pbFileInData;
+		}
+
+		if (pbFileOutData)
+		{
+			delete[] pbFileOutData;
+		}
+
 		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting");
 
-		ErrorCodeConvert(SOR_OK);
+		ulResult = ErrorCodeConvert(ulResult);
 
-		return SOR_OK;
+		return ulResult;
 	}
 
 
 	ULONG SOF_VerifySignedFile(void * p_ckpFunctions, BYTE *pbCert, ULONG ulCertLen, LPSTR pFileIn, LPSTR pFileOut)
 	{
-		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "entering");
-		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting");
-		ErrorCodeConvert(SOR_OK);
+		std::fstream _fileIn;
+		std::fstream _fileOut;
+		ULONG ulResult = 0;
+		std::ios::pos_type ulFileInDataLen;
+		char * pbFileInData = NULL;
+		char * pbFileOutData = NULL;
+		size_t pos = 0;
+		size_t i = 0;
+		int block = 1024;
+		ULONG ulFileOutDataLen = 0;
 
-		return SOR_OK;
+		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "entering");
+
+		_fileIn.open(pFileIn, std::ios::binary | std::ios::in);
+		_fileOut.open(pFileOut, std::ios::binary | std::ios::in);
+
+		if (_fileIn)
+		{
+
+		}
+		else
+		{
+			ulResult = SOR_READFILEERR;
+			goto end;
+		}
+
+		if (_fileOut)
+		{
+
+		}
+		else
+		{
+			ulResult = SOR_READFILEERR;
+			goto end;
+		}
+
+		// get length of file:
+		_fileIn.seekg(0, std::ios::end);
+		ulFileInDataLen = _fileIn.tellg();
+		_fileIn.seekg(0, std::ios::beg);
+
+
+		_fileOut.seekg(0, std::ios::end);
+		ulFileOutDataLen = _fileIn.tellg();
+		_fileOut.seekg(0, std::ios::beg);
+
+		pbFileInData = new char[ulFileInDataLen];
+		pbFileOutData = new char[ulFileOutDataLen];
+
+		// read data as a block:
+		for (pos = 0; pos < ulFileInDataLen; )
+		{
+			if (pos + 1024 < ulFileInDataLen)
+			{
+				block = 1024;
+			}
+			else
+			{
+				block = (size_t)ulFileInDataLen - pos;
+			}
+
+			_fileIn.read(pbFileInData + pos, block);
+			pos += block;
+		}
+
+
+		for (pos = 0; pos < ulFileOutDataLen; )
+		{
+			if (pos + 1024 < ulFileOutDataLen)
+			{
+				block = 1024;
+			}
+			else
+			{
+				block = (size_t)ulFileOutDataLen - pos;
+			}
+
+			_fileOut.read(pbFileOutData + pos, block);
+			pos += block;
+		}
+
+		ulResult = SOF_VerifySignedData(p_ckpFunctions, pbCert, ulCertLen,(BYTE *)pbFileInData, (ULONG)ulFileInDataLen, (BYTE *)pbFileOutData, (ULONG)ulFileOutDataLen);
+
+		if (ulResult)
+		{
+			goto end;
+		}
+
+		_fileOut.write(pbFileOutData, ulFileOutDataLen);
+
+	end:
+
+		if (_fileIn)
+		{
+			_fileIn.close();
+		}
+
+		if (_fileOut)
+		{
+			_fileOut.close();
+		}
+
+		if (pbFileInData)
+		{
+			delete[] pbFileInData;
+		}
+
+		if (pbFileOutData)
+		{
+			delete[] pbFileOutData;
+		}
+
+		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting");
+
+		ulResult = ErrorCodeConvert(ulResult);
+
+		return ulResult;
 	}
 
 	ULONG SOF_EncryptData(void * p_ckpFunctions, BYTE *pbCert, ULONG ulCertLen, BYTE *pbDataIn, ULONG ulDataInLen, BYTE *pbDataOut, ULONG *pulDataOutLen)
