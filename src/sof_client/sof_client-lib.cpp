@@ -21,6 +21,55 @@ typedef CK_SOF_CLIENT_FUNCTION_LIST *CK_SOF_CLIENT_FUNCTION_LIST_PTR;
 typedef CK_SKF_FUNCTION_LIST *CK_SKF_FUNCTION_LIST_PTR;
 
 
+//  RFC定义的oid如下：
+//  数据类型data                                           1 2 840 113549 1 7 1
+//	签名数据类型signedData                                 1 2 840 113549 1 7 2
+//	数字信封数据类型envelopedData                          1 2 840 113549 1 7 3
+//	签名及数字信封数据类型signedAndEnvelopedData           1 2 840 113549 1 7 4
+//	摘要数据类型digestData                                 1 2 840 113549 1 7 5
+//	加密数据类型encryptedData                              1 2 840 113549 1 7 6
+
+//	国密标准GM / T 0010定义的oid如下：
+//	数据类型data                                           1.2.156.10197.6.1.4.2.1
+//	签名数据类型signedData                                 1.2.156.10197.6.1.4.2.2
+//	数字信封数据类型envelopedData                          1.2.156.10197.6.1.4.2.3
+//	签名及数字信封数据类型signedAndEnvelopedData           1.2.156.10197.6.1.4.2.4
+//	加密数据类型encryptedData                              1.2.156.10197.6.1.4.2.5
+//	密钥协商类型keyAgreementInfo                           1.2.156.10197.6.1.4.2.6
+
+// 1.2.840.113549.1.7.1
+static const uint8_t kPKCS7Data[] = { 0x2a, 0x86, 0x48, 0x86, 0xf7,
+0x0d, 0x01, 0x07, 0x01 };
+
+// 1.2.840.113549.1.7.2
+static const uint8_t kPKCS7SignedData[] = { 0x2a, 0x86, 0x48, 0x86, 0xf7,0x0d, 0x01, 0x07, 0x02 };
+
+// 1.2.840.113549.1.7.3
+static const uint8_t kPKCS7EnvelopedData[] = { 0x2a, 0x86, 0x48, 0x86, 0xf7,0x0d, 0x01, 0x07, 0x03 };
+
+// 1.2.156.10197.6.1.4.2.1
+static const uint8_t kPKCS7DataSM2[] = { 0x2a , 0x81 , 0x1c , 0xcf , 0x55 , 0x06, 0x01, 0x04, 0x02, 0x01 };
+
+// 1.2.156.10197.6.1.4.2.2
+static const uint8_t kPKCS7SignedDataSM2[] = { 0x2a , 0x81 , 0x1c , 0xcf , 0x55 , 0x06, 0x01, 0x04, 0x02, 0x02 };
+
+// 1.2.156.10197.6.1.4.2.3
+static const uint8_t kPKCS7EnvelopedDataDataSM2[] = { 0x2a , 0x81 , 0x1c , 0xcf , 0x55 , 0x06, 0x01, 0x04, 0x02, 0x03 };
+
+// 1.2.156.10197.1.401
+static const uint8_t kDataSM3[] = { 0x2a , 0x81 , 0x1c , 0xcf , 0x55 , 0x01, 0x83, 0x11 };
+
+// 1.2.156.10197.1.301
+static const uint8_t kDataSM2[] = { 0x2a , 0x81 , 0x1c , 0xcf , 0x55 , 0x01, 0x82, 0x2d };
+
+// 2.16.840.1.101.3.4.2.1 
+static const uint8_t kDataSHA256[] = { 0x60, 0x86 , 0x48 , 0x01 , 0x65 , 0x03, 0x04, 0x02, 0x01 };
+// 1.3.14.3.2.26
+static const uint8_t kDataSHA1[] = { 0x2B, 0x0E , 0x03 , 0x02 , 0x1A };
+
+// 1.2.840.113549.1.1.1
+static const uint8_t kDataRSA[]{ 0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d,0x01, 0x01,0x01 };
+
 
 
 #ifdef __cplusplus
@@ -795,14 +844,18 @@ extern "C" {
 	{
 		CK_SKF_FUNCTION_LIST_PTR ckpFunctions = (CK_SKF_FUNCTION_LIST_PTR)p_ckpFunctions;
 		HANDLE hContainer = NULL;
-
 		ULONG ulResult = 0;
 		ULONG ulContainerType = 0;
+		HANDLE hHash = 0;
 
 		ECCSIGNATUREBLOB blob = { 0 };
 
 		char data_info_value[1024] = { 0 };
 		int data_info_len = sizeof(data_info_value);
+
+		BYTE hash_value[1024] = { 0 };
+		ULONG hash_len = sizeof(data_info_value);
+
 
 		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "entering");
 
@@ -818,41 +871,88 @@ extern "C" {
 			goto end;
 		}
 
-		if ( ulContainerType == 1)
-		{
-			ulResult = ckpFunctions->SKF_RSASignData(hContainer, pbDataIn, ulDataInLen, pbDataOut, pulDataOutLen);
 
-		}
-		else if (ulContainerType == 2)
+		if (ulContainerType == 1)
 		{
-			ulResult = ckpFunctions->SKF_ECCSignData(hContainer, pbDataIn, ulDataInLen, &blob);
-			if (ulResult)
+			if (global_data.sign_method == SGD_SM3_RSA)
 			{
-				goto end;
+				ulResult = ckpFunctions->SKF_DigestInit(global_data.hDevHandle, SGD_SM3, 0, 0, 0, &hHash);
 			}
-
-			ulResult = SM2SignAsn1Convert(blob.r +32,32, blob.s + 32, 32, (unsigned char *)data_info_value, &data_info_len);
-			if (ulResult)
+			else if (global_data.sign_method == SGD_SHA1_RSA)
+			{
+				ulResult = ckpFunctions->SKF_DigestInit(global_data.hDevHandle, SGD_SHA1, 0, 0, 0, &hHash);
+			}
+			else if (global_data.sign_method == SGD_SHA256_RSA)
+			{
+				ulResult = ckpFunctions->SKF_DigestInit(global_data.hDevHandle, SGD_SHA256, 0, 0, 0, &hHash);
+			}
+			else
 			{
 				ulResult = SOR_UNKNOWNERR;
 				goto end;
 			}
 
-			if (NULL == pbDataOut)
+			if (ulResult)
 			{
-				*pulDataOutLen = data_info_len;
-				ulResult = SOR_OK;
+				goto end;
 			}
-			else if (sizeof(blob) >  *pulDataOutLen)
+
+			ulResult = ckpFunctions->SKF_Digest(&hHash, pbDataIn, ulDataInLen, hash_value, &hash_len);
+			if (ulResult)
 			{
-				*pulDataOutLen = data_info_len;
-				ulResult = SOR_MEMORYERR;
+				goto end;
+			}
+
+			ulResult = ckpFunctions->SKF_RSASignData(hContainer, hash_value, hash_len, (unsigned char *)data_info_value, (ULONG *)&data_info_len);
+			if (ulResult)
+			{
+				goto end;
+			}
+
+		}
+		else if (ulContainerType == 2)
+		{
+			ECCPUBLICKEYBLOB pubkeyBlob = { 0 };
+			ULONG ulBlobLen = sizeof(pubkeyBlob);
+
+			if (global_data.sign_method == SGD_SM3_SM2)
+			{
+				ulResult = ckpFunctions->SKF_ExportPublicKey(hContainer, TRUE, (BYTE*)&pubkeyBlob, &ulBlobLen);
+				if (ulResult)
+				{
+					goto end;
+				}
+
+				ulResult = ckpFunctions->SKF_DigestInit(global_data.hDevHandle, SGD_SM3, &pubkeyBlob, (unsigned char *)"1234567812345678", 16, &hHash);
+				if (ulResult)
+				{
+					goto end;
+				}
+
+				ulResult = ckpFunctions->SKF_Digest(&hHash, pbDataIn, ulDataInLen, hash_value, &hash_len);
+				if (ulResult)
+				{
+					goto end;
+				}
+
 			}
 			else
 			{
-				*pulDataOutLen = data_info_len;
-				memcpy(pbDataOut, data_info_value, data_info_len);
-				ulResult = SOR_OK;
+				ulResult = SOR_UNKNOWNERR;
+				goto end;
+			}
+
+			ulResult = ckpFunctions->SKF_ECCSignData(hContainer, hash_value, hash_len, &blob);
+			if (ulResult)
+			{
+				goto end;
+			}
+
+			ulResult = SM2SignAsn1Convert(blob.r + 32, 32, blob.s + 32, 32, (unsigned char *)data_info_value, &data_info_len);
+			if (ulResult)
+			{
+				ulResult = SOR_UNKNOWNERR;
+				goto end;
 			}
 		}
 		else
@@ -860,7 +960,30 @@ extern "C" {
 			ulResult = SOR_NOTSUPPORTYETERR;
 			goto end;
 		}
+
+		if (NULL == pbDataOut)
+		{
+			*pulDataOutLen = data_info_len;
+			ulResult = SOR_OK;
+		}
+		else if (data_info_len >  *pulDataOutLen)
+		{
+			*pulDataOutLen = data_info_len;
+			ulResult = SOR_MEMORYERR;
+		}
+		else
+		{
+			*pulDataOutLen = data_info_len;
+			memcpy(pbDataOut, data_info_value,data_info_len);
+			ulResult = SOR_OK;
+		}
+
 	end:
+
+		if (hHash)
+		{
+			ckpFunctions->SKF_CloseHandle(hHash);
+		}
 
 		if (hContainer)
 		{
@@ -885,12 +1008,19 @@ extern "C" {
 
 		RSA *rsa = NULL;
 
-		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "entering");
+		HANDLE hHash = 0;
 
 		RSAPUBLICKEYBLOB rsaPublicKeyBlob = { 0 };
 		ECCPUBLICKEYBLOB eccPublicKeyBlob = { 0 };
 
+
+		BYTE hash_value[1024] = { 0 };
+		ULONG hash_len = sizeof(hash_value);
+
+
 		CertificateItemParse certParse;
+
+		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "entering");
 
 		certParse.setCertificate(pbCert, ulCertLen);
 
@@ -927,12 +1057,43 @@ extern "C" {
 				X509_free(x509);
 			}
 
-			ulResult = ckpFunctions->SKF_RSAVerify(global_data.hDevHandle, &rsaPublicKeyBlob, pbDataIn, ulDataInLen, pbDataOut, ulDataOutLen);
+
+			if (global_data.sign_method == SGD_SM3_RSA)
+			{
+				ulResult = ckpFunctions->SKF_DigestInit(global_data.hDevHandle, SGD_SM3, 0, 0, 0, &hHash);
+			}
+			else if (global_data.sign_method == SGD_SHA1_RSA)
+			{
+				ulResult = ckpFunctions->SKF_DigestInit(global_data.hDevHandle, SGD_SHA1, 0, 0, 0, &hHash);
+			}
+			else if (global_data.sign_method == SGD_SHA256_RSA)
+			{
+				ulResult = ckpFunctions->SKF_DigestInit(global_data.hDevHandle, SGD_SHA256, 0, 0, 0, &hHash);
+			}
+			else
+			{
+				ulResult = SOR_UNKNOWNERR;
+				goto end;
+			}
+
+			if (ulResult)
+			{
+				goto end;
+			}
+
+			ulResult = ckpFunctions->SKF_Digest(&hHash, pbDataIn, ulDataInLen, hash_value, &hash_len);
+			if (ulResult)
+			{
+				goto end;
+			}
+
+			ulResult = ckpFunctions->SKF_RSAVerify(global_data.hDevHandle, &rsaPublicKeyBlob, hash_value, hash_len, pbDataOut, ulDataOutLen);
 		}
 		else if (ECertificate_KEY_ALG_EC == certParse.m_iKeyAlg)
 		{
 			unsigned char tmp_data[32 * 2 + 1] = { 0 };
 			unsigned int tmp_len = 65;
+
 			ECCSIGNATUREBLOB blob = {0};
 			
 			eccPublicKeyBlob.BitLen = 256;
@@ -941,6 +1102,19 @@ extern "C" {
 
 			memcpy(eccPublicKeyBlob.XCoordinate + 32, tmp_data + 1, 32);
 			memcpy(eccPublicKeyBlob.YCoordinate + 32, tmp_data + 1 +32, 32);
+
+
+			ulResult = ckpFunctions->SKF_DigestInit(global_data.hDevHandle, SGD_SM3, &eccPublicKeyBlob, (unsigned char *)"1234567812345678", 16, &hHash);
+			if (ulResult)
+			{
+				goto end;
+			}
+
+			ulResult = ckpFunctions->SKF_Digest(&hHash, pbDataIn, ulDataInLen, hash_value, &hash_len);
+			if (ulResult)
+			{
+				goto end;
+			}
 
 			ulResult = SM2SignD2i(pbDataOut, ulDataOutLen, tmp_data, (int *)&tmp_len);
 			if (ulResult)
@@ -952,7 +1126,7 @@ extern "C" {
 			memcpy(blob.r + 32, tmp_data, 32);
 			memcpy(blob.s + 32, tmp_data+32, 32);
 
-			ulResult = ckpFunctions->SKF_ECCVerify(global_data.hDevHandle, &eccPublicKeyBlob, pbDataIn, ulDataInLen, &blob);
+			ulResult = ckpFunctions->SKF_ECCVerify(global_data.hDevHandle, &eccPublicKeyBlob, hash_value, hash_len, &blob);
 		}
 		else
 		{
@@ -961,6 +1135,11 @@ extern "C" {
 		}
 
 	end:
+
+		if (hHash)
+		{
+			ckpFunctions->SKF_CloseHandle(hHash);
+		}
 
 		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting");
 
@@ -1496,13 +1675,342 @@ extern "C" {
 		return ulResult;
 	}
 
+
 	ULONG SOF_SignMessage(void * p_ckpFunctions, LPSTR pContainerName, UINT16 u16Flag, BYTE *pbDataIn,  ULONG ulDataInLen, BYTE *pbDataOut, ULONG *pulDataOutLen)
 	{
-		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "entering");
-		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting");
-		ErrorCodeConvert(SOR_OK);
+		const unsigned char *ptr = NULL;
+		ASN1_INTEGER *serial_number = NULL;
+		CK_SKF_FUNCTION_LIST_PTR ckpFunctions = (CK_SKF_FUNCTION_LIST_PTR)p_ckpFunctions;
+		HANDLE hContainer = NULL;
+		X509 * x509 = NULL;
+		uint8_t *buf;
+		X509_NAME *issue_name = NULL;
+		ULONG ulResult = 0;
+		ULONG ulContainerType = 0;
 
-		return SOR_OK;
+		HANDLE hHash = 0;
+
+		int len = 0;
+
+		CBB out, outer_seq, oid, wrapped_seq, seq, version_bytes, digest_algos_set,
+			content_info, plaintext, plaintext_wrap, certificates, digest_alg, digest_algos, null_asn1, signerInfos, signerInfo, version_bytes1, digest_algos1, digest_alg1, encrypt_digest, encrypt_digests, signature;
+
+		size_t result_len = 1024 * 1024 * 1024;
+
+		ECCSIGNATUREBLOB blob = { 0 };
+
+		BYTE pbCert[1024 * 4];
+		ULONG ulCertLen = sizeof(pbCert);
+
+		char data_info_value[1024] = { 0 };
+		int data_info_len = sizeof(data_info_value);
+
+		BYTE hash_value[1024] = { 0 };
+		ULONG hash_len = sizeof(hash_value);
+
+		const uint8_t *kHashData = 0;
+		size_t kHashLen =0;
+
+		const uint8_t *kEncData = 0;
+		size_t kEncLen = 0;
+
+		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "entering");
+
+		ulResult = ckpFunctions->SKF_OpenContainer(global_data.hAppHandle, pContainerName, &hContainer);
+		if (ulResult)
+		{
+			goto end;
+		}
+		//1表示为RSA容器，为2表示为ECC容器
+		ulResult = ckpFunctions->SKF_GetContainerType(hContainer, &ulContainerType);
+		if (ulResult)
+		{
+			goto end;
+		}
+
+		ulResult = ckpFunctions->SKF_ExportCertificate(hContainer, TRUE, pbCert, &ulCertLen);
+		if (ulResult)
+		{
+			goto end;
+		}
+
+		ptr = pbCert;
+
+		x509 = d2i_X509(NULL, &ptr, ulCertLen);
+		if (!x509)
+		{
+			ulResult = SOR_UNKNOWNERR;
+			goto end;
+		}
+
+		issue_name = X509_get_issuer_name(x509);
+
+		if (ulContainerType == 1)
+		{
+			if (global_data.sign_method == SGD_SM3_RSA)
+			{
+				kEncData = kDataRSA;
+				kEncLen = sizeof(kDataRSA);
+				kHashData = kDataSM3;
+				kHashLen = sizeof(kDataSM3);
+
+				ulResult = ckpFunctions->SKF_DigestInit(global_data.hDevHandle,SGD_SM3, 0,0,0, &hHash);
+
+			}
+			else if (global_data.sign_method == SGD_SHA1_RSA)
+			{
+				kEncData = kDataRSA;
+				kEncLen = sizeof(kDataRSA);
+				kHashData = kDataSHA1;
+				kHashLen = sizeof(kDataSHA1);
+
+				ulResult = ckpFunctions->SKF_DigestInit(global_data.hDevHandle, SGD_SHA1, 0, 0, 0, &hHash);
+
+			}
+			else if (global_data.sign_method == SGD_SHA256_RSA)
+			{
+				kEncData = kDataRSA;
+				kEncLen = sizeof(kDataRSA);
+				kHashData = kDataSHA256;
+				kHashLen = sizeof(kDataSHA256);
+
+				ulResult = ckpFunctions->SKF_DigestInit(global_data.hDevHandle, SGD_SHA256, 0, 0, 0, &hHash);
+			}
+			else
+			{
+				ulResult = SOR_UNKNOWNERR;
+				goto end;
+			}
+
+			if (ulResult)
+			{
+				goto end;
+			}
+			
+			ulResult = ckpFunctions->SKF_Digest(&hHash, pbDataIn, ulDataInLen, hash_value, &hash_len);
+			if (ulResult)
+			{
+				goto end;
+			}
+
+
+			ulResult = ckpFunctions->SKF_RSASignData(hContainer, hash_value, hash_len, (unsigned char *)data_info_value, (ULONG *)&data_info_len);
+			if (ulResult)
+			{
+				goto end;
+			}
+
+
+		}
+		else if (ulContainerType == 2)
+		{
+			ECCPUBLICKEYBLOB pubkeyBlob = {0};
+			ULONG ulBlobLen = sizeof(pubkeyBlob);
+
+			if (global_data.sign_method == SGD_SM3_SM2)
+			{
+				kEncData = kDataSM2;
+				kEncLen = sizeof(kDataSM2);
+				kHashData = kDataSM3;
+				kHashLen = sizeof(kDataSM3);
+
+				ulResult = ckpFunctions->SKF_ExportPublicKey(hContainer, TRUE, (BYTE*)&pubkeyBlob, &ulBlobLen);
+				if (ulResult)
+				{
+					goto end;
+				}
+
+				ulResult = ckpFunctions->SKF_DigestInit(global_data.hDevHandle, SGD_SM3, &pubkeyBlob, (unsigned char *)"1234567812345678", 16, &hHash);
+				if (ulResult)
+				{
+					goto end;
+				}
+
+				ulResult = ckpFunctions->SKF_Digest(&hHash, pbDataIn, ulDataInLen, hash_value, &hash_len);
+				if (ulResult)
+				{
+					goto end;
+				}
+			}
+			else
+			{
+				ulResult = SOR_UNKNOWNERR;
+				goto end;
+			}
+
+			ulResult = ckpFunctions->SKF_ECCSignData(hContainer, hash_value, hash_len, &blob);
+			if (ulResult)
+			{
+				goto end;
+			}
+
+			ulResult = SM2SignAsn1Convert(blob.r + 32, 32, blob.s + 32, 32, (unsigned char *)data_info_value, &data_info_len);
+			if (ulResult)
+			{
+				ulResult = SOR_UNKNOWNERR;
+				goto end;
+			}
+		}
+		else
+		{
+			ulResult = SOR_NOTSUPPORTYETERR;
+			goto end;
+		}
+
+		CBB_init(&out, 1024 * 1024 * 1024);
+
+		// See https://tools.ietf.org/html/rfc2315#section-7
+		if (!CBB_add_asn1(&out, &outer_seq, CBS_ASN1_SEQUENCE) ||
+			!CBB_add_asn1(&outer_seq, &oid, CBS_ASN1_OBJECT) ||
+			!CBB_add_bytes(&oid, kPKCS7SignedData, sizeof(kPKCS7SignedData)) ||                            // P7 类型
+			!CBB_add_asn1(&outer_seq, &wrapped_seq,
+				CBS_ASN1_CONTEXT_SPECIFIC | CBS_ASN1_CONSTRUCTED | 0) ||
+			// See https://tools.ietf.org/html/rfc2315#section-9.1
+			!CBB_add_asn1(&wrapped_seq, &seq, CBS_ASN1_SEQUENCE) ||
+			!CBB_add_asn1(&seq, &version_bytes, CBS_ASN1_INTEGER) ||
+			!CBB_add_u8(&version_bytes, 1) ||
+			!CBB_add_asn1(&seq, &digest_algos_set, CBS_ASN1_SET) ||
+			!CBB_add_asn1(&digest_algos_set, &digest_algos, CBS_ASN1_SEQUENCE) ||
+			!CBB_add_asn1(&digest_algos, &digest_alg, CBS_ASN1_OBJECT) ||
+			!CBB_add_bytes(&digest_alg, kHashData, kHashLen) ||                                     //添加算法
+			!CBB_add_asn1(&digest_algos, &null_asn1, CBS_ASN1_NULL) ||
+			!CBB_add_asn1(&seq, &content_info, CBS_ASN1_SEQUENCE) ||
+			!CBB_add_asn1(&content_info, &oid, CBS_ASN1_OBJECT) ||
+			!CBB_add_bytes(&oid, kPKCS7Data, sizeof(kPKCS7Data)))
+		{
+			ulResult = SOR_UNKNOWNERR;
+			goto end;
+		}
+
+		if (1 == u16Flag)
+		{
+			if (!CBB_add_asn1(&content_info, &plaintext_wrap, CBS_ASN1_CONTEXT_SPECIFIC | CBS_ASN1_CONSTRUCTED | 0) ||  // 原文
+				!CBB_add_asn1(&plaintext_wrap, &plaintext, CBS_ASN1_OCTETSTRING) ||                                     // 原文
+				!CBB_add_bytes(&plaintext, pbDataIn, ulDataInLen)) {
+				ulResult = SOR_UNKNOWNERR;
+				goto end;
+			}
+		}
+
+		// See https://tools.ietf.org/html/rfc2315#section-9.1
+		if (!CBB_add_asn1(&seq, &certificates, CBS_ASN1_CONTEXT_SPECIFIC | CBS_ASN1_CONSTRUCTED | 0) ||     // 证书
+			!CBB_add_bytes(&certificates, (uint8_t *)pbCert, ulCertLen) ||                                  // 证书 
+			!CBB_flush(&seq)) {
+			return 0;
+		}
+
+		// signerInfos
+		if (!CBB_add_asn1(&seq, &signerInfos, CBS_ASN1_SET) ||
+			!CBB_add_asn1(&signerInfos, &signerInfo, CBS_ASN1_SEQUENCE) ||
+			!CBB_add_asn1(&signerInfo, &version_bytes1, CBS_ASN1_INTEGER) ||
+			!CBB_add_u8(&version_bytes1, 1)
+			)
+		{
+			ulResult = SOR_UNKNOWNERR;
+			goto end;
+		}
+
+
+		len = i2d_X509_NAME(issue_name, NULL);
+
+		if (len < 0 || !CBB_add_space(&signerInfo, &buf, len) ||
+			i2d_X509_NAME(issue_name, &buf) < 0 ||
+			CBB_flush(&signerInfo)
+			)
+		{
+			ulResult = SOR_UNKNOWNERR;
+			goto end;
+		}
+
+		// 序列号
+		serial_number = X509_get_serialNumber(x509);
+		len = i2d_ASN1_INTEGER(serial_number, NULL);
+		if (len < 0 || !CBB_add_space(&signerInfo, &buf, len) ||
+			i2d_ASN1_INTEGER(serial_number, &buf) < 0 ||
+			CBB_flush(&signerInfo)
+			)
+		{
+			ulResult = SOR_UNKNOWNERR;
+			goto end;
+		}
+
+
+		if (!CBB_add_asn1(&signerInfo, &digest_algos1, CBS_ASN1_SEQUENCE) ||
+			!CBB_add_asn1(&digest_algos1, &digest_alg1, CBS_ASN1_OBJECT) ||
+			!CBB_add_bytes(&digest_alg1, kHashData, kHashLen) ||            //添加HASH算法
+			!CBB_add_asn1(&digest_algos1, &null_asn1, CBS_ASN1_NULL)
+			)
+		{
+			ulResult = SOR_UNKNOWNERR;
+			goto end;
+		}
+
+		if (
+			!CBB_add_asn1(&signerInfo, &encrypt_digests, CBS_ASN1_SEQUENCE) ||
+			!CBB_add_asn1(&encrypt_digests, &encrypt_digest, CBS_ASN1_OBJECT) ||
+			!CBB_add_bytes(&encrypt_digest, kEncData, kEncLen) ||         //添加非对称算法
+			!CBB_add_asn1(&encrypt_digests, &null_asn1, CBS_ASN1_NULL)
+			)
+		{
+			ulResult = SOR_UNKNOWNERR;
+			goto end;
+		}
+
+
+		if (!CBB_add_asn1(&signerInfo, &signature, CBS_ASN1_OCTETSTRING) ||
+			!CBB_add_bytes(&signature, (uint8_t *)data_info_value, data_info_len)       //添加签名值
+			) // 签名值
+		{
+			ulResult = SOR_UNKNOWNERR;
+			goto end;
+		}
+
+		// end
+		if (!CBB_flush(&out))
+		{
+			ulResult = SOR_UNKNOWNERR;
+			goto end;
+		}
+
+		if (NULL == pbDataOut)
+		{
+			*pulDataOutLen = CBB_len(&out);
+			ulResult = SOR_OK;
+		}
+		else if (CBB_len(&out) >  *pulDataOutLen)
+		{
+			*pulDataOutLen = CBB_len(&out);
+			ulResult = SOR_MEMORYERR;
+		}
+		else
+		{
+			*pulDataOutLen = CBB_len(&out);
+			CBB_finish(&out, &pbDataOut, pulDataOutLen);
+			ulResult = SOR_OK;
+		}
+
+	end:
+
+		if (hHash)
+		{
+			ckpFunctions->SKF_CloseHandle(hHash);
+		}
+
+		if (x509)
+		{
+			X509_free(x509);
+		}
+
+		if (hContainer)
+		{
+			ckpFunctions->SKF_CloseContainer(hContainer);
+		}
+
+		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting");
+
+		ulResult = ErrorCodeConvert(ulResult);
+
+		return ulResult;
 	}
 
 

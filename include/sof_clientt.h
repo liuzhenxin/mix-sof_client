@@ -57,6 +57,11 @@
 #define SGD_DEVICE_MAX_DATA_SIZE				 0x00000213		  //设备一次能处理的数据容量
 
 
+#define SGD_SM3_RSA                              0x00010001 
+#define SGD_SHA1_RSA                             0x00010002
+#define SGD_SHA256_RSA                           0x00010004 
+#define SGD_SM3_SM2                              0x00020201 
+
 //errorCode
 #include "sof_clientn.h"
 
