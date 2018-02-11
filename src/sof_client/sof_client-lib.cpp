@@ -1754,6 +1754,8 @@ extern "C" {
 		{
 			kPKCS7SignedData = kPKCS7SignedDataRFC;
 			kPKCS7SignedLen = sizeof(kPKCS7SignedDataRFC);
+			kPKCS7Data = kPKCS7DataRFC;
+			kPKCS7Len = sizeof(kPKCS7DataRFC);
 
 			if (global_data.sign_method == SGD_SM3_RSA)
 			{
@@ -1817,6 +1819,8 @@ extern "C" {
 
 			kPKCS7SignedData = kPKCS7SignedDataSM2;
 			kPKCS7SignedLen = sizeof(kPKCS7SignedDataSM2);
+			kPKCS7Data = kPKCS7DataSM2;
+			kPKCS7Len = sizeof(kPKCS7DataSM2);
 
 			if (global_data.sign_method == SGD_SM3_SM2)
 			{
