@@ -38,14 +38,13 @@ typedef CK_SKF_FUNCTION_LIST *CK_SKF_FUNCTION_LIST_PTR;
 //	密钥协商类型keyAgreementInfo                           1.2.156.10197.6.1.4.2.6
 
 // 1.2.840.113549.1.7.1
-static const uint8_t kPKCS7Data[] = { 0x2a, 0x86, 0x48, 0x86, 0xf7,
-0x0d, 0x01, 0x07, 0x01 };
+static const uint8_t kPKCS7DataRFC[] = { 0x2a, 0x86, 0x48, 0x86, 0xf7,0x0d, 0x01, 0x07, 0x01 };
 
 // 1.2.840.113549.1.7.2
-static const uint8_t kPKCS7SignedData[] = { 0x2a, 0x86, 0x48, 0x86, 0xf7,0x0d, 0x01, 0x07, 0x02 };
+static const uint8_t kPKCS7SignedDataRFC[] = { 0x2a, 0x86, 0x48, 0x86, 0xf7,0x0d, 0x01, 0x07, 0x02 };
 
 // 1.2.840.113549.1.7.3
-static const uint8_t kPKCS7EnvelopedData[] = { 0x2a, 0x86, 0x48, 0x86, 0xf7,0x0d, 0x01, 0x07, 0x03 };
+static const uint8_t kPKCS7EnvelopedDataRFC[] = { 0x2a, 0x86, 0x48, 0x86, 0xf7,0x0d, 0x01, 0x07, 0x03 };
 
 // 1.2.156.10197.6.1.4.2.1
 static const uint8_t kPKCS7DataSM2[] = { 0x2a , 0x81 , 0x1c , 0xcf , 0x55 , 0x06, 0x01, 0x04, 0x02, 0x01 };
@@ -1711,6 +1710,12 @@ extern "C" {
 		const uint8_t *kHashData = 0;
 		size_t kHashLen =0;
 
+		const uint8_t *kPKCS7SignedData = 0;
+		size_t kPKCS7SignedLen = 0;
+
+		const uint8_t *kPKCS7Data = 0;
+		size_t kPKCS7Len = 0;
+
 		const uint8_t *kEncData = 0;
 		size_t kEncLen = 0;
 
@@ -1747,6 +1752,9 @@ extern "C" {
 
 		if (ulContainerType == 1)
 		{
+			kPKCS7SignedData = kPKCS7SignedDataRFC;
+			kPKCS7SignedLen = sizeof(kPKCS7SignedDataRFC);
+
 			if (global_data.sign_method == SGD_SM3_RSA)
 			{
 				kEncData = kDataRSA;
@@ -1807,6 +1815,9 @@ extern "C" {
 			ECCPUBLICKEYBLOB pubkeyBlob = {0};
 			ULONG ulBlobLen = sizeof(pubkeyBlob);
 
+			kPKCS7SignedData = kPKCS7SignedDataSM2;
+			kPKCS7SignedLen = sizeof(kPKCS7SignedDataSM2);
+
 			if (global_data.sign_method == SGD_SM3_SM2)
 			{
 				kEncData = kDataSM2;
@@ -1862,7 +1873,7 @@ extern "C" {
 		// See https://tools.ietf.org/html/rfc2315#section-7
 		if (!CBB_add_asn1(&out, &outer_seq, CBS_ASN1_SEQUENCE) ||
 			!CBB_add_asn1(&outer_seq, &oid, CBS_ASN1_OBJECT) ||
-			!CBB_add_bytes(&oid, kPKCS7SignedData, sizeof(kPKCS7SignedData)) ||                            // P7 类型
+			!CBB_add_bytes(&oid, kPKCS7SignedData, kPKCS7SignedLen) ||                            // P7 类型
 			!CBB_add_asn1(&outer_seq, &wrapped_seq,
 				CBS_ASN1_CONTEXT_SPECIFIC | CBS_ASN1_CONSTRUCTED | 0) ||
 			// See https://tools.ietf.org/html/rfc2315#section-9.1
@@ -1876,7 +1887,7 @@ extern "C" {
 			!CBB_add_asn1(&digest_algos, &null_asn1, CBS_ASN1_NULL) ||
 			!CBB_add_asn1(&seq, &content_info, CBS_ASN1_SEQUENCE) ||
 			!CBB_add_asn1(&content_info, &oid, CBS_ASN1_OBJECT) ||
-			!CBB_add_bytes(&oid, kPKCS7Data, sizeof(kPKCS7Data)))
+			!CBB_add_bytes(&oid, kPKCS7Data, kPKCS7Len))
 		{
 			ulResult = SOR_UNKNOWNERR;
 			goto end;
@@ -2016,11 +2027,152 @@ extern "C" {
 
 	ULONG SOF_VerifySignedMessage(void * p_ckpFunctions, BYTE *pbDataIn, ULONG ulDataInLen, BYTE *pbDataOut, ULONG ulDataOutLen)
 	{
-		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "entering");
-		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting");
-		ErrorCodeConvert(SOR_OK);
+		CK_SKF_FUNCTION_LIST_PTR ckpFunctions = (CK_SKF_FUNCTION_LIST_PTR)p_ckpFunctions;
+		HANDLE hContainer = NULL;
 
-		return SOR_OK;
+		ULONG ulResult = 0;
+		CBS pkcs7;
+		RSA *rsa = NULL;
+
+		/*HANDLE hHash = 0;
+
+		RSAPUBLICKEYBLOB rsaPublicKeyBlob = { 0 };
+		ECCPUBLICKEYBLOB eccPublicKeyBlob = { 0 };
+		BYTE hash_value[1024] = { 0 };
+		ULONG hash_len = sizeof(hash_value);
+
+		CBS_init(&pkcs7, pbDataOut, ulDataOutLen);
+
+
+
+		CertificateItemParse certParse;
+
+		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "entering");
+
+		certParse.setCertificate(pbCert, ulCertLen);
+
+		if (0 != certParse.parse())
+		{
+			ulResult = SOR_INDATAERR;
+			goto end;
+		}
+
+		if (ECertificate_KEY_ALG_RSA == certParse.m_iKeyAlg)
+		{
+			X509 * x509 = NULL;
+			unsigned char pbModulus[256];
+			int ulModulusLen = 0;
+			const unsigned char *ptr = NULL;
+			ptr = pbCert;
+
+			x509 = d2i_X509(NULL, &ptr, ulCertLen);
+
+			if (x509)
+			{
+				RSA *rsa = EVP_PKEY_get1_RSA(X509_get_pubkey(x509));
+
+				if (rsa != NULL)
+				{
+					ulModulusLen = BN_bn2bin(rsa->n, pbModulus);
+				}
+
+				rsaPublicKeyBlob.BitLen = ulModulusLen * 8;
+
+				memcpy(rsaPublicKeyBlob.PublicExponent, "\x00\x01\x00\x01", 4);
+
+				memcpy(rsaPublicKeyBlob.Modulus + 256 - ulModulusLen, pbModulus, ulModulusLen);
+				X509_free(x509);
+			}
+
+
+			if (global_data.sign_method == SGD_SM3_RSA)
+			{
+				ulResult = ckpFunctions->SKF_DigestInit(global_data.hDevHandle, SGD_SM3, 0, 0, 0, &hHash);
+			}
+			else if (global_data.sign_method == SGD_SHA1_RSA)
+			{
+				ulResult = ckpFunctions->SKF_DigestInit(global_data.hDevHandle, SGD_SHA1, 0, 0, 0, &hHash);
+			}
+			else if (global_data.sign_method == SGD_SHA256_RSA)
+			{
+				ulResult = ckpFunctions->SKF_DigestInit(global_data.hDevHandle, SGD_SHA256, 0, 0, 0, &hHash);
+			}
+			else
+			{
+				ulResult = SOR_UNKNOWNERR;
+				goto end;
+			}
+
+			if (ulResult)
+			{
+				goto end;
+			}
+
+			ulResult = ckpFunctions->SKF_Digest(&hHash, pbDataIn, ulDataInLen, hash_value, &hash_len);
+			if (ulResult)
+			{
+				goto end;
+			}
+
+			ulResult = ckpFunctions->SKF_RSAVerify(global_data.hDevHandle, &rsaPublicKeyBlob, hash_value, hash_len, pbDataOut, ulDataOutLen);
+		}
+		else if (ECertificate_KEY_ALG_EC == certParse.m_iKeyAlg)
+		{
+			unsigned char tmp_data[32 * 2 + 1] = { 0 };
+			unsigned int tmp_len = 65;
+
+			ECCSIGNATUREBLOB blob = { 0 };
+
+			eccPublicKeyBlob.BitLen = 256;
+
+			OpenSSL_CertGetPubkey(pbCert, ulCertLen, tmp_data, &tmp_len);
+
+			memcpy(eccPublicKeyBlob.XCoordinate + 32, tmp_data + 1, 32);
+			memcpy(eccPublicKeyBlob.YCoordinate + 32, tmp_data + 1 + 32, 32);
+
+
+			ulResult = ckpFunctions->SKF_DigestInit(global_data.hDevHandle, SGD_SM3, &eccPublicKeyBlob, (unsigned char *)"1234567812345678", 16, &hHash);
+			if (ulResult)
+			{
+				goto end;
+			}
+
+			ulResult = ckpFunctions->SKF_Digest(&hHash, pbDataIn, ulDataInLen, hash_value, &hash_len);
+			if (ulResult)
+			{
+				goto end;
+			}
+
+			ulResult = SM2SignD2i(pbDataOut, ulDataOutLen, tmp_data, (int *)&tmp_len);
+			if (ulResult)
+			{
+				ulResult = SOR_INDATAERR;
+				goto end;
+			}
+
+			memcpy(blob.r + 32, tmp_data, 32);
+			memcpy(blob.s + 32, tmp_data + 32, 32);
+
+			ulResult = ckpFunctions->SKF_ECCVerify(global_data.hDevHandle, &eccPublicKeyBlob, hash_value, hash_len, &blob);
+		}
+		else
+		{
+			ulResult = SOR_NOTSUPPORTYETERR;
+			goto end;
+		}*/
+
+	end:
+
+		//if (hHash)
+		//{
+		//	ckpFunctions->SKF_CloseHandle(hHash);
+		//}
+
+		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting");
+
+		ulResult = ErrorCodeConvert(ulResult);
+
+		return ulResult;
 	}
 
 
