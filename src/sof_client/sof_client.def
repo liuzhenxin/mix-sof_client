@@ -1,8 +1,7 @@
 EXPORTS
 	WT_SetMyCert
 	WT_GetCertInfo
-	WT_ClearCert
-
+	WT_ClearCert 	
 	FILE_LOG_FMT
 	FILE_LOG_BYTE
 	FILE_LOG_NUMBER
@@ -13,10 +12,42 @@ EXPORTS
 	FILE_WRITE_NUMBER
 	FILE_WRITE_STRING
 	FILE_WRITE_HEX
-	FILE_READ
-
+	FILE_READ 	
 	modp_b64_encode
-	modp_b64_decode
-
+	modp_b64_decode 	
 	OPF_Str2Bin
 	OPF_Bin2Str
+	
+	SOF_GetVersion  
+    SOF_SetSignMethod
+	SOF_GetSignMethod
+	SOF_SetEncryptMethod
+	SOF_GetEncryptMethod
+	SOF_GetUserList
+	SOF_ExportUserCert
+	SOF_Login   
+	SOF_GetPinRetryCount  
+    SOF_ChangePassWd
+	SOF_ExportExChangeUserCert   
+	SOF_GetCertInfo  
+    SOF_GetCertInfoByOid  
+    SOF_GetDeviceInfo  
+    SOF_ValidateCert
+	SOF_SignData  
+    SOF_VerifySignedData  
+    SOF_SignFile   
+	SOF_VerifySignedFile  
+    SOF_EncryptData
+	SOF_DecryptData 
+    SOF_EncryptFile  
+    SOF_DecryptFile  
+    SOF_SignMessage
+	SOF_VerifySignedMessage
+	SOF_GetInfoFromSignedMessage
+	SOF_SignDataXML
+	SOF_VerifySignedDataXML
+	SOF_GetXMLSignatureInfo
+	SOF_GenRandom
+	SOF_GetLastError  
+    SOF_FinalizeLibraryNative  
+    SOF_InitializeLibraryNative  

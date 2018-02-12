@@ -6,8 +6,12 @@
 #ifndef _SKFT_H_
 #define _SKFT_H_ 1
 
-#define CK_DECLARE_FUNCTION(rtype,func) extern rtype func
-#define CK_DECLARE_FUNCTION_POINTER(rtype,func) rtype ( * func)
+#include "common.h"
+
+#define CK_DECLARE_FUNCTION(rtype,func) extern rtype CALL_CONVENTION func
+#define CK_DECLARE_FUNCTION_POINTER(rtype,func) rtype (CALL_CONVENTION* func)
+
+
 
 //errorCode
 #include "skfn.h"

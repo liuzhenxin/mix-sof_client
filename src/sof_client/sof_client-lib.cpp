@@ -1,7 +1,6 @@
 ﻿#include <string>
 #include "sof_client.h"
 #include "sof_client-tools.h"
-#include "skf.h"
 #include "assert.h"
 #include "FILE_LOG.h"
 #include <openssl/x509v3.h>
@@ -121,7 +120,7 @@ extern "C" {
 	}
 
 
-	ULONG SOF_GetVersion(void * p_ckpFunctions, VERSION *pVersion)
+	ULONG CALL_CONVENTION SOF_GetVersion(void * p_ckpFunctions, VERSION *pVersion)
 	{
 		CK_SKF_FUNCTION_LIST_PTR ckpFunctions = (CK_SKF_FUNCTION_LIST_PTR)p_ckpFunctions;
 
@@ -146,7 +145,7 @@ extern "C" {
 		return ulResult;
 	}
 
-	ULONG SOF_SetSignMethod(void * p_ckpFunctions, ULONG ulMethod)
+	ULONG CALL_CONVENTION SOF_SetSignMethod(void * p_ckpFunctions, ULONG ulMethod)
 	{
 		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "entering");
 		global_data.sign_method = ulMethod;
@@ -156,7 +155,7 @@ extern "C" {
 		return SOR_OK;
 	}
 
-	ULONG SOF_GetSignMethod(void * p_ckpFunctions, ULONG *pulMethod)
+	ULONG CALL_CONVENTION SOF_GetSignMethod(void * p_ckpFunctions, ULONG *pulMethod)
 	{
 		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "entering");
 		*pulMethod = global_data.sign_method;
@@ -166,7 +165,7 @@ extern "C" {
 		return SOR_OK;
 	}
 
-	ULONG SOF_SetEncryptMethod(void * p_ckpFunctions, ULONG ulMethod)
+	ULONG CALL_CONVENTION SOF_SetEncryptMethod(void * p_ckpFunctions, ULONG ulMethod)
 	{
 		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "entering");
 		global_data.encrypt_method = ulMethod;
@@ -176,7 +175,7 @@ extern "C" {
 		return SOR_OK;
 	}
 
-	ULONG SOF_GetEncryptMethod(void * p_ckpFunctions, ULONG *pulMethod)
+	ULONG CALL_CONVENTION SOF_GetEncryptMethod(void * p_ckpFunctions, ULONG *pulMethod)
 	{
 		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "entering");
 		*pulMethod = global_data.encrypt_method;
@@ -186,7 +185,7 @@ extern "C" {
 		return SOR_OK;
 	}
 
-	ULONG SOF_GetUserList(void * p_ckpFunctions, BYTE *pbUserList, ULONG *pulUserListLen)
+	ULONG CALL_CONVENTION SOF_GetUserList(void * p_ckpFunctions, BYTE *pbUserList, ULONG *pulUserListLen)
 	{
 		CK_SKF_FUNCTION_LIST_PTR ckpFunctions = (CK_SKF_FUNCTION_LIST_PTR)p_ckpFunctions;
 		char * ptr = NULL;
@@ -286,7 +285,7 @@ extern "C" {
 		return ulResult;
 	}
 
-	ULONG SOF_ExportUserCert(void * p_ckpFunctions, LPSTR pContainerName, BYTE *pbCert, ULONG *pulCertLen)
+	ULONG CALL_CONVENTION SOF_ExportUserCert(void * p_ckpFunctions, LPSTR pContainerName, BYTE *pbCert, ULONG *pulCertLen)
 	{
 		CK_SKF_FUNCTION_LIST_PTR ckpFunctions = (CK_SKF_FUNCTION_LIST_PTR)p_ckpFunctions;
 		HANDLE hContainer = NULL;
@@ -323,7 +322,7 @@ extern "C" {
 		return ulResult;
 	}
 
-	ULONG SOF_Login(void * p_ckpFunctions, LPSTR pContainerName, LPSTR pPIN)
+	ULONG CALL_CONVENTION SOF_Login(void * p_ckpFunctions, LPSTR pContainerName, LPSTR pPIN)
 	{
 		CK_SKF_FUNCTION_LIST_PTR ckpFunctions = (CK_SKF_FUNCTION_LIST_PTR)p_ckpFunctions;
 
@@ -346,7 +345,7 @@ extern "C" {
 		return ulResult;
 	}
 
-	ULONG SOF_GetPinRetryCount(void * p_ckpFunctions, LPSTR pContainerName, ULONG *pulRetryCount)
+	ULONG CALL_CONVENTION SOF_GetPinRetryCount(void * p_ckpFunctions, LPSTR pContainerName, ULONG *pulRetryCount)
 	{
 		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "entering");
 		*pulRetryCount = global_data.retry;
@@ -356,7 +355,7 @@ extern "C" {
 		return SOR_OK;
 	}
 
-	ULONG SOF_ChangePassWd(void * p_ckpFunctions, LPSTR pContainerName, LPSTR pPINOld, LPSTR pPINNew)
+	ULONG CALL_CONVENTION SOF_ChangePassWd(void * p_ckpFunctions, LPSTR pContainerName, LPSTR pPINOld, LPSTR pPINNew)
 	{
 		CK_SKF_FUNCTION_LIST_PTR ckpFunctions = (CK_SKF_FUNCTION_LIST_PTR)p_ckpFunctions;
 
@@ -379,7 +378,7 @@ extern "C" {
 		return ulResult;
 	}
 
-	ULONG SOF_ExportExChangeUserCert(void * p_ckpFunctions, LPSTR pContainerName, BYTE *pbCert, ULONG *pulCertLen)
+	ULONG CALL_CONVENTION SOF_ExportExChangeUserCert(void * p_ckpFunctions, LPSTR pContainerName, BYTE *pbCert, ULONG *pulCertLen)
 	{
 		CK_SKF_FUNCTION_LIST_PTR ckpFunctions = (CK_SKF_FUNCTION_LIST_PTR)p_ckpFunctions;
 		HANDLE hContainer = NULL;
@@ -416,7 +415,7 @@ extern "C" {
 		return ulResult;
 	}
 
-	ULONG SOF_GetCertInfo(void * p_ckpFunctions, BYTE *pbCert, ULONG ulCertLen, UINT16 u16Type, BYTE *pbInfo, ULONG *pulInfoLen)
+	ULONG CALL_CONVENTION SOF_GetCertInfo(void * p_ckpFunctions, BYTE *pbCert, ULONG ulCertLen, UINT16 u16Type, BYTE *pbInfo, ULONG *pulInfoLen)
 	{
 		ULONG ulResult = 0;
 
@@ -625,7 +624,7 @@ extern "C" {
 	}
 
 
-	ULONG SOF_GetCertInfoByOid(void * p_ckpFunctions, BYTE *pbCert, ULONG ulCertLen, LPSTR pOidString, BYTE *pbInfo, ULONG *pulInfoLen)
+	ULONG CALL_CONVENTION SOF_GetCertInfoByOid(void * p_ckpFunctions, BYTE *pbCert, ULONG ulCertLen, LPSTR pOidString, BYTE *pbInfo, ULONG *pulInfoLen)
 	{
 		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "entering");
 		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting");
@@ -634,7 +633,7 @@ extern "C" {
 		return SOR_NOTSUPPORTYETERR;
 	}
 
-	ULONG SOF_GetDeviceInfo(void * p_ckpFunctions, LPSTR pContainerName, ULONG ulType, BYTE *pbInfo, ULONG *pulInfoLen)
+	ULONG CALL_CONVENTION SOF_GetDeviceInfo(void * p_ckpFunctions, LPSTR pContainerName, ULONG ulType, BYTE *pbInfo, ULONG *pulInfoLen)
 	{
 		CK_SKF_FUNCTION_LIST_PTR ckpFunctions = (CK_SKF_FUNCTION_LIST_PTR)p_ckpFunctions;
 
@@ -784,7 +783,7 @@ extern "C" {
 		return ulResult;
 	}
 
-	ULONG SOF_ValidateCert(void * p_ckpFunctions, BYTE *pbCert, ULONG ulCertLen, ULONG *pulValidate)
+	ULONG CALL_CONVENTION SOF_ValidateCert(void * p_ckpFunctions, BYTE *pbCert, ULONG ulCertLen, ULONG *pulValidate)
 	{
 		ULONG ulResult = 0;
 
@@ -840,7 +839,7 @@ extern "C" {
 		return ulResult;
 	}
 
-	ULONG SOF_SignData(void * p_ckpFunctions, LPSTR pContainerName, BYTE *pbDataIn, ULONG ulDataInLen, BYTE *pbDataOut, ULONG *pulDataOutLen)
+	ULONG CALL_CONVENTION SOF_SignData(void * p_ckpFunctions, LPSTR pContainerName, BYTE *pbDataIn, ULONG ulDataInLen, BYTE *pbDataOut, ULONG *pulDataOutLen)
 	{
 		CK_SKF_FUNCTION_LIST_PTR ckpFunctions = (CK_SKF_FUNCTION_LIST_PTR)p_ckpFunctions;
 		HANDLE hContainer = NULL;
@@ -998,7 +997,7 @@ extern "C" {
 	}
 
 
-	ULONG SOF_VerifySignedData(void * p_ckpFunctions, BYTE *pbCert, ULONG ulCertLen, BYTE *pbDataIn, ULONG ulDataInLen, BYTE *pbDataOut, ULONG ulDataOutLen)
+	ULONG CALL_CONVENTION SOF_VerifySignedData(void * p_ckpFunctions, BYTE *pbCert, ULONG ulCertLen, BYTE *pbDataIn, ULONG ulDataInLen, BYTE *pbDataOut, ULONG ulDataOutLen)
 	{
 		CK_SKF_FUNCTION_LIST_PTR ckpFunctions = (CK_SKF_FUNCTION_LIST_PTR)p_ckpFunctions;
 		HANDLE hContainer = NULL;
@@ -1149,7 +1148,7 @@ extern "C" {
 	}
 
 
-	ULONG SOF_SignFile(void * p_ckpFunctions, LPSTR pContainerName, LPSTR pFileIn, BYTE *pbDataOut, ULONG *pulDataOutLen)
+	ULONG CALL_CONVENTION SOF_SignFile(void * p_ckpFunctions, LPSTR pContainerName, LPSTR pFileIn, BYTE *pbDataOut, ULONG *pulDataOutLen)
 	{
 		std::fstream _fileIn;
 		ULONG ulResult = 0;
@@ -1223,7 +1222,7 @@ extern "C" {
 	}
 
 
-	ULONG SOF_VerifySignedFile(void * p_ckpFunctions, BYTE *pbCert, ULONG ulCertLen, LPSTR pFileIn, BYTE *pbDataOut, ULONG ulDataOutLen)
+	ULONG CALL_CONVENTION SOF_VerifySignedFile(void * p_ckpFunctions, BYTE *pbCert, ULONG ulCertLen, LPSTR pFileIn, BYTE *pbDataOut, ULONG ulDataOutLen)
 	{
 		std::fstream _fileIn; 
 		ULONG ulResult = 0;
@@ -1298,7 +1297,7 @@ extern "C" {
 		return ulResult;
 	}
 
-	ULONG SOF_EncryptData(void * p_ckpFunctions, BYTE *pbCert, ULONG ulCertLen, BYTE *pbDataIn, ULONG ulDataInLen, BYTE *pbDataOut, ULONG *pulDataOutLen)
+	ULONG CALL_CONVENTION SOF_EncryptData(void * p_ckpFunctions, BYTE *pbCert, ULONG ulCertLen, BYTE *pbDataIn, ULONG ulDataInLen, BYTE *pbDataOut, ULONG *pulDataOutLen)
 	{
 		CK_SKF_FUNCTION_LIST_PTR ckpFunctions = (CK_SKF_FUNCTION_LIST_PTR)p_ckpFunctions;
 		HANDLE hContainer = NULL;
@@ -1400,7 +1399,7 @@ extern "C" {
 		return ulResult;
 	}
 
-	ULONG SOF_DecryptData(void * p_ckpFunctions, LPSTR pContainerName, BYTE *pbDataIn, ULONG ulDataInLen, BYTE *pbDataOut, ULONG *pulDataOutLen)
+	ULONG CALL_CONVENTION SOF_DecryptData(void * p_ckpFunctions, LPSTR pContainerName, BYTE *pbDataIn, ULONG ulDataInLen, BYTE *pbDataOut, ULONG *pulDataOutLen)
 	{
 		CK_SKF_FUNCTION_LIST_PTR ckpFunctions = (CK_SKF_FUNCTION_LIST_PTR)p_ckpFunctions;
 		HANDLE hContainer = NULL;
@@ -1469,7 +1468,7 @@ extern "C" {
 		return ulResult;
 	}
 
-	ULONG SOF_EncryptFile(void * p_ckpFunctions, BYTE *pbCert, ULONG ulCertLen, LPSTR pFileIn, LPSTR pFileOut)
+	ULONG CALL_CONVENTION SOF_EncryptFile(void * p_ckpFunctions, BYTE *pbCert, ULONG ulCertLen, LPSTR pFileIn, LPSTR pFileOut)
 	{
 		std::fstream _fileIn;
 		std::fstream _fileOut;
@@ -1572,7 +1571,7 @@ extern "C" {
 		return ulResult;
 	}
 
-	ULONG SOF_DecryptFile(void * p_ckpFunctions, LPSTR pContainerName, LPSTR pFileIn, LPSTR pFileOut)
+	ULONG CALL_CONVENTION SOF_DecryptFile(void * p_ckpFunctions, LPSTR pContainerName, LPSTR pFileIn, LPSTR pFileOut)
 	{
 		std::fstream _fileIn;
 		std::fstream _fileOut;
@@ -1676,7 +1675,7 @@ extern "C" {
 	}
 
 
-	ULONG SOF_SignMessage(void * p_ckpFunctions, LPSTR pContainerName, UINT16 u16Flag, BYTE *pbDataIn,  ULONG ulDataInLen, BYTE *pbDataOut, ULONG *pulDataOutLen)
+	ULONG CALL_CONVENTION SOF_SignMessage(void * p_ckpFunctions, LPSTR pContainerName, UINT16 u16Flag, BYTE *pbDataIn,  ULONG ulDataInLen, BYTE *pbDataOut, ULONG *pulDataOutLen)
 	{
 		const unsigned char *ptr = NULL;
 		ASN1_INTEGER *serial_number = NULL;
@@ -2032,7 +2031,7 @@ extern "C" {
 	
 	extern "C" int CBS_asn1_ber_to_der(CBS *in, uint8_t **out, size_t *out_len);
 
-	ULONG SOF_VerifySignedMessage(void * p_ckpFunctions, BYTE *pbDataIn, ULONG ulDataInLen, BYTE *pbDataOut, ULONG ulDataOutLen)
+	ULONG CALL_CONVENTION SOF_VerifySignedMessage(void * p_ckpFunctions, BYTE *pbDataIn, ULONG ulDataInLen, BYTE *pbDataOut, ULONG ulDataOutLen)
 	{
 		CK_SKF_FUNCTION_LIST_PTR ckpFunctions = (CK_SKF_FUNCTION_LIST_PTR)p_ckpFunctions;
 		HANDLE hContainer = NULL;
@@ -2331,7 +2330,7 @@ end:
 	}
 
 
-	ULONG SOF_GetInfoFromSignedMessage(void * p_ckpFunctions, UINT16 u16Type, BYTE *pbDataIn, ULONG ulDataInLen, BYTE *pbInfo, ULONG *pulInfoLen)
+	ULONG CALL_CONVENTION SOF_GetInfoFromSignedMessage(void * p_ckpFunctions, UINT16 u16Type, BYTE *pbDataIn, ULONG ulDataInLen, BYTE *pbInfo, ULONG *pulInfoLen)
 	{
 		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "entering");
 		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting");
@@ -2340,17 +2339,7 @@ end:
 		return SOR_OK;
 	}
 
-	ULONG SOF_SignDataXML(void * p_ckpFunctions, LPSTR pContainerName, BYTE *pbDataIn, ULONG ulDataInLen, BYTE *pbDataOut, ULONG *pulDataOutLen)
-	{
-		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "entering");
-		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting");
-		ErrorCodeConvert(SOR_OK);
-
-		return SOR_OK;
-	}
-
-
-	ULONG SOF_VerifySignedDataXML(void * p_ckpFunctions, BYTE *pbDataIn, ULONG ulDataInLen)
+	ULONG CALL_CONVENTION SOF_SignDataXML(void * p_ckpFunctions, LPSTR pContainerName, BYTE *pbDataIn, ULONG ulDataInLen, BYTE *pbDataOut, ULONG *pulDataOutLen)
 	{
 		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "entering");
 		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting");
@@ -2360,7 +2349,7 @@ end:
 	}
 
 
-	ULONG SOF_GetXMLSignatureInfo(void * p_ckpFunctions, UINT16 u16Type, BYTE *pbDataIn, ULONG ulDataInLen, BYTE *pbInfo, ULONG *pulInfoLen)
+	ULONG CALL_CONVENTION SOF_VerifySignedDataXML(void * p_ckpFunctions, BYTE *pbDataIn, ULONG ulDataInLen)
 	{
 		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "entering");
 		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting");
@@ -2369,7 +2358,17 @@ end:
 		return SOR_OK;
 	}
 
-	ULONG SOF_GenRandom(void * p_ckpFunctions, UINT16 u16Type, BYTE *pbDataIn, ULONG ulDataInLen)
+
+	ULONG CALL_CONVENTION SOF_GetXMLSignatureInfo(void * p_ckpFunctions, UINT16 u16Type, BYTE *pbDataIn, ULONG ulDataInLen, BYTE *pbInfo, ULONG *pulInfoLen)
+	{
+		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "entering");
+		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting");
+		ErrorCodeConvert(SOR_OK);
+
+		return SOR_OK;
+	}
+
+	ULONG CALL_CONVENTION SOF_GenRandom(void * p_ckpFunctions, UINT16 u16Type, BYTE *pbDataIn, ULONG ulDataInLen)
 	{
 		ULONG ulResult = SOR_OK;
 		CK_SKF_FUNCTION_LIST_PTR ckpFunctions = (CK_SKF_FUNCTION_LIST_PTR)p_ckpFunctions;
@@ -2384,7 +2383,7 @@ end:
 		return ulResult;
 	}
 
-	ULONG SOF_GetLastError(void * p_ckpFunctions)
+	ULONG CALL_CONVENTION SOF_GetLastError(void * p_ckpFunctions)
 	{
 		ULONG ulResult = SOR_OK;
 
@@ -2397,7 +2396,7 @@ end:
 	}
 
 
-	ULONG SOF_FinalizeLibraryNative(CK_SKF_FUNCTION_LIST_PTR p_ckpFunctions) {
+	ULONG CALL_CONVENTION SOF_FinalizeLibraryNative(CK_SKF_FUNCTION_LIST_PTR p_ckpFunctions) {
 		ULONG ulResult = SOR_OK;
 
 		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "entering");
@@ -2425,7 +2424,7 @@ end:
 		return ulResult;
 	}
 
-	ULONG SOF_InitializeLibraryNative(char *pSKFLibraryPath, CK_SKF_FUNCTION_LIST_PTR *pp_ckpFunctions) {
+	ULONG CALL_CONVENTION SOF_InitializeLibraryNative(char *pSKFLibraryPath, CK_SKF_FUNCTION_LIST_PTR *pp_ckpFunctions) {
 		CK_SKF_FUNCTION_LIST_PTR ckpFunctions = new CK_SKF_FUNCTION_LIST;
 
 		void * hHandle = NULL;
