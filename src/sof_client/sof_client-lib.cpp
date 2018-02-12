@@ -15,6 +15,7 @@
 #include <iostream>
 #include <fstream>
 #include <sm2_boringssl.h>
+#include <openssl/mem.h>
 
 
 typedef CK_SOF_CLIENT_FUNCTION_LIST *CK_SOF_CLIENT_FUNCTION_LIST_PTR;
@@ -1691,8 +1692,8 @@ extern "C" {
 
 		int len = 0;
 
-		CBB out, outer_seq, oid, wrapped_seq, seq, version_bytes, digest_algos_set,
-			content_info, plaintext, plaintext_wrap, certificates, digest_alg, digest_algos, null_asn1, signerInfos, signerInfo, version_bytes1, digest_algos1, digest_alg1, encrypt_digest, encrypt_digests, signature;
+		CBB out, outer_seq, oid, wrapped_seq, seq, version_bytes, digests_set,
+			content_info, plaintext, plaintext_wrap, certificates, digest_alg, digests, null_asn1, signerInfos, signerInfo, version_bytes1, digests1, digest1, encrypt_digest, encrypt_digests, signature;
 
 		size_t result_len = 1024 * 1024 * 1024;
 
@@ -1884,11 +1885,11 @@ extern "C" {
 			!CBB_add_asn1(&wrapped_seq, &seq, CBS_ASN1_SEQUENCE) ||
 			!CBB_add_asn1(&seq, &version_bytes, CBS_ASN1_INTEGER) ||
 			!CBB_add_u8(&version_bytes, 1) ||
-			!CBB_add_asn1(&seq, &digest_algos_set, CBS_ASN1_SET) ||
-			!CBB_add_asn1(&digest_algos_set, &digest_algos, CBS_ASN1_SEQUENCE) ||
-			!CBB_add_asn1(&digest_algos, &digest_alg, CBS_ASN1_OBJECT) ||
+			!CBB_add_asn1(&seq, &digests_set, CBS_ASN1_SET) ||
+			!CBB_add_asn1(&digests_set, &digests, CBS_ASN1_SEQUENCE) ||
+			!CBB_add_asn1(&digests, &digest_alg, CBS_ASN1_OBJECT) ||
 			!CBB_add_bytes(&digest_alg, kHashData, kHashLen) ||                                     //添加算法
-			!CBB_add_asn1(&digest_algos, &null_asn1, CBS_ASN1_NULL) ||
+			!CBB_add_asn1(&digests, &null_asn1, CBS_ASN1_NULL) ||
 			!CBB_add_asn1(&seq, &content_info, CBS_ASN1_SEQUENCE) ||
 			!CBB_add_asn1(&content_info, &oid, CBS_ASN1_OBJECT) ||
 			!CBB_add_bytes(&oid, kPKCS7Data, kPKCS7Len))
@@ -1950,10 +1951,10 @@ extern "C" {
 		}
 
 
-		if (!CBB_add_asn1(&signerInfo, &digest_algos1, CBS_ASN1_SEQUENCE) ||
-			!CBB_add_asn1(&digest_algos1, &digest_alg1, CBS_ASN1_OBJECT) ||
-			!CBB_add_bytes(&digest_alg1, kHashData, kHashLen) ||            //添加HASH算法
-			!CBB_add_asn1(&digest_algos1, &null_asn1, CBS_ASN1_NULL)
+		if (!CBB_add_asn1(&signerInfo, &digests1, CBS_ASN1_SEQUENCE) ||
+			!CBB_add_asn1(&digests1, &digest1, CBS_ASN1_OBJECT) ||
+			!CBB_add_bytes(&digest1, kHashData, kHashLen) ||            //添加HASH算法
+			!CBB_add_asn1(&digests1, &null_asn1, CBS_ASN1_NULL)
 			)
 		{
 			ulResult = SOR_UNKNOWNERR;
@@ -2028,6 +2029,8 @@ extern "C" {
 		return ulResult;
 	}
 
+	
+	extern "C" int CBS_asn1_ber_to_der(CBS *in, uint8_t **out, size_t *out_len);
 
 	ULONG SOF_VerifySignedMessage(void * p_ckpFunctions, BYTE *pbDataIn, ULONG ulDataInLen, BYTE *pbDataOut, ULONG ulDataOutLen)
 	{
@@ -2038,20 +2041,177 @@ extern "C" {
 		CBS pkcs7;
 		RSA *rsa = NULL;
 
-		/*HANDLE hHash = 0;
+		BYTE pbCert[1024 * 4];
+		ULONG ulCertLen = sizeof(pbCert);
+
+		CertificateItemParse certParse;
+
+		HANDLE hHash = 0;
 
 		RSAPUBLICKEYBLOB rsaPublicKeyBlob = { 0 };
 		ECCPUBLICKEYBLOB eccPublicKeyBlob = { 0 };
 		BYTE hash_value[1024] = { 0 };
 		ULONG hash_len = sizeof(hash_value);
 
-		CBS_init(&pkcs7, pbDataOut, ulDataOutLen);
+		CBS signed_data, certificates;
+		uint8_t *der_bytes = NULL;
+		STACK_OF(X509) * out_certs = sk_X509_new_null();
 
+		const size_t initial_certs_len = sk_X509_num(out_certs);
+		size_t der_len;
+		CBS in, content_info, content_type, wrapped_signed_data, digests, digest, content, content_type1, digests_set, wrapped_plain_text, plain_text, signerInfos, signerInfo, signature;
+		uint64_t version;
 
-
-		CertificateItemParse certParse;
+		int hashAlg = 0;
 
 		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "entering");
+
+		CBS_init(&pkcs7, pbDataOut, ulDataOutLen);
+
+		der_bytes = NULL;
+
+		if (!CBS_asn1_ber_to_der(&pkcs7, &der_bytes, &der_len)) {
+			ulResult = SOR_UNKNOWNERR;
+			goto end;
+		}
+		if (der_bytes != NULL) {
+			CBS_init(&in, der_bytes, der_len);
+		}
+		else {
+			CBS_init(&in, CBS_data(&pkcs7), CBS_len(&pkcs7));
+		}
+
+		/* See https://tools.ietf.org/html/rfc2315#section-7 */
+		if (!CBS_get_asn1(&in, &content_info, CBS_ASN1_SEQUENCE) ||
+			!CBS_get_asn1(&content_info, &content_type, CBS_ASN1_OBJECT)) {
+			ulResult = SOR_UNKNOWNERR;
+			goto end;
+		}
+
+		//if (OBJ_cbs2nid(&content_type) != NID_pkcs7_signed) {
+		//	ulResult = SOR_UNKNOWNERR;
+		//	goto end;
+		//}
+
+		/* See https://tools.ietf.org/html/rfc2315#section-9.1 */
+		if (!CBS_get_asn1(&content_info, &wrapped_signed_data,
+			CBS_ASN1_CONTEXT_SPECIFIC | CBS_ASN1_CONSTRUCTED | 0) ||
+			!CBS_get_asn1(&wrapped_signed_data, &signed_data, CBS_ASN1_SEQUENCE) ||
+			!CBS_get_asn1_uint64(&signed_data, &version) ||
+			!CBS_get_asn1(&signed_data, &digests_set, CBS_ASN1_SET) ||
+			!CBS_get_asn1(&signed_data, &content, CBS_ASN1_SEQUENCE)) {
+			ulResult = SOR_UNKNOWNERR;
+			goto end;
+		}
+
+		if (!CBS_get_asn1(&signed_data, &signerInfos, CBS_ASN1_SET)) {
+			ulResult = SOR_UNKNOWNERR;
+			goto end;
+		}
+		
+		if (!CBS_get_asn1(&signerInfos, &signerInfo, CBS_ASN1_SEQUENCE) || 
+			!CBS_get_asn1(&signerInfo, NULL, CBS_ASN1_INTEGER) ||
+			!CBS_get_asn1(&signerInfo, NULL, CBS_ASN1_SEQUENCE) ||
+			!CBS_get_asn1(&signerInfo, NULL, CBS_ASN1_SEQUENCE) ||
+			!CBS_get_asn1(&signerInfo, &signature, CBS_ASN1_OCTETSTRING)
+			) {
+			ulResult = SOR_UNKNOWNERR;
+			goto end;
+		}
+
+
+		if (!CBS_get_asn1(&digests_set, &digests, CBS_ASN1_SEQUENCE) ||
+			!CBS_get_asn1(&digests, &digest, CBS_ASN1_OBJECT)
+			)
+		{
+			ulResult = SOR_UNKNOWNERR;
+			goto end;
+		}
+		else
+		{
+			if (0 == memcmp(CBS_data(&digest), kDataSM3, sizeof(kDataSM3)))
+			{
+				hashAlg = SGD_SM3;
+			}
+			else if (0 == memcmp(CBS_data(&digest), kDataSHA1, sizeof(kDataSHA1)))
+			{
+				hashAlg = SGD_SHA1;
+			}
+			else if (0 == memcmp(CBS_data(&digest), kDataSHA256, sizeof(kDataSHA256)))
+			{
+				hashAlg = SGD_SHA256;
+			}
+			else
+			{
+				ulResult = SOR_UNKNOWNERR;
+				goto end;
+			}
+		}
+
+
+		if (!CBS_get_asn1( &content, &content_type1, CBS_ASN1_OBJECT) 
+			)
+		{
+			ulResult = SOR_UNKNOWNERR;
+			goto end;
+		}
+
+		if (!CBS_get_asn1(&content, &wrapped_plain_text, CBS_ASN1_CONSTRUCTED | CBS_ASN1_CONTEXT_SPECIFIC) ||
+			!CBS_get_asn1(&wrapped_plain_text, &plain_text, CBS_ASN1_OCTETSTRING) || 
+			CBS_len(&plain_text) < 0)
+		{
+			// 无明文
+		}
+		else
+		{
+			pbDataIn = (unsigned char *)CBS_data(&plain_text);
+			ulDataInLen = CBS_len(&plain_text);
+		}
+
+
+		if (version < 1) {
+			ulResult = SOR_UNKNOWNERR;
+			goto end;
+		}
+
+		/* See https://tools.ietf.org/html/rfc2315#section-9.1 */
+		if (!CBS_get_asn1(&signed_data, &certificates,
+			CBS_ASN1_CONTEXT_SPECIFIC | CBS_ASN1_CONSTRUCTED | 0)) {
+			ulResult = SOR_UNKNOWNERR;
+			goto end;
+		}
+
+		while (CBS_len(&certificates) > 0) {
+			CBS cert;
+			X509 *x509;
+			const uint8_t *inp;
+
+			if (!CBS_get_asn1_element(&certificates, &cert, CBS_ASN1_SEQUENCE)) {
+				ulResult = SOR_UNKNOWNERR;
+				goto end;
+			}
+
+			if (CBS_len(&cert) > LONG_MAX) {
+				ulResult = SOR_UNKNOWNERR;
+				goto end;
+			}
+			inp = CBS_data(&cert);
+			x509 = d2i_X509(NULL, &inp, (long)CBS_len(&cert));
+			if (!x509) {
+				ulResult = SOR_UNKNOWNERR;
+				goto end;
+			}
+
+			assert(inp == CBS_data(&cert) + CBS_len(&cert));
+
+			memcpy(pbCert, CBS_data(&cert), CBS_len(&cert));
+			ulCertLen = CBS_len(&cert);
+
+			if (sk_X509_push(out_certs, x509) == 0) {
+				ulResult = SOR_UNKNOWNERR;
+				goto end;
+			}
+		}
 
 		certParse.setCertificate(pbCert, ulCertLen);
 
@@ -2088,25 +2248,8 @@ extern "C" {
 				X509_free(x509);
 			}
 
-
-			if (global_data.sign_method == SGD_SM3_RSA)
-			{
-				ulResult = ckpFunctions->SKF_DigestInit(global_data.hDevHandle, SGD_SM3, 0, 0, 0, &hHash);
-			}
-			else if (global_data.sign_method == SGD_SHA1_RSA)
-			{
-				ulResult = ckpFunctions->SKF_DigestInit(global_data.hDevHandle, SGD_SHA1, 0, 0, 0, &hHash);
-			}
-			else if (global_data.sign_method == SGD_SHA256_RSA)
-			{
-				ulResult = ckpFunctions->SKF_DigestInit(global_data.hDevHandle, SGD_SHA256, 0, 0, 0, &hHash);
-			}
-			else
-			{
-				ulResult = SOR_UNKNOWNERR;
-				goto end;
-			}
-
+			ulResult = ckpFunctions->SKF_DigestInit(global_data.hDevHandle, hashAlg, 0, 0, 0, &hHash);
+			
 			if (ulResult)
 			{
 				goto end;
@@ -2118,7 +2261,7 @@ extern "C" {
 				goto end;
 			}
 
-			ulResult = ckpFunctions->SKF_RSAVerify(global_data.hDevHandle, &rsaPublicKeyBlob, hash_value, hash_len, pbDataOut, ulDataOutLen);
+			ulResult = ckpFunctions->SKF_RSAVerify(global_data.hDevHandle, &rsaPublicKeyBlob, hash_value, hash_len, (BYTE *)CBS_data(&signature), CBS_len(&signature));
 		}
 		else if (ECertificate_KEY_ALG_EC == certParse.m_iKeyAlg)
 		{
@@ -2147,7 +2290,7 @@ extern "C" {
 				goto end;
 			}
 
-			ulResult = SM2SignD2i(pbDataOut, ulDataOutLen, tmp_data, (int *)&tmp_len);
+			ulResult = SM2SignD2i((BYTE *)CBS_data(&signature), CBS_len(&signature), tmp_data, (int *)&tmp_len);
 			if (ulResult)
 			{
 				ulResult = SOR_INDATAERR;
@@ -2163,14 +2306,22 @@ extern "C" {
 		{
 			ulResult = SOR_NOTSUPPORTYETERR;
 			goto end;
-		}*/
+		}
+end:
 
-	end:
+		if (der_bytes) {
+			OPENSSL_free(der_bytes);
+		}
 
-		//if (hHash)
-		//{
-		//	ckpFunctions->SKF_CloseHandle(hHash);
-		//}
+		while (sk_X509_num(out_certs) != initial_certs_len) {
+			X509 *x509 = sk_X509_pop(out_certs);
+			X509_free(x509);
+		}
+
+		if (hHash)
+		{
+			ckpFunctions->SKF_CloseHandle(hHash);
+		}
 
 		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting");
 
