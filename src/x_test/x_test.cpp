@@ -7,7 +7,7 @@
 #include <vector>
 #include "sof_client.h"
 
-
+#include "FILE_LOG.h"
 
 
 int main(int argc, char * argv[])
@@ -73,7 +73,35 @@ int main(int argc, char * argv[])
 	{
 		goto end;
 	}
+	signature_len = sizeof(signature);
+	ulResult = SOF_SignMessage(ckpFunctions, "RT_SM_CON",1, plain, plain_len, signature, &signature_len);
+	if (ulResult)
+	{
+		goto end;
+	}
 
+	FILE_WRITE_BYTE( "D:/sm2.a", signature, signature_len);
+
+	ulResult = SOF_VerifySignedMessage(ckpFunctions, plain, plain_len, signature, signature_len);
+	if (ulResult)
+	{
+		goto end;
+	}
+
+	signature_len = sizeof(signature);
+	ulResult = SOF_SignMessage(ckpFunctions, "RT_SM_CON", 0, plain, plain_len, signature, &signature_len);
+	if (ulResult)
+	{
+		goto end;
+	}
+
+	FILE_WRITE_BYTE( "D:/sm2.d", signature, signature_len);
+
+	ulResult = SOF_VerifySignedMessage(ckpFunctions, plain, plain_len, signature, signature_len);
+	if (ulResult)
+	{
+		goto end;
+	}
 
 end:
 	

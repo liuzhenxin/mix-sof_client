@@ -1689,6 +1689,8 @@ extern "C" {
 
 		HANDLE hHash = 0;
 
+		size_t require_len = 0;
+
 		int len = 0;
 
 		CBB out, outer_seq, oid, wrapped_seq, seq, version_bytes, digests_set,
@@ -1697,6 +1699,8 @@ extern "C" {
 		size_t result_len = 1024 * 1024 * 1024;
 
 		ECCSIGNATUREBLOB blob = { 0 };
+
+		uint8_t *out_buf = NULL;
 
 		BYTE pbCert[1024 * 4];
 		ULONG ulCertLen = sizeof(pbCert);
@@ -1909,8 +1913,9 @@ extern "C" {
 
 		// See https://tools.ietf.org/html/rfc2315#section-9.1
 		if (!CBB_add_asn1(&seq, &certificates, CBS_ASN1_CONTEXT_SPECIFIC | CBS_ASN1_CONSTRUCTED | 0) ||     // 证书
-			!CBB_add_bytes(&certificates, (uint8_t *)pbCert, ulCertLen) ||                                  // 证书 
-			!CBB_flush(&seq)) {
+			!CBB_add_bytes(&certificates, (uint8_t *)pbCert, ulCertLen) 
+			
+			) {
 			return 0;
 		}
 
@@ -1929,8 +1934,7 @@ extern "C" {
 		len = i2d_X509_NAME(issue_name, NULL);
 
 		if (len < 0 || !CBB_add_space(&signerInfo, &buf, len) ||
-			i2d_X509_NAME(issue_name, &buf) < 0 ||
-			CBB_flush(&signerInfo)
+			i2d_X509_NAME(issue_name, &buf) < 0
 			)
 		{
 			ulResult = SOR_UNKNOWNERR;
@@ -1941,8 +1945,7 @@ extern "C" {
 		serial_number = X509_get_serialNumber(x509);
 		len = i2d_ASN1_INTEGER(serial_number, NULL);
 		if (len < 0 || !CBB_add_space(&signerInfo, &buf, len) ||
-			i2d_ASN1_INTEGER(serial_number, &buf) < 0 ||
-			CBB_flush(&signerInfo)
+			i2d_ASN1_INTEGER(serial_number, &buf) < 0 
 			)
 		{
 			ulResult = SOR_UNKNOWNERR;
@@ -1987,19 +1990,25 @@ extern "C" {
 			goto end;
 		}
 
+		if (!CBB_finish(&out, &out_buf, &require_len))
+		{
+			ulResult = SOR_UNKNOWNERR;
+			goto end;
+		}
+
 		if (NULL == pbDataOut)
 		{
-			*pulDataOutLen = CBB_len(&out);
+			*pulDataOutLen = require_len;
 			ulResult = SOR_OK;
 		}
-		else if (CBB_len(&out) >  *pulDataOutLen)
+		else if (require_len >  *pulDataOutLen)
 		{
-			*pulDataOutLen = CBB_len(&out);
+			*pulDataOutLen = require_len;
 			ulResult = SOR_MEMORYERR;
 		}
 		else
 		{
-			*pulDataOutLen = CBB_len(&out);
+			*pulDataOutLen = require_len;
 			CBB_finish(&out, &pbDataOut, pulDataOutLen);
 			ulResult = SOR_OK;
 		}
