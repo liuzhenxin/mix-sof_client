@@ -24,7 +24,10 @@ int main(int argc, char * argv[])
 	ULONG plain_len = sizeof(plain);
 	ULONG sign_cert_len = sizeof(sign_cert);
 	ULONG signature_len = sizeof(signature);
+	int i = 0;
 
+	unsigned char info[2048] = { 0 };
+	ULONG info_len  = sizeof(info);
 	
 
 	CK_SKF_FUNCTION_LIST *ckpFunctions = NULL;
@@ -80,6 +83,16 @@ int main(int argc, char * argv[])
 		goto end;
 	}
 
+	for (i = 1; i < 4; i++)
+	{
+		info_len = sizeof(info);
+		ulResult = SOF_GetInfoFromSignedMessage(ckpFunctions, i, signature, signature_len, info, &info_len);
+		if (ulResult)
+		{
+			goto end;
+		}
+	}
+
 	ulResult = SOF_VerifySignedMessage(ckpFunctions, NULL, 0, signature, signature_len);
 	if (ulResult)
 	{
@@ -94,6 +107,19 @@ int main(int argc, char * argv[])
 	}
 
 	ulResult = SOF_VerifySignedMessage(ckpFunctions, plain, plain_len, signature, signature_len);
+	if (ulResult)
+	{
+		goto end;
+	}
+
+	signature_len = sizeof(signature);
+	ulResult = SOF_SignFile(ckpFunctions, "RT_SM_CON", "D:/test.txt", signature, &signature_len);
+	if (ulResult)
+	{
+		goto end;
+	}
+
+	ulResult = SOF_VerifySignedFile(ckpFunctions, sign_cert, sign_cert_len, "D:/test.txt", signature, signature_len);
 	if (ulResult)
 	{
 		goto end;
