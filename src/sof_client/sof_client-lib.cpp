@@ -1694,7 +1694,7 @@ extern "C" {
 		int len = 0;
 
 		CBB out, outer_seq, oid, wrapped_seq, seq, version_bytes, digests_set,
-			content_info, plaintext, plaintext_wrap, certificates, digest_alg, digests, null_asn1, signerInfos, signerInfo, version_bytes1, digests1, digest1, encrypt_digest, encrypt_digests, signature;
+			content_info, plaintext, plaintext_wrap, certificates, digest_alg, issue_and_sn, digests, null_asn1, signerInfos, signerInfo, version_bytes1, digests1, digest1, encrypt_digest, encrypt_digests, signature;
 
 		size_t result_len = 1024 * 1024 * 1024;
 
@@ -1876,7 +1876,7 @@ extern "C" {
 			goto end;
 		}
 
-		CBB_init(&out, 1024 * 1024 * 1024);
+		CBB_init(&out, 1024 * 1024 * 10);
 
 		// See https://tools.ietf.org/html/rfc2315#section-7
 		if (!CBB_add_asn1(&out, &outer_seq, CBS_ASN1_SEQUENCE) ||
@@ -1923,7 +1923,8 @@ extern "C" {
 		if (!CBB_add_asn1(&seq, &signerInfos, CBS_ASN1_SET) ||
 			!CBB_add_asn1(&signerInfos, &signerInfo, CBS_ASN1_SEQUENCE) ||
 			!CBB_add_asn1(&signerInfo, &version_bytes1, CBS_ASN1_INTEGER) ||
-			!CBB_add_u8(&version_bytes1, 1)
+			!CBB_add_u8(&version_bytes1, 1) ||
+			!CBB_add_asn1(&signerInfo, &issue_and_sn, CBS_ASN1_SEQUENCE) 
 			)
 		{
 			ulResult = SOR_UNKNOWNERR;
@@ -1933,7 +1934,7 @@ extern "C" {
 
 		len = i2d_X509_NAME(issue_name, NULL);
 
-		if (len < 0 || !CBB_add_space(&signerInfo, &buf, len) ||
+		if (len < 0 || !CBB_add_space(&issue_and_sn, &buf, len) ||
 			i2d_X509_NAME(issue_name, &buf) < 0
 			)
 		{
@@ -1944,7 +1945,7 @@ extern "C" {
 		// 序列号
 		serial_number = X509_get_serialNumber(x509);
 		len = i2d_ASN1_INTEGER(serial_number, NULL);
-		if (len < 0 || !CBB_add_space(&signerInfo, &buf, len) ||
+		if (len < 0 || !CBB_add_space(&issue_and_sn, &buf, len) ||
 			i2d_ASN1_INTEGER(serial_number, &buf) < 0 
 			)
 		{
@@ -2009,7 +2010,7 @@ extern "C" {
 		else
 		{
 			*pulDataOutLen = require_len;
-			CBB_finish(&out, &pbDataOut, pulDataOutLen);
+			memcpy(pbDataOut, out_buf, require_len);
 			ulResult = SOR_OK;
 		}
 
@@ -2112,6 +2113,46 @@ extern "C" {
 			goto end;
 		}
 
+
+		/* See https://tools.ietf.org/html/rfc2315#section-9.1 */
+		if (!CBS_get_asn1(&signed_data, &certificates,
+			CBS_ASN1_CONTEXT_SPECIFIC | CBS_ASN1_CONSTRUCTED | 0)) {
+			ulResult = SOR_UNKNOWNERR;
+			goto end;
+		}
+
+		while (CBS_len(&certificates) > 0) {
+			CBS cert;
+			X509 *x509;
+			const uint8_t *inp;
+
+			if (!CBS_get_asn1_element(&certificates, &cert, CBS_ASN1_SEQUENCE)) {
+				ulResult = SOR_UNKNOWNERR;
+				goto end;
+			}
+
+			if (CBS_len(&cert) > LONG_MAX) {
+				ulResult = SOR_UNKNOWNERR;
+				goto end;
+			}
+			inp = CBS_data(&cert);
+			x509 = d2i_X509(NULL, &inp, (long)CBS_len(&cert));
+			if (!x509) {
+				ulResult = SOR_UNKNOWNERR;
+				goto end;
+			}
+
+			assert(inp == CBS_data(&cert) + CBS_len(&cert));
+
+			memcpy(pbCert, CBS_data(&cert), CBS_len(&cert));
+			ulCertLen = CBS_len(&cert);
+
+			if (sk_X509_push(out_certs, x509) == 0) {
+				ulResult = SOR_UNKNOWNERR;
+				goto end;
+			}
+		}
+
 		if (!CBS_get_asn1(&signed_data, &signerInfos, CBS_ASN1_SET)) {
 			ulResult = SOR_UNKNOWNERR;
 			goto end;
@@ -2119,6 +2160,7 @@ extern "C" {
 		
 		if (!CBS_get_asn1(&signerInfos, &signerInfo, CBS_ASN1_SEQUENCE) || 
 			!CBS_get_asn1(&signerInfo, NULL, CBS_ASN1_INTEGER) ||
+			!CBS_get_asn1(&signerInfo, NULL, CBS_ASN1_SEQUENCE) ||
 			!CBS_get_asn1(&signerInfo, NULL, CBS_ASN1_SEQUENCE) ||
 			!CBS_get_asn1(&signerInfo, NULL, CBS_ASN1_SEQUENCE) ||
 			!CBS_get_asn1(&signerInfo, &signature, CBS_ASN1_OCTETSTRING)
@@ -2182,44 +2224,7 @@ extern "C" {
 			goto end;
 		}
 
-		/* See https://tools.ietf.org/html/rfc2315#section-9.1 */
-		if (!CBS_get_asn1(&signed_data, &certificates,
-			CBS_ASN1_CONTEXT_SPECIFIC | CBS_ASN1_CONSTRUCTED | 0)) {
-			ulResult = SOR_UNKNOWNERR;
-			goto end;
-		}
-
-		while (CBS_len(&certificates) > 0) {
-			CBS cert;
-			X509 *x509;
-			const uint8_t *inp;
-
-			if (!CBS_get_asn1_element(&certificates, &cert, CBS_ASN1_SEQUENCE)) {
-				ulResult = SOR_UNKNOWNERR;
-				goto end;
-			}
-
-			if (CBS_len(&cert) > LONG_MAX) {
-				ulResult = SOR_UNKNOWNERR;
-				goto end;
-			}
-			inp = CBS_data(&cert);
-			x509 = d2i_X509(NULL, &inp, (long)CBS_len(&cert));
-			if (!x509) {
-				ulResult = SOR_UNKNOWNERR;
-				goto end;
-			}
-
-			assert(inp == CBS_data(&cert) + CBS_len(&cert));
-
-			memcpy(pbCert, CBS_data(&cert), CBS_len(&cert));
-			ulCertLen = CBS_len(&cert);
-
-			if (sk_X509_push(out_certs, x509) == 0) {
-				ulResult = SOR_UNKNOWNERR;
-				goto end;
-			}
-		}
+		
 
 		certParse.setCertificate(pbCert, ulCertLen);
 

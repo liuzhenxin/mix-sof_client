@@ -80,9 +80,7 @@ int main(int argc, char * argv[])
 		goto end;
 	}
 
-	FILE_WRITE_BYTE( "D:/sm2.a", signature, signature_len);
-
-	ulResult = SOF_VerifySignedMessage(ckpFunctions, plain, plain_len, signature, signature_len);
+	ulResult = SOF_VerifySignedMessage(ckpFunctions, NULL, 0, signature, signature_len);
 	if (ulResult)
 	{
 		goto end;
@@ -94,8 +92,6 @@ int main(int argc, char * argv[])
 	{
 		goto end;
 	}
-
-	FILE_WRITE_BYTE( "D:/sm2.d", signature, signature_len);
 
 	ulResult = SOF_VerifySignedMessage(ckpFunctions, plain, plain_len, signature, signature_len);
 	if (ulResult)
