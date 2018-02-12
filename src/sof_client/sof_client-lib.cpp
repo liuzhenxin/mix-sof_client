@@ -2346,11 +2346,232 @@ end:
 
 	ULONG CALL_CONVENTION SOF_GetInfoFromSignedMessage(void * p_ckpFunctions, UINT16 u16Type, BYTE *pbDataIn, ULONG ulDataInLen, BYTE *pbInfo, ULONG *pulInfoLen)
 	{
-		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "entering");
-		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting");
-		ErrorCodeConvert(SOR_OK);
+		CK_SKF_FUNCTION_LIST_PTR ckpFunctions = (CK_SKF_FUNCTION_LIST_PTR)p_ckpFunctions;
+		ULONG ulResult = 0;
+		CBS pkcs7;
+		BYTE pbCert[1024 * 4];
+		ULONG ulCertLen = sizeof(pbCert);
+		CBS signed_data, certificates;
+		uint8_t *der_bytes = NULL;
+		STACK_OF(X509) * out_certs = sk_X509_new_null();
 
-		return SOR_OK;
+		unsigned char *data_info_value = NULL;
+		int data_info_len = 0;
+
+		const size_t initial_certs_len = sk_X509_num(out_certs);
+		size_t der_len;
+		CBS in, content_info, content_type, wrapped_signed_data, digests, digest, content, content_type1, digests_set, wrapped_plain_text, plain_text, signerInfos, signerInfo, signature;
+		uint64_t version;
+
+		int hashAlg = 0;
+
+		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "entering");
+
+		CBS_init(&pkcs7, pbDataIn, ulDataInLen);
+
+		der_bytes = NULL;
+
+		if (!CBS_asn1_ber_to_der(&pkcs7, &der_bytes, &der_len)) {
+			ulResult = SOR_UNKNOWNERR;
+			goto end;
+		}
+		if (der_bytes != NULL) {
+			CBS_init(&in, der_bytes, der_len);
+		}
+		else {
+			CBS_init(&in, CBS_data(&pkcs7), CBS_len(&pkcs7));
+		}
+
+		/* See https://tools.ietf.org/html/rfc2315#section-7 */
+		if (!CBS_get_asn1(&in, &content_info, CBS_ASN1_SEQUENCE) ||
+			!CBS_get_asn1(&content_info, &content_type, CBS_ASN1_OBJECT)) {
+			ulResult = SOR_UNKNOWNERR;
+			goto end;
+		}
+
+		//if (OBJ_cbs2nid(&content_type) != NID_pkcs7_signed) {
+		//	ulResult = SOR_UNKNOWNERR;
+		//	goto end;
+		//}
+
+		/* See https://tools.ietf.org/html/rfc2315#section-9.1 */
+		if (!CBS_get_asn1(&content_info, &wrapped_signed_data,
+			CBS_ASN1_CONTEXT_SPECIFIC | CBS_ASN1_CONSTRUCTED | 0) ||
+			!CBS_get_asn1(&wrapped_signed_data, &signed_data, CBS_ASN1_SEQUENCE) ||
+			!CBS_get_asn1_uint64(&signed_data, &version) ||
+			!CBS_get_asn1(&signed_data, &digests_set, CBS_ASN1_SET) ||
+			!CBS_get_asn1(&signed_data, &content, CBS_ASN1_SEQUENCE)) {
+			ulResult = SOR_UNKNOWNERR;
+			goto end;
+		}
+
+
+		/* See https://tools.ietf.org/html/rfc2315#section-9.1 */
+		if (!CBS_get_asn1(&signed_data, &certificates,
+			CBS_ASN1_CONTEXT_SPECIFIC | CBS_ASN1_CONSTRUCTED | 0)) {
+			ulResult = SOR_UNKNOWNERR;
+			goto end;
+		}
+
+		while (CBS_len(&certificates) > 0) {
+			CBS cert;
+			X509 *x509;
+			const uint8_t *inp;
+
+			if (!CBS_get_asn1_element(&certificates, &cert, CBS_ASN1_SEQUENCE)) {
+				ulResult = SOR_UNKNOWNERR;
+				goto end;
+			}
+
+			if (CBS_len(&cert) > LONG_MAX) {
+				ulResult = SOR_UNKNOWNERR;
+				goto end;
+			}
+			inp = CBS_data(&cert);
+			x509 = d2i_X509(NULL, &inp, (long)CBS_len(&cert));
+			if (!x509) {
+				ulResult = SOR_UNKNOWNERR;
+				goto end;
+			}
+
+			assert(inp == CBS_data(&cert) + CBS_len(&cert));
+
+			memcpy(pbCert, CBS_data(&cert), CBS_len(&cert));
+			ulCertLen = CBS_len(&cert);
+
+			if (sk_X509_push(out_certs, x509) == 0) {
+				ulResult = SOR_UNKNOWNERR;
+				goto end;
+			}
+		}
+
+		if (!CBS_get_asn1(&signed_data, &signerInfos, CBS_ASN1_SET)) {
+			ulResult = SOR_UNKNOWNERR;
+			goto end;
+		}
+
+		if (!CBS_get_asn1(&signerInfos, &signerInfo, CBS_ASN1_SEQUENCE) ||
+			!CBS_get_asn1(&signerInfo, NULL, CBS_ASN1_INTEGER) ||
+			!CBS_get_asn1(&signerInfo, NULL, CBS_ASN1_SEQUENCE) ||
+			!CBS_get_asn1(&signerInfo, NULL, CBS_ASN1_SEQUENCE) ||
+			!CBS_get_asn1(&signerInfo, NULL, CBS_ASN1_SEQUENCE) ||
+			!CBS_get_asn1(&signerInfo, &signature, CBS_ASN1_OCTETSTRING)
+			) {
+			ulResult = SOR_UNKNOWNERR;
+			goto end;
+		}
+
+
+		if (!CBS_get_asn1(&digests_set, &digests, CBS_ASN1_SEQUENCE) ||
+			!CBS_get_asn1(&digests, &digest, CBS_ASN1_OBJECT)
+			)
+		{
+			ulResult = SOR_UNKNOWNERR;
+			goto end;
+		}
+		else
+		{
+			if (0 == memcmp(CBS_data(&digest), kDataSM3, sizeof(kDataSM3)))
+			{
+				hashAlg = SGD_SM3;
+			}
+			else if (0 == memcmp(CBS_data(&digest), kDataSHA1, sizeof(kDataSHA1)))
+			{
+				hashAlg = SGD_SHA1;
+			}
+			else if (0 == memcmp(CBS_data(&digest), kDataSHA256, sizeof(kDataSHA256)))
+			{
+				hashAlg = SGD_SHA256;
+			}
+			else
+			{
+				ulResult = SOR_UNKNOWNERR;
+				goto end;
+			}
+		}
+
+
+		if (!CBS_get_asn1(&content, &content_type1, CBS_ASN1_OBJECT)
+			)
+		{
+			ulResult = SOR_UNKNOWNERR;
+			goto end;
+		}
+
+		if (!CBS_get_asn1(&content, &wrapped_plain_text, CBS_ASN1_CONSTRUCTED | CBS_ASN1_CONTEXT_SPECIFIC) ||
+			!CBS_get_asn1(&wrapped_plain_text, &plain_text, CBS_ASN1_OCTETSTRING) ||
+			CBS_len(&plain_text) < 0)
+		{
+			// 无明文
+			if (u16Type == 1)
+			{
+				ulResult = SOR_UNKNOWNERR;
+				goto end;
+			}
+		}
+		else
+		{
+
+		}
+
+		if (version < 1) {
+			ulResult = SOR_UNKNOWNERR;
+			goto end;
+		}
+
+		if (u16Type == 1) // plain
+		{
+			data_info_value = (unsigned char *)CBS_data(&plain_text);
+			data_info_len = CBS_len(&plain_text);
+		}
+		else if(u16Type == 2) // cert
+		{
+			data_info_value = pbCert;
+			data_info_len = ulCertLen;
+		}
+		else if (u16Type == 3) // signature
+		{
+			data_info_value = (BYTE *)CBS_data(&signature);
+			data_info_len = CBS_len(&signature);
+		}
+		else
+		{
+			ulResult = SOR_UNKNOWNERR;
+			goto end;
+		}
+
+		if (NULL == pbInfo)
+		{
+			*pulInfoLen = data_info_len;
+			ulResult = SOR_OK;
+		}
+		else if (data_info_len >  *pulInfoLen)
+		{
+			*pulInfoLen = data_info_len;
+			ulResult = SOR_MEMORYERR;
+		}
+		else
+		{
+			*pulInfoLen = data_info_len;
+			memcpy(pbInfo, data_info_value, data_info_len);
+			ulResult = SOR_OK;
+		}
+	end:
+
+		if (der_bytes) {
+			OPENSSL_free(der_bytes);
+		}
+
+		while (sk_X509_num(out_certs) != initial_certs_len) {
+			X509 *x509 = sk_X509_pop(out_certs);
+			X509_free(x509);
+		}
+
+		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting");
+
+		ulResult = ErrorCodeConvert(ulResult);
+
+		return ulResult;
 	}
 
 	ULONG CALL_CONVENTION SOF_SignDataXML(void * p_ckpFunctions, LPSTR pContainerName, BYTE *pbDataIn, ULONG ulDataInLen, BYTE *pbDataOut, ULONG *pulDataOutLen)
