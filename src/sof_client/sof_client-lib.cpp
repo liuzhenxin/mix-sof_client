@@ -243,7 +243,7 @@ extern "C" {
 
 			}
 
-			strUserList.append(data_info_value);
+			strUserList.append(strstr(data_info_value, "=") == NULL ? "" : strstr(data_info_value, "=")+1);
 			strUserList.append("||");
 			strUserList.append(ptr);
 			ckpFunctions->SKF_CloseContainer(hContainer);
@@ -256,18 +256,18 @@ extern "C" {
 
 		if (NULL == pbUserList)
 		{
-			*pulUserListLen = data_info_len;
+			*pulUserListLen = strUserList.size();
 			ulResult = SOR_OK;
 		}
-		else if (data_info_len >  *pulUserListLen)
+		else if (strUserList.size() >  *pulUserListLen)
 		{
-			*pulUserListLen = data_info_len;
+			*pulUserListLen = strUserList.size();
 			ulResult = SOR_MEMORYERR;
 		}
 		else
 		{
-			*pulUserListLen = data_info_len;
-			memcpy(pbUserList, data_info_value, data_info_len);
+			*pulUserListLen = strUserList.size();
+			memcpy(pbUserList, strUserList.c_str(), strUserList.size());
 			ulResult = SOR_OK;
 		}
 
@@ -896,7 +896,7 @@ extern "C" {
 				goto end;
 			}
 
-			ulResult = ckpFunctions->SKF_Digest(&hHash, pbDataIn, ulDataInLen, hash_value, &hash_len);
+			ulResult = ckpFunctions->SKF_Digest(hHash, pbDataIn, ulDataInLen, hash_value, &hash_len);
 			if (ulResult)
 			{
 				goto end;
@@ -928,7 +928,7 @@ extern "C" {
 					goto end;
 				}
 
-				ulResult = ckpFunctions->SKF_Digest(&hHash, pbDataIn, ulDataInLen, hash_value, &hash_len);
+				ulResult = ckpFunctions->SKF_Digest(hHash, pbDataIn, ulDataInLen, hash_value, &hash_len);
 				if (ulResult)
 				{
 					goto end;
@@ -1080,7 +1080,7 @@ extern "C" {
 				goto end;
 			}
 
-			ulResult = ckpFunctions->SKF_Digest(&hHash, pbDataIn, ulDataInLen, hash_value, &hash_len);
+			ulResult = ckpFunctions->SKF_Digest(hHash, pbDataIn, ulDataInLen, hash_value, &hash_len);
 			if (ulResult)
 			{
 				goto end;
@@ -1109,7 +1109,7 @@ extern "C" {
 				goto end;
 			}
 
-			ulResult = ckpFunctions->SKF_Digest(&hHash, pbDataIn, ulDataInLen, hash_value, &hash_len);
+			ulResult = ckpFunctions->SKF_Digest(hHash, pbDataIn, ulDataInLen, hash_value, &hash_len);
 			if (ulResult)
 			{
 				goto end;
@@ -1797,7 +1797,7 @@ extern "C" {
 				goto end;
 			}
 			
-			ulResult = ckpFunctions->SKF_Digest(&hHash, pbDataIn, ulDataInLen, hash_value, &hash_len);
+			ulResult = ckpFunctions->SKF_Digest(hHash, pbDataIn, ulDataInLen, hash_value, &hash_len);
 			if (ulResult)
 			{
 				goto end;
@@ -1841,7 +1841,7 @@ extern "C" {
 					goto end;
 				}
 
-				ulResult = ckpFunctions->SKF_Digest(&hHash, pbDataIn, ulDataInLen, hash_value, &hash_len);
+				ulResult = ckpFunctions->SKF_Digest(hHash, pbDataIn, ulDataInLen, hash_value, &hash_len);
 				if (ulResult)
 				{
 					goto end;
@@ -2254,7 +2254,7 @@ extern "C" {
 				goto end;
 			}
 
-			ulResult = ckpFunctions->SKF_Digest(&hHash, pbDataIn, ulDataInLen, hash_value, &hash_len);
+			ulResult = ckpFunctions->SKF_Digest(hHash, pbDataIn, ulDataInLen, hash_value, &hash_len);
 			if (ulResult)
 			{
 				goto end;
@@ -2283,7 +2283,7 @@ extern "C" {
 				goto end;
 			}
 
-			ulResult = ckpFunctions->SKF_Digest(&hHash, pbDataIn, ulDataInLen, hash_value, &hash_len);
+			ulResult = ckpFunctions->SKF_Digest(hHash, pbDataIn, ulDataInLen, hash_value, &hash_len);
 			if (ulResult)
 			{
 				goto end;
