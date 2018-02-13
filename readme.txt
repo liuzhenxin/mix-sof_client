@@ -8,3 +8,6 @@ mkdir src/build
 cd build
 cmake ..
 
+
+cmake .. -G "Visual Studio 10 2010"
+
