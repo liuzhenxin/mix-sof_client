@@ -28,7 +28,7 @@ LINK_DIRECTORIES(
 FILE(GLOB 
   common_cs 
   ${CMAKE_SOURCE_DIR}/sof_client/FILE_LOG.c 
-  ${CMAKE_SOURCE_DIR}/sof_client/modp_b64.c 
+  ${CMAKE_SOURCE_DIR}/sof_client/modp_b64.cc 
   ${CMAKE_SOURCE_DIR}/sof_client/o_all_func_def.c 
   ${CMAKE_SOURCE_DIR}/sof_client/openssl_func_def.c 
   )

@@ -67,7 +67,7 @@ static const uint8_t kDataSHA256[] = { 0x60, 0x86 , 0x48 , 0x01 , 0x65 , 0x03, 0
 static const uint8_t kDataSHA1[] = { 0x2B, 0x0E , 0x03 , 0x02 , 0x1A };
 
 // 1.2.840.113549.1.1.1
-static const uint8_t kDataRSA[]{ 0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d,0x01, 0x01,0x01 };
+static const uint8_t kDataRSA[] = { 0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d,0x01, 0x01,0x01 };
 
 
 
@@ -1407,8 +1407,6 @@ extern "C" {
 		ULONG ulResult = 0;
 		ULONG ulContainerType = 0;
 
-		ECCSIGNATUREBLOB blob;
-
 		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "entering");
 
 		ulResult = ckpFunctions->SKF_OpenContainer(global_data.hAppHandle, pContainerName, &hContainer);
@@ -1431,23 +1429,6 @@ extern "C" {
 		else if (ulContainerType == 2)
 		{
 			ulResult = ckpFunctions->SKF_ECCDecrypt(hContainer, pbDataIn, ulDataInLen, pbDataOut, pulDataOutLen);
-
-			if (NULL == pbDataOut)
-			{
-				*pulDataOutLen = sizeof(blob);
-				ulResult = SOR_OK;
-			}
-			else if (sizeof(blob) >  *pulDataOutLen)
-			{
-				*pulDataOutLen = sizeof(blob);
-				ulResult = SOR_MEMORYERR;
-			}
-			else
-			{
-				*pulDataOutLen = sizeof(blob);
-				memcpy(pbDataOut, &blob, sizeof(blob));
-				ulResult = SOR_OK;
-			}
 		}
 		else
 		{

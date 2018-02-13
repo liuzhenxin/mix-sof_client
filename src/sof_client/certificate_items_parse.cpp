@@ -5,6 +5,11 @@
 #include <openssl/x509.h>
 #include <openssl/x509v3.h>
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <windows.h>
+#include <locale.h>
+
 
 
 /*
@@ -75,7 +80,7 @@ static int API_TimeToStringEX(string &strDateStr, const time_t &timeData)
 	p->tm_year = p->tm_year + 1900;
 	p->tm_mon = p->tm_mon + 1;
 
-	snprintf(chTmp, sizeof(chTmp), "%04d-%02d-%02d %02d:%02d:%02d",
+	sprintf(chTmp, "%04d-%02d-%02d %02d:%02d:%02d",
 		p->tm_year, p->tm_mon, p->tm_mday, p->tm_hour, p->tm_min, p->tm_sec);
 	strDateStr = chTmp;
 	return 0;
