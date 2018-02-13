@@ -2603,7 +2603,7 @@ end:
 		return SOR_OK;
 	}
 
-	ULONG CALL_CONVENTION SOF_GenRandom(void * p_ckpFunctions, UINT16 u16Type, BYTE *pbDataIn, ULONG ulDataInLen)
+	ULONG CALL_CONVENTION SOF_GenRandom(void * p_ckpFunctions, BYTE *pbDataIn, ULONG ulDataInLen)
 	{
 		ULONG ulResult = SOR_OK;
 		CK_SKF_FUNCTION_LIST_PTR ckpFunctions = (CK_SKF_FUNCTION_LIST_PTR)p_ckpFunctions;

@@ -207,7 +207,7 @@ CK_SOF_CLIENT_FUNCTION_INFO(SOF_GetXMLSignatureInfo)
 
 CK_SOF_CLIENT_FUNCTION_INFO(SOF_GenRandom)
 #ifdef CK_NEED_ARG_LIST
-(void * p_ckpFunctions, UINT16 u16Type, BYTE *pbDataIn, ULONG ulDataInLen);
+(void * p_ckpFunctions, BYTE *pbDataIn, ULONG ulDataInLen);
 #endif
 
 
