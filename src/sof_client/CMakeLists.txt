@@ -59,7 +59,12 @@ ADD_LIBRARY(
   ${common_cpps} 
 )
 
-target_link_libraries(sof_client mix_bssl)
+IF (MSVC_VERSION EQUAL 1900)
+ target_link_libraries(sof_client mix_bssl)
+ ELSE()
+ target_link_libraries(sof_client mix_bssl_shared)
+ENDIF()
+
 target_link_libraries(sof_client crypt32)
 
 
