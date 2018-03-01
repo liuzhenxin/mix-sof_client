@@ -1390,6 +1390,392 @@ COMMON_API unsigned int CALL_CONVENTION SMB_CS_VerifyCert(unsigned int uiFlag, u
 
 	ulAlgType = certParse.m_iKeyAlg;
 
+	if (SMB_CERT_ALG_FLAG_RSA == ulAlgType || SMB_CERT_ALG_FLAG_SM2 == ulAlgType)
+	{
+#if defined(WIN32) || defined(WINDOWS)
+		// 创建上下文
+		certContext_IN = CertCreateCertificateContext(X509_ASN_ENCODING, pbCert, uiCertLen);
+		if (!certContext_IN)
+		{
+			ulRet = EErr_SMB_CREATE_CERT_CONTEXT;
+			goto err;
+		}
+
+		// TIME
+		if (SMB_CERT_VERIFY_FLAG_TIME & uiFlag)
+		{
+			ulRet = CertVerifyTimeValidity(NULL, certContext_IN->pCertInfo);
+			if (ulRet)
+			{
+				ulRet = EErr_SMB_VERIFY_TIME;
+				goto err;
+			}
+		}
+
+		// SIGN CERT
+		if (SMB_CERT_VERIFY_FLAG_CHAIN & uiFlag)
+		{
+			// 打开存储区		
+			hCertStore = CertOpenStore(
+				CERT_STORE_PROV_SYSTEM,          // The store provider type
+				0,                               // The encoding type is
+												 // not needed
+				NULL,                            // Use the default HCRYPTPROV
+				CERT_SYSTEM_STORE_CURRENT_USER,  // Set the store location in a
+												 // registry location
+				L"Ca"                            // The store name as a Unicode 
+												 // string
+			);
+
+			if (NULL == hCertStore)
+			{
+				ulRet = EErr_SMB_OPEN_STORE;
+				goto err;
+			}
+
+			// 查找颁发者证书
+			// certContext_OUT = CertFindCertificateInStore(hCertStore, X509_ASN_ENCODING, 0, CERT_FIND_ISSUER_OF, certContext_IN, NULL);
+			{
+				CERT_ID id;
+
+				unsigned char data_value_keyid[1024] = { 0 };
+				unsigned int data_len_keyid = 1024;
+
+				id.dwIdChoice = CERT_ID_KEY_IDENTIFIER;
+
+				GetExtAuthorityIdentifier(certContext_IN, data_value_keyid, &data_len_keyid);
+				FILE_LOG_FMT(file_log_name, "%s", "data_value_keyid");
+				FILE_LOG_HEX(file_log_name, data_value_keyid, data_len_keyid);
+
+				id.KeyId.pbData = data_value_keyid;
+				id.KeyId.cbData = data_len_keyid;
+
+				certContext_OUT = CertFindCertificateInStore(hCertStore, X509_ASN_ENCODING, 0, CERT_FIND_CERT_ID, &id, NULL);
+			}
+
+			if (NULL == certContext_OUT)
+			{
+				if (hCertStore)
+				{
+					// 关闭存储区
+					CertCloseStore(hCertStore, CERT_CLOSE_STORE_CHECK_FLAG);
+				}
+
+				// 打开存储区		
+				hCertStore = CertOpenStore(
+					CERT_STORE_PROV_SYSTEM,          // The store provider type
+					0,                               // The encoding type is
+													 // not needed
+					NULL,                            // Use the default HCRYPTPROV
+					CERT_SYSTEM_STORE_CURRENT_USER,  // Set the store location in a
+													 // registry location
+					L"Root"                            // The store name as a Unicode 
+													   // string
+				);
+
+				if (NULL == hCertStore)
+				{
+					ulRet = EErr_SMB_OPEN_STORE;
+					goto err;
+				}
+
+				// 查找颁发者证书
+				// certContext_OUT = CertFindCertificateInStore(hCertStore, X509_ASN_ENCODING, 0, CERT_FIND_ISSUER_OF, certContext_IN, NULL);
+				{
+					CERT_ID id;
+
+					unsigned char data_value_keyid[1024] = { 0 };
+					unsigned int data_len_keyid = 1024;
+
+					id.dwIdChoice = CERT_ID_KEY_IDENTIFIER;
+
+					GetExtAuthorityIdentifier(certContext_IN, data_value_keyid, &data_len_keyid);
+					//FILE_LOG_FMT(file_log_name, "%s", "data_value_keyid");
+					//FILE_LOG_HEX(file_log_name, data_value_keyid, data_len_keyid);
+
+					id.KeyId.pbData = data_value_keyid;
+					id.KeyId.cbData = data_len_keyid;
+
+					certContext_OUT = CertFindCertificateInStore(hCertStore, X509_ASN_ENCODING, 0, CERT_FIND_CERT_ID, &id, NULL);
+				}
+			}
+
+			if (NULL != certContext_OUT)
+			{
+				DWORD  dwFlags = CERT_STORE_SIGNATURE_FLAG;
+
+				FILE_LOG_FMT(file_log_name, "%s", "certContext_OUT");
+				FILE_LOG_HEX(file_log_name, certContext_OUT->pbCertEncoded, certContext_OUT->cbCertEncoded);
+				// 验证颁发者证书
+				if (0 == memcmp(certContext_OUT->pbCertEncoded, pbCert, uiCertLen))
+				{
+					ulRet=0;
+				}
+				else
+				{
+					// 验证上级证书
+					ulRet = SMB_CS_VerifyCert(uiFlag, certContext_OUT->pbCertEncoded, certContext_OUT->cbCertEncoded);
+					if (ulRet)
+					{
+						goto err;
+					}
+				}
+
+				FILE_LOG_FMT(file_log_name, "%s", "certContext_IN");
+				FILE_LOG_HEX(file_log_name, certContext_IN->pbCertEncoded, certContext_IN->cbCertEncoded);
+				FILE_LOG_FMT(file_log_name, "%s", "certContext_OUT");
+				FILE_LOG_HEX(file_log_name, certContext_OUT->pbCertEncoded, certContext_OUT->cbCertEncoded);
+
+				if(SMB_CERT_ALG_FLAG_RSA == ulAlgType)
+				{
+					if (!CertVerifySubjectCertificateContext(certContext_IN, certContext_OUT, &dwFlags))
+					{
+						ulRet = EErr_SMB_VERIFY_CERT;
+						goto err;
+					}
+					else
+					{
+						ulRet = 0;
+					}
+
+					if (dwFlags)
+					{
+						FILE_LOG_FMT(file_log_name, "%s", "EErr_SMB_VERIFY_CERT");
+						ulRet = EErr_SMB_VERIFY_CERT;
+					}
+				}
+				else
+				{
+					ulRet = OpenSSL_VerifyCert(certContext_IN->pbCertEncoded, certContext_IN->cbCertEncoded, certContext_OUT->pbCertEncoded, certContext_OUT->cbCertEncoded);
+					if (ulRet)
+					{
+						ulRet = EErr_SMB_VERIFY_CERT;
+						goto err;
+					}
+					else
+					{
+						ulRet = 0;
+					}
+				}
+			}
+			else
+			{
+// 				ulRet = EErr_SMB_NO_CERT_CHAIN; // ???
+// 				goto err;
+				DWORD dwFlags = CERT_STORE_SIGNATURE_FLAG;
+				if(SMB_CERT_ALG_FLAG_RSA == ulAlgType)
+				{
+					if (!CertVerifySubjectCertificateContext(certContext_IN, certContext_IN, &dwFlags))
+					{
+						ulRet = EErr_SMB_VERIFY_CERT;
+						goto err;
+					}
+					else
+					{
+						ulRet = 0;
+					}
+
+					if (dwFlags)
+					{
+						FILE_LOG_FMT(file_log_name, "%s", "EErr_SMB_VERIFY_CERT");
+						ulRet = EErr_SMB_VERIFY_CERT;
+					}
+				}
+				else
+				{
+					ulRet = OpenSSL_VerifyCert(certContext_IN->pbCertEncoded, certContext_IN->cbCertEncoded, certContext_IN->pbCertEncoded, certContext_IN->cbCertEncoded);
+					if (ulRet)
+					{
+						ulRet = EErr_SMB_VERIFY_CERT;
+						goto err;
+					}
+					else
+					{
+						ulRet = 0;
+					}
+				}
+			}
+		}
+		//CRL
+		if (SMB_CERT_VERIFY_FLAG_CRL & uiFlag)
+		{
+			; //
+		}
+#else
+		ulRet = OpenSSL_VerifyCertChain(pbCert, uiCertLen);
+#endif
+
+		FILE_LOG_FMT(file_log_name, "ulRet = %d", ulRet);
+		goto err;
+	}
+
+
+
+
+	// 创建上下文
+	SMB_CS_CreateCertCtx(&ctx, pbCert, uiCertLen);
+
+	if (!ctx)
+	{
+		ulRet = EErr_SMB_CREATE_CERT_CONTEXT;
+		goto err;
+	}
+
+	// TIME
+	if (SMB_CERT_VERIFY_FLAG_TIME & uiFlag)
+	{
+		time_t time_now;
+		time(&time_now);
+
+		if (time_now > certParse.m_tNotAfter || time_now < certParse.m_tNotBefore)
+		{
+			ulRet = EErr_SMB_VERIFY_TIME;
+			goto err;
+		}
+	}
+
+	// SIGN CERT
+	if (SMB_CERT_VERIFY_FLAG_CHAIN & uiFlag)
+	{
+		// 查找颁发者证书
+		SMB_CS_CertificateFindAttr findAttr = { 0 };
+
+		findAttr.uiFindFlag = 128;
+
+		findAttr.stSubjectKeyID.data = (unsigned char*)certParse.m_strIssueKeyID.c_str();
+		findAttr.stSubjectKeyID.length = certParse.m_strIssueKeyID.size();
+
+		SMB_CS_FindCertCtx(&findAttr, &ctxHeader);
+
+		if (NULL != ctxHeader)
+		{
+			// 验证颁发者证书
+			if (0 == memcmp(ctxHeader->ptr_data->stContent.data, pbCert, uiCertLen))
+			{
+				;
+			}
+			else
+			{
+				// 验证上级证书
+				ulRet = SMB_CS_VerifyCert(uiFlag, ctxHeader->ptr_data->stContent.data, ctxHeader->ptr_data->stContent.length);
+				if (ulRet)
+				{
+					goto err;
+				}
+			}
+
+			switch (ulAlgType)
+			{
+			case SMB_CERT_ALG_FLAG_RSA:
+			{
+				ulRet = OpenSSL_VerifyCert(pbCert, uiCertLen, ctxHeader->ptr_data->stContent.data, ctxHeader->ptr_data->stContent.length);
+				if (ulRet)
+				{
+					ulRet = EErr_SMB_VERIFY_CERT;
+					goto err;
+				}
+				else
+				{
+					ulRet = 0;
+				}
+				break;
+			}
+			case SMB_CERT_ALG_FLAG_SM2:
+			{
+				OpenSSL_Initialize();
+				ulRet = OpenSSL_VerifyCert(pbCert, uiCertLen, ctxHeader->ptr_data->stContent.data, ctxHeader->ptr_data->stContent.length);
+				if (ulRet)
+				{
+					ulRet = EErr_SMB_VERIFY_CERT;
+					goto err;
+				}
+				else
+				{
+					ulRet = 0;
+				}
+				break;
+			}
+			default:
+				break;
+			}
+		}
+		else
+		{
+			ulRet = EErr_SMB_NO_CERT_CHAIN;
+			goto err;
+		}
+	}
+	//CRL
+	if (SMB_CERT_VERIFY_FLAG_CRL & uiFlag)
+	{
+
+	}
+
+err:
+
+	if (NULL != ctx)
+	{
+		SMB_CS_FreeCertCtx(ctx);
+	}
+
+	if (NULL != ctxHeader)
+	{
+		SMB_CS_FreeCertCtxLink(&ctxHeader);
+	}
+#if defined(WIN32) || defined(WINDOWS)
+	// 释放上下文
+	if (certContext_OUT)
+	{
+		CertFreeCertificateContext(certContext_OUT);
+	}
+
+	// 释放上下文
+	if (certContext_IN)
+	{
+		CertFreeCertificateContext(certContext_IN);
+	}
+
+	if (hCertStore)
+	{
+		// 关闭存储区
+		CertCloseStore(hCertStore, CERT_CLOSE_STORE_CHECK_FLAG);
+	}
+#endif
+
+	return ulRet;
+}
+
+
+#if 0
+COMMON_API unsigned int CALL_CONVENTION SMB_CS_VerifyCert(unsigned int uiFlag, unsigned char* pbCert, unsigned int uiCertLen)
+{
+	unsigned int ulRet = 0;
+
+	unsigned int ulAlgType = 0;
+
+	CertificateItemParse certParse;
+
+	SMB_CS_CertificateContext *ctx = NULL;
+
+	SMB_CS_CertificateContext_NODE * ctxHeader = NULL;
+
+#if defined(WIN32) || defined(WINDOWS)
+	CERT_PUBLIC_KEY_INFO certPublicKeyInfo = { 0 };
+	HCERTSTORE hCertStore = NULL;
+	PCCERT_CONTEXT certContext_OUT = NULL;
+	PCCERT_CONTEXT certContext_IN = NULL;
+#endif
+
+	if (0 != certParse.setCertificate(pbCert, uiCertLen))
+	{
+		ulRet = EErr_SMB_INVALID_ARG;
+		goto err;
+	}
+
+	certParse.parse();
+
+	ulAlgType = certParse.m_iKeyAlg;
+
 	if (SMB_CERT_ALG_FLAG_RSA == ulAlgType)
 	{
 #if defined(WIN32) || defined(WINDOWS)
@@ -1417,13 +1803,13 @@ COMMON_API unsigned int CALL_CONVENTION SMB_CS_VerifyCert(unsigned int uiFlag, u
 			hCertStore = CertOpenStore(
 				CERT_STORE_PROV_SYSTEM,          // The store provider type
 				0,                               // The encoding type is
-												 // not needed
+				// not needed
 				NULL,                            // Use the default HCRYPTPROV
 				CERT_SYSTEM_STORE_CURRENT_USER,  // Set the store location in a
-												 // registry location
+				// registry location
 				L"Ca"                            // The store name as a Unicode 
-												 // string
-			);
+				// string
+				);
 
 			if (NULL == hCertStore)
 			{
@@ -1461,13 +1847,13 @@ COMMON_API unsigned int CALL_CONVENTION SMB_CS_VerifyCert(unsigned int uiFlag, u
 				hCertStore = CertOpenStore(
 					CERT_STORE_PROV_SYSTEM,          // The store provider type
 					0,                               // The encoding type is
-													 // not needed
+					// not needed
 					NULL,                            // Use the default HCRYPTPROV
 					CERT_SYSTEM_STORE_CURRENT_USER,  // Set the store location in a
-													 // registry location
+					// registry location
 					L"Root"                            // The store name as a Unicode 
-													   // string
-				);
+					// string
+					);
 
 				if (NULL == hCertStore)
 				{
@@ -1598,35 +1984,35 @@ COMMON_API unsigned int CALL_CONVENTION SMB_CS_VerifyCert(unsigned int uiFlag, u
 			switch (ulAlgType)
 			{
 			case SMB_CERT_ALG_FLAG_RSA:
-			{
-				ulRet = OpenSSL_VerifyCert(pbCert, uiCertLen, ctxHeader->ptr_data->stContent.data, ctxHeader->ptr_data->stContent.length);
-				if (ulRet)
 				{
-					ulRet = EErr_SMB_VERIFY_CERT;
-					goto err;
+					ulRet = OpenSSL_VerifyCert(pbCert, uiCertLen, ctxHeader->ptr_data->stContent.data, ctxHeader->ptr_data->stContent.length);
+					if (ulRet)
+					{
+						ulRet = EErr_SMB_VERIFY_CERT;
+						goto err;
+					}
+					else
+					{
+						ulRet = 0;
+					}
+					break;
 				}
-				else
-				{
-					ulRet = 0;
-				}
-				break;
-			}
 			case SMB_CERT_ALG_FLAG_SM2:
-			{
-				OpenSSL_Initialize();
+				{
+					OpenSSL_Initialize();
 
-				ulRet = OpenSSL_VerifyCert(pbCert, uiCertLen, ctxHeader->ptr_data->stContent.data, ctxHeader->ptr_data->stContent.length);
-				if (ulRet)
-				{
-					ulRet = EErr_SMB_VERIFY_CERT;
-					goto err;
+					ulRet = OpenSSL_VerifyCert(pbCert, uiCertLen, ctxHeader->ptr_data->stContent.data, ctxHeader->ptr_data->stContent.length);
+					if (ulRet)
+					{
+						ulRet = EErr_SMB_VERIFY_CERT;
+						goto err;
+					}
+					else
+					{
+						ulRet = 0;
+					}
+					break;
 				}
-				else
-				{
-					ulRet = 0;
-				}
-				break;
-			}
 			default:
 				break;
 			}
@@ -1675,6 +2061,9 @@ err:
 
 	return ulRet;
 }
+
+#endif
+
 
 COMMON_API unsigned int CALL_CONVENTION SMB_CS_EnumCertCtx(SMB_CS_CertificateContext_NODE **ppCertCtxNodeHeader, unsigned char ucStoreType)
 {

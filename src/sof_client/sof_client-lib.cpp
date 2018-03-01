@@ -115,7 +115,129 @@ extern "C" {
 		{
 			//return errCode;
 		}
+		else
+		{
+			switch(errCode)
+			{
+			case SAR_FAIL:
+			case SAR_UNKNOWNERR:
+			case SAR_INVALIDHANDLEERR:
+			case SAR_BUFFER_TOO_SMALL:
+			case SAR_NOT_EVENTERR:
+			case SAR_DEVICE_REMOVED:
+			case SAR_PIN_INCORRECT:
+			case SAR_PIN_LOCKED:
+			case SAR_PIN_INVALID:
+			case SAR_APPLICATION_EXISTS:
+			case SAR_NO_ROOM:
+			case SAR_REACH_MAX_CONTAINER_COUNT:
+				errCode = SOR_UNKNOWNERR;
+				break;
+			case SAR_NOTSUPPORTYETERR:
+				errCode = SOR_NOTSUPPORTYETERR;
+				break;
+			case SAR_FILEERR:
+			case SAR_READFILEERR:
+			case SAR_WRITEFILEERR:
+			case SAR_FILE_ALREADY_EXIST:
+			case SAR_FILE_NOT_EXIST:
+				errCode = SOR_FILEERR;
+				break;
+			case SAR_INVALIDPARAMERR:
+			case SAR_PIN_LEN_RANGE:
+			case SAR_USER_TYPE_INVALID:
+				errCode = SOR_PARAMETERNOTSUPPORTEERR;
+				break;
+			case SAR_NAMELENERR:
+				errCode = SOR_NAMELENERR;
+				break;
+			case SAR_KEYUSAGEERR:
+				errCode = SOR_KEYUSAGEERR;
+				break;
+
+			case SAR_MODULUSLENERR:
+				errCode = SOR_MODULUSLENERR;
+				break;
+			case SAR_NOTINITIALIZEERR:
+			case SAR_USER_PIN_NOT_INITIALIZED:
+			case SAR_USER_NOT_LOGGED_IN:
+				errCode = SOR_NOTINITIALIZEERR;
+				break;
+			case SAR_OBJERR:
+				errCode = SOR_OBJERR;
+				break;
+			case SAR_MEMORYERR:
+				errCode = SOR_MEMORYERR;
+				break;
+			case SAR_TIMEOUTERR:
+				errCode = SOR_TIMEOUTERR;
+				break;
+			case SAR_INDATALENERR:
+				errCode = SOR_INDATALENERR;
+				break;
+			case SAR_INDATAERR:
+				errCode = SOR_INDATAERR;
+				break;
+			case SAR_GENRANDERR:
+				errCode = SOR_GENRANDERR;
+				break;
+			case SAR_HASHOBJERR:
+				errCode = SOR_HASHOBJERR;
+				break;
+			case SAR_HASHERR:
+				errCode = SOR_HASHERR;
+				break;
+			case SAR_GENRSAKEYERR:
+				errCode = SOR_GENRSAKEYERR;
+				break;
+			case SAR_RSAMODULUSLENERR:
+				errCode = SOR_RSAMODULUSLENERR;
+				break;
+			case SAR_CSPIMPRTPUBKEYERR:
+				errCode = SOR_CSPIMPORTPUBKEYERR;
+				break;
+			case SAR_RSAENCERR:
+				errCode = SOR_RSAENCERR;
+				break;
+			case SAR_RSADECERR:
+				errCode = SOR_RSADECERR;
+				break;
+			case SAR_HASHNOTEQUALERR:
+				errCode = SOR_HASHNOTEQUALERR;
+				break;
+			case SAR_KEYNOTFOUNTERR:
+				errCode = SOR_KEYNOTFOUNDERR;
+				break;
+			case SAR_CERTNOTFOUNTERR:
+				errCode = SOR_CERTNOTFOUNTERR;
+				break;
+			case SAR_NOTEXPORTERR:
+				errCode = SOR_NOTEXPORTERR;
+				break;
+			case SAR_DECRYPTPADERR:
+				errCode = SOR_DECRYPTPADERR;
+				break;
+			case SAR_MACLENERR:
+				errCode = SOR_MACLENERR;
+				break;
+			case SAR_KEYINFOTYPEERR:
+				errCode = SOR_KEYINFOTYPEERR;
+				break;
+
+			case SAR_USER_ALREADY_LOGGED_IN:
+				errCode = SOR_OK;
+				break;
+			case SAR_APPLICATION_NAME_INVALID:
+			case SAR_APPLICATION_NOT_EXISTS:
+				errCode = SOR_APPNOTFOUND;
+				break;
+			default:
+				errCode = SOR_UNKNOWNERR;
+				break;
+			}
+		}
 		global_data.last_error = errCode;
+
 		return errCode;
 	}
 
@@ -127,18 +249,20 @@ extern "C" {
 		ULONG ulResult = 0;
 		DEVINFO devinfo;
 
-		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "entering");
+		FILE_LOG_FMT(file_log_name, "\n%s %d %s", __FUNCTION__, __LINE__, "entering");
 
 		ulResult = ckpFunctions->SKF_GetDevInfo(global_data.hDevHandle,&devinfo);
+		FILE_LOG_FMT(file_log_name, "SKF_GetDevInfo ulResult: %d", ulResult);
 		if (ulResult)
 		{
 			goto end;
 		}
+		FILE_LOG_FMT(file_log_name, "%d.%d", devinfo.Version.major, devinfo.Version.minor);
 
 		memcpy(pVersion, &(devinfo.Version), sizeof(VERSION));
 
 	end:
-		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting");
+		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting\n");
 
 		ulResult = ErrorCodeConvert(ulResult);
 
@@ -147,9 +271,9 @@ extern "C" {
 
 	ULONG CALL_CONVENTION SOF_SetSignMethod(void * p_ckpFunctions, ULONG ulMethod)
 	{
-		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "entering");
+		FILE_LOG_FMT(file_log_name, "\n%s %d %s", __FUNCTION__, __LINE__, "entering");
 		global_data.sign_method = ulMethod;
-		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting");
+		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting\n");
 		ErrorCodeConvert(SOR_OK);
 
 		return SOR_OK;
@@ -157,9 +281,9 @@ extern "C" {
 
 	ULONG CALL_CONVENTION SOF_GetSignMethod(void * p_ckpFunctions, ULONG *pulMethod)
 	{
-		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "entering");
+		FILE_LOG_FMT(file_log_name, "\n%s %d %s", __FUNCTION__, __LINE__, "entering");
 		*pulMethod = global_data.sign_method;
-		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting");
+		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting\n");
 		ErrorCodeConvert(SOR_OK);
 
 		return SOR_OK;
@@ -167,9 +291,9 @@ extern "C" {
 
 	ULONG CALL_CONVENTION SOF_SetEncryptMethod(void * p_ckpFunctions, ULONG ulMethod)
 	{
-		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "entering");
+		FILE_LOG_FMT(file_log_name, "\n%s %d %s", __FUNCTION__, __LINE__, "entering");
 		global_data.encrypt_method = ulMethod;
-		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting");
+		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting\n");
 		ErrorCodeConvert(SOR_OK);
 
 		return SOR_OK;
@@ -177,9 +301,9 @@ extern "C" {
 
 	ULONG CALL_CONVENTION SOF_GetEncryptMethod(void * p_ckpFunctions, ULONG *pulMethod)
 	{
-		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "entering");
+		FILE_LOG_FMT(file_log_name, "\n%s %d %s", __FUNCTION__, __LINE__, "entering");
 		*pulMethod = global_data.encrypt_method;
-		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting");
+		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting\n");
 		ErrorCodeConvert(SOR_OK);
 
 		return SOR_OK;
@@ -204,7 +328,7 @@ extern "C" {
 
 		ULONG ulResult = 0;
 
-		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "entering");
+		FILE_LOG_FMT(file_log_name, "\n%s %d %s", __FUNCTION__, __LINE__, "entering");
 
 		ulResult = ckpFunctions->SKF_EnumContainer(global_data.hAppHandle, buffer_containers, &buffer_containers_len);
 		if (ulResult)
@@ -270,6 +394,7 @@ extern "C" {
 			memcpy(pbUserList, strUserList.c_str(), strUserList.size());
 			ulResult = SOR_OK;
 		}
+		FILE_LOG_FMT(file_log_name, "UserList: %s", strUserList.c_str());
 
 	end:
 
@@ -278,7 +403,7 @@ extern "C" {
 			ckpFunctions->SKF_CloseContainer(hContainer);
 		}
 
-		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting");
+		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting\n");
 
 		ulResult = ErrorCodeConvert(ulResult);
 
@@ -291,20 +416,33 @@ extern "C" {
 		HANDLE hContainer = NULL;
 
 		ULONG ulResult = 0;
+		ULONG ulCertLen;
 
-		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "entering");
+		FILE_LOG_FMT(file_log_name, "\n%s %d %s", __FUNCTION__, __LINE__, "entering");
 
 		ulResult = ckpFunctions->SKF_OpenContainer(global_data.hAppHandle, pContainerName, &hContainer);
-		if (ulResult)
+		if (ulResult != SAR_OK)
 		{
 			goto end;
 		}
 
-		ulResult = ckpFunctions->SKF_ExportCertificate(hContainer, TRUE, pbCert, pulCertLen);
+		ulCertLen = *pulCertLen;
+		ulResult = ckpFunctions->SKF_ExportCertificate(hContainer, TRUE, pbCert, &ulCertLen);
+		if(ulResult == SAR_CERTNOTFOUNTERR)
+		{
+			ulCertLen = *pulCertLen;
+			ulResult = ckpFunctions->SKF_ExportCertificate(hContainer, FALSE, pbCert, &ulCertLen);
+		}
 		if (ulResult)
 		{
+			if(ulResult == SAR_BUFFER_TOO_SMALL)
+				*pulCertLen = ulCertLen;
 			goto end;
 		}
+		*pulCertLen = ulCertLen;
+
+		FILE_LOG_HEX(file_log_name, pbCert, ulCertLen);
+
 
 		ulResult = ckpFunctions->SKF_CloseContainer(hContainer);
 		hContainer = 0;
@@ -315,7 +453,7 @@ extern "C" {
 			ckpFunctions->SKF_CloseContainer(hContainer);
 		}
 
-		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting");
+		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting\n");
 
 		ulResult = ErrorCodeConvert(ulResult);
 
@@ -328,7 +466,7 @@ extern "C" {
 
 		ULONG ulResult = 0;
 
-		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "entering");
+		FILE_LOG_FMT(file_log_name, "\n%s %d %s", __FUNCTION__, __LINE__, "entering");
 
 		ulResult = ckpFunctions->SKF_VerifyPIN(global_data.hAppHandle, USER_TYPE, pPIN, &global_data.retry);
 		if (ulResult)
@@ -338,7 +476,7 @@ extern "C" {
 
 	end:
 
-		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting");
+		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting\n");
 
 		ulResult = ErrorCodeConvert(ulResult);
 
@@ -347,12 +485,26 @@ extern "C" {
 
 	ULONG CALL_CONVENTION SOF_GetPinRetryCount(void * p_ckpFunctions, LPSTR pContainerName, ULONG *pulRetryCount)
 	{
-		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "entering");
-		*pulRetryCount = global_data.retry;
-		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting");
-		ErrorCodeConvert(SOR_OK);
+		CK_SKF_FUNCTION_LIST_PTR ckpFunctions = (CK_SKF_FUNCTION_LIST_PTR)p_ckpFunctions;
+		ULONG ulResult = SOR_OK;
+		ULONG ulMaxRetryCount, ulRemainRetryCount;
+		BOOL bDefaultPin;
 
-		return SOR_OK;
+		FILE_LOG_FMT(file_log_name, "\n%s %d %s", __FUNCTION__, __LINE__, "entering");
+
+//		*pulRetryCount = global_data.retry;
+		ulResult = ckpFunctions->SKF_GetPINInfo(global_data.hAppHandle, USER_TYPE, &ulMaxRetryCount, &ulRemainRetryCount, &bDefaultPin);
+		if (ulResult)
+		{
+			goto end;
+		}
+		*pulRetryCount = ulRemainRetryCount;
+		
+end:
+		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting\n");
+		ulResult = ErrorCodeConvert(ulResult);
+
+		return ulResult;
 	}
 
 	ULONG CALL_CONVENTION SOF_ChangePassWd(void * p_ckpFunctions, LPSTR pContainerName, LPSTR pPINOld, LPSTR pPINNew)
@@ -361,7 +513,7 @@ extern "C" {
 
 		ULONG ulResult = 0;
 
-		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "entering");
+		FILE_LOG_FMT(file_log_name, "\n%s %d %s", __FUNCTION__, __LINE__, "entering");
 
 		ulResult = ckpFunctions->SKF_ChangePIN(global_data.hAppHandle, USER_TYPE, pPINOld, pPINNew, &global_data.retry);
 		if (ulResult)
@@ -371,7 +523,7 @@ extern "C" {
 
 	end:
 
-		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting");
+		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting\n");
 
 		ulResult = ErrorCodeConvert(ulResult);
 
@@ -385,7 +537,7 @@ extern "C" {
 
 		ULONG ulResult = 0;
 
-		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "entering");
+		FILE_LOG_FMT(file_log_name, "\n%s %d %s", __FUNCTION__, __LINE__, "entering");
 
 		ulResult = ckpFunctions->SKF_OpenContainer(global_data.hAppHandle, pContainerName, &hContainer);
 		if (ulResult)
@@ -408,7 +560,7 @@ extern "C" {
 			ckpFunctions->SKF_CloseContainer(hContainer);
 		}
 
-		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting");
+		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting\n");
 
 		ulResult = ErrorCodeConvert(ulResult);
 
@@ -422,7 +574,9 @@ extern "C" {
 		char data_info_value[1024] = { 0 };
 		int data_info_len = sizeof(data_info_value);
 
-		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "entering");
+		FILE_LOG_FMT(file_log_name, "\n%s %d %s", __FUNCTION__, __LINE__, "entering");
+		FILE_LOG_NUMBER(file_log_name, u16Type);
+		FILE_LOG_HEX(file_log_name, pbCert, ulCertLen);
 
 		CertificateItemParse certParse;
 
@@ -617,7 +771,7 @@ extern "C" {
 		}
 
 	end:
-		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting");
+		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting\n");
 		ErrorCodeConvert(ulResult);
 
 		return ulResult;
@@ -626,11 +780,75 @@ extern "C" {
 
 	ULONG CALL_CONVENTION SOF_GetCertInfoByOid(void * p_ckpFunctions, BYTE *pbCert, ULONG ulCertLen, LPSTR pOidString, BYTE *pbInfo, ULONG *pulInfoLen)
 	{
-		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "entering");
-		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting");
-		ErrorCodeConvert(SOR_NOTSUPPORTYETERR);
+		CK_SKF_FUNCTION_LIST_PTR ckpFunctions = (CK_SKF_FUNCTION_LIST_PTR)p_ckpFunctions;
+		ULONG ulResult = 0;
 
-		return SOR_NOTSUPPORTYETERR;
+		FILE_LOG_FMT(file_log_name, "\n%s %d %s", __FUNCTION__, __LINE__, "entering");
+		FILE_LOG_HEX(file_log_name, pbCert, ulCertLen);
+		FILE_LOG_FMT(file_log_name, "pOidString: %s", pOidString);
+
+		unsigned char buf[256] = {0};
+		char szTmp[5] = {0};
+		int len=0;
+		int ext_count;
+		int k;
+		BIO *bio = NULL;
+		char *pszUserID = pOidString;//(char*)"2.16.840.1.113732.2";		
+
+		unsigned char bType;
+		const unsigned char *p=NULL;
+		X509 *pX509 = NULL;
+
+		p = pbCert;
+		pX509 = d2i_X509(NULL, &p, ulCertLen);
+		if(NULL == pX509)
+		{
+			ulResult = SOR_UNKNOWNERR;
+			goto end;
+		}
+
+		ext_count = X509_get_ext_count(pX509);	
+		FILE_LOG_FMT(file_log_name, "ext_count: %d", ext_count);
+		for (k=0; k<ext_count; k++ )
+		{
+			X509_EXTENSION* ex = X509_get_ext(pX509, k);
+			if( ex == NULL )
+				continue;
+			memset(buf, 0, sizeof(buf));
+			OBJ_obj2txt((char *)buf, sizeof(buf), ex->object, 0);
+
+			FILE_LOG_FMT(file_log_name, "ext name: %s", (char*)buf);
+
+			if(0 == memcmp(buf, pszUserID, strlen(pszUserID))) {
+				bio = BIO_new(BIO_s_mem());
+				if(!X509V3_EXT_print(bio, ex, 0, 0)) // read the text of this      extention
+					M_ASN1_OCTET_STRING_print(bio,ex->value);
+
+				memset(buf, 0, sizeof(buf));
+				len = BIO_read(bio, buf, sizeof(buf));// here buffer contain          the text, len the lenght of it.
+				buf[len] = '\0'; // add the eot sign, buffer contain a readable text.
+				BIO_free(bio);
+
+				memset(pbInfo, 0x00, *pulInfoLen);
+				memcpy(pbInfo, buf+2, buf[1]);
+				*pulInfoLen = buf[1];
+
+				break;
+			}
+		}
+		if (k == ext_count)
+		{
+			ulResult = SOR_UNKNOWNERR;
+			goto end;
+		}
+	end:
+		if(NULL != pX509)
+			X509_free(pX509);
+
+		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting\n");
+		ulResult = ErrorCodeConvert(ulResult);
+
+		return ulResult;
 	}
 
 	ULONG CALL_CONVENTION SOF_GetDeviceInfo(void * p_ckpFunctions, LPSTR pContainerName, ULONG ulType, BYTE *pbInfo, ULONG *pulInfoLen)
@@ -643,7 +861,7 @@ extern "C" {
 		char data_info_value[1024] = { 0 };
 		int data_info_len = sizeof(data_info_value);
 
-		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "entering");
+		FILE_LOG_FMT(file_log_name, "\n%s %d %s", __FUNCTION__, __LINE__, "entering");
 
 		ulResult = ckpFunctions->SKF_GetDevInfo(global_data.hDevHandle, &devinfo);
 		if (ulResult)
@@ -653,96 +871,96 @@ extern "C" {
 
 		switch (ulType)
 		{
-		case SGD_DEVICE_SORT:
+		case SGD_DEVICE_SORT: // 设备类别：密码机、密码卡、智能密码钥匙等
 		{
-			memcpy(data_info_value, "crypto card", strlen("crypto card"));
-			data_info_len = strlen("crypto card");
+			sprintf(data_info_value, "%08x", 0x04000000); // SGD_DEVICE_SORT_SM(0x04000000)
+			data_info_len = strlen(data_info_value); //strlen("crypto card")
 		}
 		break;
-		case SGD_DEVICE_TYPE:
+		case SGD_DEVICE_TYPE: // 设备型号
 		{
 			memcpy(data_info_value, "null", strlen("null"));
 			data_info_len = strlen("null");
 		}
 		break;
-		case SGD_DEVICE_DESCRIPTION:
-		case SGD_DEVICE_NAME:
+		case SGD_DEVICE_DESCRIPTION: // 设备描述
+		case SGD_DEVICE_NAME: // 设备名称
 		{
 			memcpy(data_info_value, devinfo.Label, strlen((const char *)devinfo.Label));
 			data_info_len = strlen((const char *)devinfo.Label);
 		}
 		break;
-		case SGD_DEVICE_MANUFACTURER:
+		case SGD_DEVICE_MANUFACTURER:// 设备厂商
 		{
 			memcpy(data_info_value, devinfo.Manufacturer, strlen((const char *)devinfo.Manufacturer));
 			data_info_len = strlen((const char *)devinfo.Manufacturer);
 		}
 		break;
-		case SGD_DEVICE_HARDWARE_VERSION:
+		case SGD_DEVICE_HARDWARE_VERSION: // 硬件版本
 		{
 			sprintf(data_info_value, "%d.%d", devinfo.HWVersion.major, devinfo.HWVersion.minor);
 			data_info_len = strlen(data_info_value);
 		}
 		break;
-		case SGD_DEVICE_SOFTWARE_VERSION:
+		case SGD_DEVICE_SOFTWARE_VERSION: // 软件版本
 		{
 			sprintf(data_info_value, "%d.%d", devinfo.FirmwareVersion.major, devinfo.FirmwareVersion.minor);
 			data_info_len = strlen(data_info_value);
 		}
 		break;
 
-		case SGD_DEVICE_STANDARD_VERSION:
+		case SGD_DEVICE_STANDARD_VERSION: // 符合标准版本
 		{
 			sprintf(data_info_value, "%d.%d", devinfo.Version.major, devinfo.Version.minor);
 			data_info_len = strlen(data_info_value);
 		}
 		break;
-		case SGD_DEVICE_SERIAL_NUMBER:
+		case SGD_DEVICE_SERIAL_NUMBER: // 序列号
 		{
 			memcpy(data_info_value, devinfo.SerialNumber, strlen((const char *)devinfo.SerialNumber));
 			data_info_len = strlen((const char *)devinfo.SerialNumber);
 		}
 		break;
-		case SGD_DEVICE_SUPPORT_ALG_ASYM:
+		case SGD_DEVICE_SUPPORT_ALG_ASYM: // 支持的非对称算法
 		{
 			sprintf(data_info_value, "%08x", devinfo.AlgAsymCap);
 			data_info_len = strlen(data_info_value);
 		}
 		break;
-		case SGD_DEVICE_SUPPORT_ALG_SYM:
+		case SGD_DEVICE_SUPPORT_ALG_SYM: // 支持的对称算法
 		{
 			sprintf(data_info_value, "%08x", devinfo.AlgSymCap);
 			data_info_len = strlen(data_info_value);
 		}
 		break;
-		case SGD_DEVICE_SUPPORT_HASH_ALG:
+		case SGD_DEVICE_SUPPORT_HASH_ALG: // 支持的哈希算法
 		{
 			sprintf(data_info_value, "%08x", devinfo.AlgHashCap);
 			data_info_len = strlen(data_info_value);
 		}
 		break;
-		case SGD_DEVICE_SUPPORT_STORAGE_SPACE:
+		case SGD_DEVICE_SUPPORT_STORAGE_SPACE: // 最大空间
 		{
 			sprintf(data_info_value, "%08x", devinfo.TotalSpace);
 			data_info_len = strlen(data_info_value);
 		}
 		break;
-		case SGD_DEVICE_SUPPORT_FREE_SPACE:
+		case SGD_DEVICE_SUPPORT_FREE_SPACE: // 剩余空间
 		{
 			sprintf(data_info_value, "%08x", devinfo.FreeSpace);
 			data_info_len = strlen(data_info_value);
 		}
 		break;
 		
-		case SGD_DEVICE_MANAGER_INFO:
+		case SGD_DEVICE_MANAGER_INFO:// 设备管理者信息
 		{
-			sprintf(data_info_value, "%08x", devinfo.Issuer);
+			sprintf(data_info_value, "%s", devinfo.Issuer);
 			data_info_len = strlen(data_info_value);
 		}
 		break;
-		case SGD_DEVICE_MAX_DATA_SIZE:
+		case SGD_DEVICE_MAX_DATA_SIZE: // 一次处理最大数据量
 		{
-			sprintf(data_info_value, "%08x", devinfo.TotalSpace);
+			sprintf(data_info_value, "%08x", 2000);//devinfo.TotalSpace);
 			data_info_len = strlen(data_info_value);
 		}
 		break;
@@ -776,13 +994,14 @@ extern "C" {
 		}
 
 	end:
-		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting");
+		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting\n");
 
 		ulResult = ErrorCodeConvert(ulResult);
 
 		return ulResult;
 	}
 
+	//????? SM2证书
 	ULONG CALL_CONVENTION SOF_ValidateCert(void * p_ckpFunctions, BYTE *pbCert, ULONG ulCertLen, ULONG *pulValidate)
 	{
 		ULONG ulResult = 0;
@@ -790,7 +1009,9 @@ extern "C" {
 		char data_info_value[1024] = { 0 };
 		int data_info_len = sizeof(data_info_value);
 
-		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "entering");
+		FILE_LOG_FMT(file_log_name, "\n%s %d %s", __FUNCTION__, __LINE__, "entering");
+		FILE_LOG_FMT(file_log_name, "%s", "Cert:");
+		FILE_LOG_HEX(file_log_name, pbCert, ulCertLen);
 
 		CertificateItemParse certParse;
 
@@ -802,7 +1023,7 @@ extern "C" {
 			goto end;
 		}
 
-		if (ECertificate_KEY_ALG_RSA == certParse.m_iKeyAlg)
+		if (ECertificate_KEY_ALG_RSA==certParse.m_iKeyAlg || ECertificate_KEY_ALG_EC==certParse.m_iKeyAlg)
 		{
 			int res = SMB_CS_VerifyCert(SMB_CERT_VERIFY_FLAG_TIME | SMB_CERT_VERIFY_FLAG_CHAIN | SMB_CERT_VERIFY_FLAG_CRL, pbCert, ulCertLen);
 			*pulValidate = 0;
@@ -833,7 +1054,7 @@ extern "C" {
 		}
 
 	end:
-		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting");
+		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting\n");
 		ErrorCodeConvert(ulResult);
 
 		return ulResult;
@@ -856,19 +1077,26 @@ extern "C" {
 		ULONG hash_len = sizeof(data_info_value);
 
 
-		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "entering");
+		FILE_LOG_FMT(file_log_name, "\n%s %d %s", __FUNCTION__, __LINE__, "entering");
+		FILE_LOG_FMT(file_log_name, "ContainerName: %s", pContainerName);
+		FILE_LOG_FMT(file_log_name, "%s", "DataIn: ");
+		FILE_LOG_HEX(file_log_name, pbDataIn, ulDataInLen);
 
 		ulResult = ckpFunctions->SKF_OpenContainer(global_data.hAppHandle, pContainerName, &hContainer);
 		if (ulResult)
 		{
 			goto end;
 		}
+		FILE_LOG_FMT(file_log_name, "%s", "Open container ok");
+
 		//1表示为RSA容器，为2表示为ECC容器
 		ulResult = ckpFunctions->SKF_GetContainerType(hContainer, &ulContainerType);
 		if (ulResult)
 		{
 			goto end;
 		}
+		FILE_LOG_FMT(file_log_name, "ContainerType: %d", ulContainerType);
+		FILE_LOG_FMT(file_log_name, "sign_method: %d", global_data.sign_method);
 
 
 		if (ulContainerType == 1)
@@ -887,7 +1115,7 @@ extern "C" {
 			}
 			else
 			{
-				ulResult = SOR_UNKNOWNERR;
+				ulResult = SOR_PARAMETERNOTSUPPORTEERR;//SOR_UNKNOWNERR;
 				goto end;
 			}
 
@@ -933,19 +1161,21 @@ extern "C" {
 				{
 					goto end;
 				}
-
 			}
 			else
 			{
-				ulResult = SOR_UNKNOWNERR;
+				ulResult = SOR_PARAMETERNOTSUPPORTEERR;//SOR_UNKNOWNERR;
 				goto end;
 			}
 
 			ulResult = ckpFunctions->SKF_ECCSignData(hContainer, hash_value, hash_len, &blob);
 			if (ulResult)
 			{
+				FILE_LOG_FMT(file_log_name, "SignData ulResult: %d", ulResult);
 				goto end;
 			}
+			FILE_LOG_HEX(file_log_name, blob.r + 32, 32);
+			FILE_LOG_HEX(file_log_name, blob.s + 32, 32);
 
 			ulResult = SM2SignAsn1Convert(blob.r + 32, 32, blob.s + 32, 32, (unsigned char *)data_info_value, &data_info_len);
 			if (ulResult)
@@ -953,6 +1183,7 @@ extern "C" {
 				ulResult = SOR_UNKNOWNERR;
 				goto end;
 			}
+
 		}
 		else
 		{
@@ -989,7 +1220,7 @@ extern "C" {
 			ckpFunctions->SKF_CloseContainer(hContainer);
 		}
 
-		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting");
+		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting\n");
 
 		ulResult = ErrorCodeConvert(ulResult);
 
@@ -1019,7 +1250,11 @@ extern "C" {
 
 		CertificateItemParse certParse;
 
-		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "entering");
+		FILE_LOG_FMT(file_log_name, "\n%s %d %s", __FUNCTION__, __LINE__, "entering");
+		FILE_LOG_FMT(file_log_name, "%s", "Cert: ");
+		FILE_LOG_HEX(file_log_name, pbCert, ulCertLen);
+		FILE_LOG_FMT(file_log_name, "%s", "DataIn: ");
+		FILE_LOG_HEX(file_log_name, pbDataIn, ulDataInLen);
 
 		certParse.setCertificate(pbCert, ulCertLen);
 
@@ -1028,6 +1263,7 @@ extern "C" {
 			ulResult = SOR_INDATAERR;
 			goto end;
 		}
+		FILE_LOG_FMT(file_log_name, "KeyAlg: %d", certParse.m_iKeyAlg);
 
 		if (ECertificate_KEY_ALG_RSA == certParse.m_iKeyAlg)
 		{
@@ -1071,7 +1307,7 @@ extern "C" {
 			}
 			else
 			{
-				ulResult = SOR_UNKNOWNERR;
+				ulResult = SOR_PARAMETERNOTSUPPORTEERR;//SOR_UNKNOWNERR;
 				goto end;
 			}
 
@@ -1102,6 +1338,8 @@ extern "C" {
 			memcpy(eccPublicKeyBlob.XCoordinate + 32, tmp_data + 1, 32);
 			memcpy(eccPublicKeyBlob.YCoordinate + 32, tmp_data + 1 +32, 32);
 
+			FILE_LOG_HEX(file_log_name, eccPublicKeyBlob.XCoordinate + 32, 32);
+			FILE_LOG_HEX(file_log_name, eccPublicKeyBlob.YCoordinate + 32, 32);
 
 			ulResult = ckpFunctions->SKF_DigestInit(global_data.hDevHandle, SGD_SM3, &eccPublicKeyBlob, (unsigned char *)"1234567812345678", 16, &hHash);
 			if (ulResult)
@@ -1115,6 +1353,7 @@ extern "C" {
 				goto end;
 			}
 
+			FILE_LOG_HEX(file_log_name, pbDataOut, ulDataOutLen);
 			ulResult = SM2SignD2i(pbDataOut, ulDataOutLen, tmp_data, (int *)&tmp_len);
 			if (ulResult)
 			{
@@ -1124,8 +1363,11 @@ extern "C" {
 
 			memcpy(blob.r + 32, tmp_data, 32);
 			memcpy(blob.s + 32, tmp_data+32, 32);
+			FILE_LOG_HEX(file_log_name, blob.r + 32, 32);
+			FILE_LOG_HEX(file_log_name, blob.s + 32, 32);
 
 			ulResult = ckpFunctions->SKF_ECCVerify(global_data.hDevHandle, &eccPublicKeyBlob, hash_value, hash_len, &blob);
+			FILE_LOG_FMT(file_log_name, "Verify ulResult = %d", ulResult);
 		}
 		else
 		{
@@ -1140,7 +1382,7 @@ extern "C" {
 			ckpFunctions->SKF_CloseHandle(hHash);
 		}
 
-		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting");
+		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting\n");
 
 		ulResult = ErrorCodeConvert(ulResult);
 
@@ -1158,7 +1400,7 @@ extern "C" {
 		size_t i = 0;
 		int block = 1024;
 
-		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "entering");
+		FILE_LOG_FMT(file_log_name, "\n%s %d %s", __FUNCTION__, __LINE__, "entering");
 
 		_fileIn.open(pFileIn, std::ios::binary | std::ios::in);
 
@@ -1214,7 +1456,7 @@ extern "C" {
 			delete[] pbFileInData;
 		}
 
-		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting");
+		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting\n");
 
 		ulResult = ErrorCodeConvert(ulResult);
 
@@ -1233,7 +1475,7 @@ extern "C" {
 		int block = 1024;
 		ULONG ulFileOutDataLen = 0;
 
-		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "entering");
+		FILE_LOG_FMT(file_log_name, "\n%s %d %s", __FUNCTION__, __LINE__, "entering");
 
 		_fileIn.open(pFileIn, std::ios::binary | std::ios::in);
 
@@ -1290,7 +1532,7 @@ extern "C" {
 			delete[] pbFileInData;
 		}
 
-		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting");
+		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting\n");
 
 		ulResult = ErrorCodeConvert(ulResult);
 
@@ -1302,14 +1544,20 @@ extern "C" {
 		CK_SKF_FUNCTION_LIST_PTR ckpFunctions = (CK_SKF_FUNCTION_LIST_PTR)p_ckpFunctions;
 		HANDLE hContainer = NULL;
 
-		ULONG ulResult = 0;
+		ULONG ulResult = SOR_OK;
 		ULONG ulContainerType = 0;
 
-		ECCCIPHERBLOB blob;
+		BYTE *pbTmp=NULL;
+		ULONG ulTmpLen;
 
 		RSA *rsa = NULL;
 
-		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "entering");
+		FILE_LOG_FMT(file_log_name, "\n%s %d %s", __FUNCTION__, __LINE__, "entering");
+		
+		FILE_LOG_FMT(file_log_name, "%s", "Cert:");
+		FILE_LOG_HEX(file_log_name, pbCert, ulCertLen);
+		FILE_LOG_FMT(file_log_name, "%s", "DataIn:");
+		FILE_LOG_HEX(file_log_name, pbDataIn, ulDataInLen);
 
 		RSAPUBLICKEYBLOB rsaPublicKeyBlob = { 0 };
 		ECCPUBLICKEYBLOB eccPublicKeyBlob = { 0 };
@@ -1365,24 +1613,35 @@ extern "C" {
 			memcpy(eccPublicKeyBlob.XCoordinate + 32, pk_data + 1, 32);
 			memcpy(eccPublicKeyBlob.YCoordinate + 32, pk_data + 1 + 32, 32);
 
-			ulResult = ckpFunctions->SKF_ExtECCEncrypt(global_data.hDevHandle, &eccPublicKeyBlob, pbDataIn, ulDataInLen, (PECCCIPHERBLOB)&blob);
-
+			ulTmpLen = ulDataInLen+sizeof(ECCCIPHERBLOB);
+			pbTmp = (BYTE*)malloc(ulTmpLen);
+			if(pbTmp == NULL)
+			{
+				ulResult = SOR_MEMORYERR;
+				goto end;
+			}
+			memset(pbTmp, 0x00, ulDataInLen+sizeof(ECCCIPHERBLOB));
+			ulResult = ckpFunctions->SKF_ExtECCEncrypt(global_data.hDevHandle, &eccPublicKeyBlob, pbDataIn, ulDataInLen, (PECCCIPHERBLOB)pbTmp);
+			
 			if (NULL == pbDataOut)
 			{
-				*pulDataOutLen = sizeof(blob);
+				*pulDataOutLen = ulTmpLen;
 				ulResult = SOR_OK;
+				goto end;
 			}
-			else if (sizeof(blob) >  *pulDataOutLen)
+			else if (ulTmpLen >  *pulDataOutLen)
 			{
-				*pulDataOutLen = sizeof(blob);
+				*pulDataOutLen = ulTmpLen;
 				ulResult = SOR_MEMORYERR;
+				goto end;
 			}
 			else
 			{
-				*pulDataOutLen = sizeof(blob);
-				memcpy(pbDataOut, &blob, sizeof(blob));
-				ulResult = SOR_OK;
+				*pulDataOutLen = ulTmpLen;
+				memcpy(pbDataOut, pbTmp, ulTmpLen);
 			}
+			FILE_LOG_FMT(file_log_name, "%s", "DataOut:");
+			FILE_LOG_HEX(file_log_name, pbDataOut, ulTmpLen);
 		}
 		else
 		{
@@ -1392,7 +1651,9 @@ extern "C" {
 
 	end:
 
-		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting");
+		if(pbTmp != NULL)
+			free(pbTmp);
+		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting\n");
 
 		ulResult = ErrorCodeConvert(ulResult);
 
@@ -1407,7 +1668,11 @@ extern "C" {
 		ULONG ulResult = 0;
 		ULONG ulContainerType = 0;
 
-		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "entering");
+		FILE_LOG_FMT(file_log_name, "\n%s %d %s", __FUNCTION__, __LINE__, "entering");
+		FILE_LOG_FMT(file_log_name, "ContainerName: %s", pContainerName);
+
+		FILE_LOG_FMT(file_log_name, "%s", "DataIn:");
+		FILE_LOG_HEX(file_log_name, pbDataIn, ulDataInLen);
 
 		ulResult = ckpFunctions->SKF_OpenContainer(global_data.hAppHandle, pContainerName, &hContainer);
 		if (ulResult)
@@ -1429,11 +1694,19 @@ extern "C" {
 		else if (ulContainerType == 2)
 		{
 			ulResult = ckpFunctions->SKF_ECCDecrypt(hContainer, pbDataIn, ulDataInLen, pbDataOut, pulDataOutLen);
+			FILE_LOG_FMT(file_log_name, "ulResult: %d", ulResult);
 		}
 		else
 		{
 			ulResult = SOR_NOTSUPPORTYETERR;
 			goto end;
+		}
+		if(pbDataOut == NULL)
+			FILE_LOG_FMT(file_log_name, "ulDataOutLen: %d", *pulDataOutLen);
+		else
+		{
+			FILE_LOG_FMT(file_log_name, "%s", "DataOut:");
+			FILE_LOG_HEX(file_log_name, pbDataOut, *pulDataOutLen);
 		}
 	end:
 
@@ -1442,7 +1715,7 @@ extern "C" {
 			ckpFunctions->SKF_CloseContainer(hContainer);
 		}
 
-		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting");
+		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting\n");
 
 		ulResult = ErrorCodeConvert(ulResult);
 
@@ -1462,7 +1735,7 @@ extern "C" {
 		int block = 1024;
 		ULONG ulFileOutDataLen = 0;
 
-		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "entering");
+		FILE_LOG_FMT(file_log_name, "\n%s %d %s", __FUNCTION__, __LINE__, "entering");
 
 		_fileIn.open(pFileIn, std::ios::binary | std::ios::in);
 		_fileOut.open(pFileOut, std::ios::binary | std::ios::out);
@@ -1545,7 +1818,7 @@ extern "C" {
 			delete[] pbFileOutData;
 		}
 
-		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting");
+		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting\n");
 
 		ulResult = ErrorCodeConvert(ulResult);
 
@@ -1565,7 +1838,7 @@ extern "C" {
 		int block = 1024;
 		ULONG ulFileOutDataLen = 0;
 
-		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "entering");
+		FILE_LOG_FMT(file_log_name, "\n%s %d %s", __FUNCTION__, __LINE__, "entering");
 
 		_fileIn.open(pFileIn, std::ios::binary | std::ios::in);
 		_fileOut.open(pFileOut, std::ios::binary | std::ios::out);
@@ -1648,7 +1921,7 @@ extern "C" {
 			delete[] pbFileOutData;
 		}
 
-		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting");
+		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting\n");
 
 		ulResult = ErrorCodeConvert(ulResult);
 
@@ -1656,7 +1929,7 @@ extern "C" {
 	}
 
 
-	ULONG CALL_CONVENTION SOF_SignMessage(void * p_ckpFunctions, LPSTR pContainerName, UINT16 u16Flag, BYTE *pbDataIn,  ULONG ulDataInLen, BYTE *pbDataOut, ULONG *pulDataOutLen)
+	ULONG CALL_CONVENTION SOF_SignMessage(void * p_ckpFunctions, LPSTR pContainerName, UINT16 u16Flag, BYTE *pbDataIn,  ULONG ulDataInLen, BYTE *pbSignedMessage, ULONG *pulSignedMessageLen)
 	{
 		const unsigned char *ptr = NULL;
 		ASN1_INTEGER *serial_number = NULL;
@@ -1683,7 +1956,7 @@ extern "C" {
 
 		uint8_t *out_buf = NULL;
 
-		BYTE pbCert[1024 * 4];
+		BYTE pbCert[8192];
 		ULONG ulCertLen = sizeof(pbCert);
 
 		char data_info_value[1024] = { 0 };
@@ -1704,7 +1977,11 @@ extern "C" {
 		const uint8_t *kEncData = 0;
 		size_t kEncLen = 0;
 
-		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "entering");
+		FILE_LOG_FMT(file_log_name, "\n%s %d %s", __FUNCTION__, __LINE__, "entering");
+		FILE_LOG_FMT(file_log_name, "ContainerName: %s", pContainerName);
+		FILE_LOG_FMT(file_log_name, "u16Flag: %d", u16Flag);
+		FILE_LOG_FMT(file_log_name, "%s", "DataIn:");
+		FILE_LOG_HEX(file_log_name, pbDataIn, ulDataInLen);
 
 		ulResult = ckpFunctions->SKF_OpenContainer(global_data.hAppHandle, pContainerName, &hContainer);
 		if (ulResult)
@@ -1723,6 +2000,8 @@ extern "C" {
 		{
 			goto end;
 		}
+		FILE_LOG_FMT(file_log_name, "%s", "Cert:");
+		FILE_LOG_HEX(file_log_name, pbCert, ulCertLen);
 
 		ptr = pbCert;
 
@@ -1819,6 +2098,9 @@ extern "C" {
 				{
 					goto end;
 				}
+				FILE_LOG_FMT(file_log_name, "%s", "PublicKey:");
+				FILE_LOG_HEX(file_log_name, pubkeyBlob.XCoordinate+32, 32);
+				FILE_LOG_HEX(file_log_name, pubkeyBlob.YCoordinate+32, 32);
 
 				ulResult = ckpFunctions->SKF_DigestInit(global_data.hDevHandle, SGD_SM3, &pubkeyBlob, (unsigned char *)"1234567812345678", 16, &hHash);
 				if (ulResult)
@@ -1843,6 +2125,9 @@ extern "C" {
 			{
 				goto end;
 			}
+			FILE_LOG_FMT(file_log_name, "%s", "SignData:");
+			FILE_LOG_HEX(file_log_name, blob.r+32, 32);
+			FILE_LOG_HEX(file_log_name, blob.s+32, 32);
 
 			ulResult = SM2SignAsn1Convert(blob.r + 32, 32, blob.s + 32, 32, (unsigned char *)data_info_value, &data_info_len);
 			if (ulResult)
@@ -1850,6 +2135,8 @@ extern "C" {
 				ulResult = SOR_UNKNOWNERR;
 				goto end;
 			}
+			FILE_LOG_FMT(file_log_name, "%s", "Asn1Convert:");
+			FILE_LOG_HEX(file_log_name, (unsigned char *)data_info_value, data_info_len);
 		}
 		else
 		{
@@ -1882,7 +2169,7 @@ extern "C" {
 			goto end;
 		}
 
-		if (1 == u16Flag)
+		if (0 == u16Flag)
 		{
 			if (!CBB_add_asn1(&content_info, &plaintext_wrap, CBS_ASN1_CONTEXT_SPECIFIC | CBS_ASN1_CONSTRUCTED | 0) ||  // 原文
 				!CBB_add_asn1(&plaintext_wrap, &plaintext, CBS_ASN1_OCTETSTRING) ||                                     // 原文
@@ -1896,8 +2183,10 @@ extern "C" {
 		if (!CBB_add_asn1(&seq, &certificates, CBS_ASN1_CONTEXT_SPECIFIC | CBS_ASN1_CONSTRUCTED | 0) ||     // 证书
 			!CBB_add_bytes(&certificates, (uint8_t *)pbCert, ulCertLen) 
 			
-			) {
-			return 0;
+		) {
+			ulResult = SOR_UNKNOWNERR;
+			goto end;
+//			return 0;
 		}
 
 		// signerInfos
@@ -1911,7 +2200,6 @@ extern "C" {
 			ulResult = SOR_UNKNOWNERR;
 			goto end;
 		}
-
 
 		len = i2d_X509_NAME(issue_name, NULL);
 
@@ -1934,7 +2222,6 @@ extern "C" {
 			goto end;
 		}
 
-
 		if (!CBB_add_asn1(&signerInfo, &digests1, CBS_ASN1_SEQUENCE) ||
 			!CBB_add_asn1(&digests1, &digest1, CBS_ASN1_OBJECT) ||
 			!CBB_add_bytes(&digest1, kHashData, kHashLen) ||            //添加HASH算法
@@ -1956,7 +2243,6 @@ extern "C" {
 			goto end;
 		}
 
-
 		if (!CBB_add_asn1(&signerInfo, &signature, CBS_ASN1_OCTETSTRING) ||
 			!CBB_add_bytes(&signature, (uint8_t *)data_info_value, data_info_len)       //添加签名值
 			) // 签名值
@@ -1977,23 +2263,33 @@ extern "C" {
 			ulResult = SOR_UNKNOWNERR;
 			goto end;
 		}
+		FILE_LOG_FMT(file_log_name, "require_len: %d", require_len);
 
-		if (NULL == pbDataOut)
+		FILE_LOG_FMT(file_log_name, "%s", "out_buf:");
+		FILE_LOG_HEX(file_log_name, out_buf, require_len);
+
+
+		if (NULL == pbSignedMessage)
 		{
-			*pulDataOutLen = require_len;
+			*pulSignedMessageLen = require_len;
 			ulResult = SOR_OK;
+			goto end;
 		}
-		else if (require_len >  *pulDataOutLen)
+		else if (require_len >  *pulSignedMessageLen)
 		{
-			*pulDataOutLen = require_len;
+			*pulSignedMessageLen = require_len;
 			ulResult = SOR_MEMORYERR;
+			goto end;
 		}
 		else
 		{
-			*pulDataOutLen = require_len;
-			memcpy(pbDataOut, out_buf, require_len);
+			*pulSignedMessageLen = require_len;
+			memcpy(pbSignedMessage, out_buf, require_len);
 			ulResult = SOR_OK;
 		}
+		FILE_LOG_FMT(file_log_name, "%s", "SignedMessage:");
+		FILE_LOG_HEX(file_log_name, pbSignedMessage, *pulSignedMessageLen);
+
 
 	end:
 
@@ -2012,7 +2308,7 @@ extern "C" {
 			ckpFunctions->SKF_CloseContainer(hContainer);
 		}
 
-		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting");
+		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting\n");
 
 		ulResult = ErrorCodeConvert(ulResult);
 
@@ -2022,7 +2318,7 @@ extern "C" {
 	
 	extern "C" int CBS_asn1_ber_to_der(CBS *in, uint8_t **out, size_t *out_len);
 
-	ULONG CALL_CONVENTION SOF_VerifySignedMessage(void * p_ckpFunctions, BYTE *pbDataIn, ULONG ulDataInLen, BYTE *pbDataOut, ULONG ulDataOutLen)
+	ULONG CALL_CONVENTION SOF_VerifySignedMessage(void * p_ckpFunctions, BYTE *pbMessageData, ULONG ulMessageDataLen, BYTE *pbPlaintext, ULONG ulPlaintextLen)
 	{
 		CK_SKF_FUNCTION_LIST_PTR ckpFunctions = (CK_SKF_FUNCTION_LIST_PTR)p_ckpFunctions;
 		HANDLE hContainer = NULL;
@@ -2031,7 +2327,7 @@ extern "C" {
 		CBS pkcs7;
 		RSA *rsa = NULL;
 
-		BYTE pbCert[1024 * 4];
+		BYTE pbCert[8192];
 		ULONG ulCertLen = sizeof(pbCert);
 
 		CertificateItemParse certParse;
@@ -2054,9 +2350,14 @@ extern "C" {
 
 		int hashAlg = 0;
 
-		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "entering");
+		BYTE *pbDataIn=NULL;
+		ULONG ulDataInLen;
 
-		CBS_init(&pkcs7, pbDataOut, ulDataOutLen);
+		FILE_LOG_FMT(file_log_name, "\n%s %d %s", __FUNCTION__, __LINE__, "entering");
+		FILE_LOG_FMT(file_log_name, "%s", "MessageData:");
+		FILE_LOG_HEX(file_log_name, pbMessageData, ulMessageDataLen);
+
+		CBS_init(&pkcs7, pbMessageData, ulMessageDataLen);
 
 		der_bytes = NULL;
 
@@ -2127,17 +2428,22 @@ extern "C" {
 
 			memcpy(pbCert, CBS_data(&cert), CBS_len(&cert));
 			ulCertLen = CBS_len(&cert);
+			FILE_LOG_FMT(file_log_name, "%s", "Cert:");
+			FILE_LOG_HEX(file_log_name, pbCert, ulCertLen);
+
 
 			if (sk_X509_push(out_certs, x509) == 0) {
 				ulResult = SOR_UNKNOWNERR;
 				goto end;
 			}
 		}
+		FILE_LOG_FMT(file_log_name, "%s", "111");
 
 		if (!CBS_get_asn1(&signed_data, &signerInfos, CBS_ASN1_SET)) {
 			ulResult = SOR_UNKNOWNERR;
 			goto end;
 		}
+		FILE_LOG_FMT(file_log_name, "%s", "222");
 		
 		if (!CBS_get_asn1(&signerInfos, &signerInfo, CBS_ASN1_SEQUENCE) || 
 			!CBS_get_asn1(&signerInfo, NULL, CBS_ASN1_INTEGER) ||
@@ -2149,6 +2455,7 @@ extern "C" {
 			ulResult = SOR_UNKNOWNERR;
 			goto end;
 		}
+		FILE_LOG_FMT(file_log_name, "%s", "333");
 
 
 		if (!CBS_get_asn1(&digests_set, &digests, CBS_ASN1_SEQUENCE) ||
@@ -2178,6 +2485,7 @@ extern "C" {
 				goto end;
 			}
 		}
+		FILE_LOG_FMT(file_log_name, "%s", "555");
 
 
 		if (!CBS_get_asn1( &content, &content_type1, CBS_ASN1_OBJECT) 
@@ -2186,18 +2494,28 @@ extern "C" {
 			ulResult = SOR_UNKNOWNERR;
 			goto end;
 		}
+		FILE_LOG_FMT(file_log_name, "%s", "666");
 
 		if (!CBS_get_asn1(&content, &wrapped_plain_text, CBS_ASN1_CONSTRUCTED | CBS_ASN1_CONTEXT_SPECIFIC) ||
 			!CBS_get_asn1(&wrapped_plain_text, &plain_text, CBS_ASN1_OCTETSTRING) || 
 			CBS_len(&plain_text) < 0)
 		{
 			// 无明文
+			if(pbPlaintext==NULL || ulPlaintextLen==0)
+			{
+				ulResult = SOR_PARAMETERNOTSUPPORTEERR;
+				goto end;
+			}
+			pbDataIn = pbPlaintext;
+			ulDataInLen = ulPlaintextLen;
 		}
 		else
 		{
 			pbDataIn = (unsigned char *)CBS_data(&plain_text);
 			ulDataInLen = CBS_len(&plain_text);
 		}
+		FILE_LOG_FMT(file_log_name, "%s", "Plaintext:");
+		FILE_LOG_HEX(file_log_name, pbDataIn, ulDataInLen);
 
 
 		if (version < 1) {
@@ -2317,7 +2635,7 @@ end:
 			ckpFunctions->SKF_CloseHandle(hHash);
 		}
 
-		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting");
+		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting\n");
 
 		ulResult = ErrorCodeConvert(ulResult);
 
@@ -2325,7 +2643,7 @@ end:
 	}
 
 
-	ULONG CALL_CONVENTION SOF_GetInfoFromSignedMessage(void * p_ckpFunctions, UINT16 u16Type, BYTE *pbDataIn, ULONG ulDataInLen, BYTE *pbInfo, ULONG *pulInfoLen)
+	ULONG CALL_CONVENTION SOF_GetInfoFromSignedMessage(void * p_ckpFunctions, UINT16 u16Type, BYTE *pbMessageData, ULONG ulMessageDataLen, BYTE *pbInfo, ULONG *pulInfoLen)
 	{
 		CK_SKF_FUNCTION_LIST_PTR ckpFunctions = (CK_SKF_FUNCTION_LIST_PTR)p_ckpFunctions;
 		ULONG ulResult = 0;
@@ -2346,9 +2664,9 @@ end:
 
 		int hashAlg = 0;
 
-		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "entering");
+		FILE_LOG_FMT(file_log_name, "\n%s %d %s", __FUNCTION__, __LINE__, "entering");
 
-		CBS_init(&pkcs7, pbDataIn, ulDataInLen);
+		CBS_init(&pkcs7, pbMessageData, ulMessageDataLen);
 
 		der_bytes = NULL;
 
@@ -2548,7 +2866,7 @@ end:
 			X509_free(x509);
 		}
 
-		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting");
+		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting\n");
 
 		ulResult = ErrorCodeConvert(ulResult);
 
@@ -2557,8 +2875,8 @@ end:
 
 	ULONG CALL_CONVENTION SOF_SignDataXML(void * p_ckpFunctions, LPSTR pContainerName, BYTE *pbDataIn, ULONG ulDataInLen, BYTE *pbDataOut, ULONG *pulDataOutLen)
 	{
-		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "entering");
-		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting");
+		FILE_LOG_FMT(file_log_name, "\n%s %d %s", __FUNCTION__, __LINE__, "entering");
+		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting\n");
 		ErrorCodeConvert(SOR_OK);
 
 		return SOR_OK;
@@ -2577,8 +2895,8 @@ end:
 
 	ULONG CALL_CONVENTION SOF_GetXMLSignatureInfo(void * p_ckpFunctions, UINT16 u16Type, BYTE *pbDataIn, ULONG ulDataInLen, BYTE *pbInfo, ULONG *pulInfoLen)
 	{
-		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "entering");
-		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting");
+		FILE_LOG_FMT(file_log_name, "\n%s %d %s", __FUNCTION__, __LINE__, "entering");
+		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting\n");
 		ErrorCodeConvert(SOR_OK);
 
 		return SOR_OK;
@@ -2589,11 +2907,13 @@ end:
 		ULONG ulResult = SOR_OK;
 		CK_SKF_FUNCTION_LIST_PTR ckpFunctions = (CK_SKF_FUNCTION_LIST_PTR)p_ckpFunctions;
 
-		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "entering");
+		FILE_LOG_FMT(file_log_name, "\n%s %d %s", __FUNCTION__, __LINE__, "entering");
 
 		ulResult = ckpFunctions->SKF_GenRandom(global_data.hDevHandle, pbDataIn, ulDataInLen);
+		if(ulResult != SAR_OK)
+			ulResult = SOR_GENRANDERR;
 
-		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting");
+		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting\n");
 		ulResult = ErrorCodeConvert(ulResult);
 
 		return ulResult;
@@ -2603,9 +2923,9 @@ end:
 	{
 		ULONG ulResult = SOR_OK;
 
-		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "entering");
+		FILE_LOG_FMT(file_log_name, "\n%s %d %s", __FUNCTION__, __LINE__, "entering");
 		ulResult = global_data.last_error;
-		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting");
+		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting\n");
 		ErrorCodeConvert(ulResult);
 
 		return ulResult;
@@ -2615,7 +2935,7 @@ end:
 	ULONG CALL_CONVENTION SOF_FinalizeLibraryNative(CK_SKF_FUNCTION_LIST_PTR p_ckpFunctions) {
 		ULONG ulResult = SOR_OK;
 
-		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "entering");
+		FILE_LOG_FMT(file_log_name, "\n%s %d %s", __FUNCTION__, __LINE__, "entering");
 		if (p_ckpFunctions) {
 			// add code here
 
@@ -2636,7 +2956,7 @@ end:
 
 			delete (p_ckpFunctions);
 		}
-		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting");
+		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting\n");
 		return ulResult;
 	}
 
@@ -2652,7 +2972,7 @@ end:
 
 		int mult_string_count = 10;
 
-		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "entering");
+		FILE_LOG_FMT(file_log_name, "\n%s %d %s", __FUNCTION__, __LINE__, "entering");
 		
 		hHandle = MYLoadLibrary(pSKFLibraryPath);
 		if (NULL == hHandle) {
@@ -2861,7 +3181,7 @@ end:
 		}
 	end:
 
-		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting");
+		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting\n");
 
 		return ulResult;
 	}

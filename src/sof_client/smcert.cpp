@@ -1328,14 +1328,15 @@ int GetCertInfoFromID(int iNameID, int iSubNameID, char *pszGB, int* piLen)
 		{			
 			iLen = X509_get_version(g_MyCert);
 			iLen++;
-			*piLen = 1;
+			*piLen = 2;
 			if(NULL != pszGB)
 			{	
-#ifdef	WIN32
-				//itoa(iLen, pszGB, 10);
-//#else
+// #ifdef	WIN32
+// 				*pszGB = 'V';
+// 				itoa(iLen, pszGB+1, 10);
+// #else
 				sprintf(pszGB, "V%d", iLen);
-#endif
+//#endif
 			}
 			ret = 0;
 		}
