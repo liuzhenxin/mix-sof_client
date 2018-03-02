@@ -17,6 +17,8 @@
 #include <openssl/mem.h>
 
 
+extern "C" int CBS_asn1_ber_to_der(CBS *in, uint8_t **out, size_t *out_len);
+
 typedef CK_SOF_CLIENT_FUNCTION_LIST *CK_SOF_CLIENT_FUNCTION_LIST_PTR;
 typedef CK_SKF_FUNCTION_LIST *CK_SKF_FUNCTION_LIST_PTR;
 
@@ -76,30 +78,30 @@ static const uint8_t kDataRSAEncrypt[] = { 0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d,0x
 static const uint8_t kDataSM2Encrypt[] = { 0x2a , 0x81 , 0x1c , 0xcf , 0x55 , 0x01, 0x82, 0x2d, 0x03 };
 
 
-//// 1.2.156.10197.1.102.1
-//static const uint8_t kDataSM1_ECB[] = { 0 };
-//// 1.2.156.10197.1.102.2
-//static const uint8_t kDataSM1_CBC = { 0 };
-//// 1.2.156.10197.1.102.4
-//static const uint8_t kDataSM1_CFB = { 0 };
-//// 1.2.156.10197.1.102.3
-//static const uint8_t kDataSM1_OFB = { 0 };
-//// 1.2.156.10197.1.103.1
-//static const uint8_t kDataSSF33_ECB = { 0 };
-//// 1.2.156.10197.1.103.2
-//static const uint8_t kDataSSF33_CBC = { 0 };
-//// 1.2.156.10197.1.103.4
-//static const uint8_t kDataSSF33_CFB = { 0 };
-//// 1.2.156.10197.1.103.3
-//static const uint8_t kDataSSF33_OFB = { 0 };
-//// 1.2.156.10197.1.104.1
-//static const uint8_t kDataSMS4_ECB = { 0 };
-//// 1.2.156.10197.1.104.2
-//static const uint8_t kDataSMS4_CBC = { 0 };
-//// 1.2.156.10197.1.104.4
-//static const uint8_t kDataSMS4_CFB = { 0 };
-//// 1.2.156.10197.1.104.3
-//static const uint8_t kDataSMS4_OFB = { 0 };
+// 1.2.156.10197.1.102.1
+static const uint8_t kDataSM1_ECB[] = { 0x2a, 0x81, 0x1c, 0xcf, 0x55, 0x01, 0x66, 0x01 };
+// 1.2.156.10197.1.102.2
+static const uint8_t kDataSM1_CBC[] = { 0x2a, 0x81, 0x1c, 0xcf, 0x55, 0x01, 0x66, 0x02 };
+// 1.2.156.10197.1.102.4
+static const uint8_t kDataSM1_CFB[] = { 0x2a, 0x81, 0x1c, 0xcf, 0x55, 0x01, 0x66, 0x04 };
+// 1.2.156.10197.1.102.3
+static const uint8_t kDataSM1_OFB[] = { 0x2a, 0x81, 0x1c, 0xcf, 0x55, 0x01, 0x66, 0x03 };
+// 1.2.156.10197.1.103.1
+static const uint8_t kDataSSF33_ECB[] = { 0x2a, 0x81, 0x1c, 0xcf, 0x55, 0x01, 0x67, 0x01 };
+// 1.2.156.10197.1.103.2
+static const uint8_t kDataSSF33_CBC[] = { 0x2a, 0x81, 0x1c, 0xcf, 0x55, 0x01, 0x67, 0x02 };
+// 1.2.156.10197.1.103.4
+static const uint8_t kDataSSF33_CFB[] = { 0x2a, 0x81, 0x1c, 0xcf, 0x55, 0x01, 0x67, 0x04 };
+// 1.2.156.10197.1.103.3
+static const uint8_t kDataSSF33_OFB[] = { 0x2a, 0x81, 0x1c, 0xcf, 0x55, 0x01, 0x67, 0x03 };
+// 1.2.156.10197.1.104.1
+static const uint8_t kDataSMS4_ECB[] = { 0x2a, 0x81, 0x1c, 0xcf, 0x55, 0x01, 0x68, 0x01 };
+// 1.2.156.10197.1.104.2
+static const uint8_t kDataSMS4_CBC[] = { 0x2a, 0x81, 0x1c, 0xcf, 0x55, 0x01, 0x68, 0x02 };
+// 1.2.156.10197.1.104.4
+static const uint8_t kDataSMS4_CFB[] = { 0x2a, 0x81, 0x1c, 0xcf, 0x55, 0x01, 0x68, 0x04 };
+// 1.2.156.10197.1.104.3
+static const uint8_t kDataSMS4_OFB[] = { 0x2a, 0x81, 0x1c, 0xcf, 0x55, 0x01, 0x68, 0x03 };
 
 
 #ifdef __cplusplus
@@ -1582,7 +1584,7 @@ end:
 
 		HANDLE hKey = 0;
 
-		BYTE sym_key_plain[1024] = { 0 };
+		//BYTE sym_key_plain[1024] = { 0 };
 
 		size_t require_len = 0;
 
@@ -2388,15 +2390,25 @@ end:
 	{
 		CK_SKF_FUNCTION_LIST_PTR ckpFunctions = (CK_SKF_FUNCTION_LIST_PTR)p_ckpFunctions;
 		HANDLE hContainer = NULL;
-
 		ULONG ulResult = 0;
 		ULONG ulContainerType = 0;
+		CBS pkcs7;
+		RSA *rsa = NULL;
+		HANDLE hKey = 0;
+		BLOCKCIPHERPARAM blockCipherParam = { 0 };
+		uint8_t *der_bytes = NULL;
+		size_t der_len;
+		CBS in, content_info, content, sym_seq, sym_iv, sym_alg, content_type, oid,  ciphertext, wrapped_seq, seq, wrap_key, recipInfo, recipInfos;
+		uint64_t version;
+
+		ULONG ulSymAlg = 0;
 
 		FILE_LOG_FMT(file_log_name, "\n%s %d %s", __FUNCTION__, __LINE__, "entering");
 		FILE_LOG_FMT(file_log_name, "ContainerName: %s", pContainerName);
 
 		FILE_LOG_FMT(file_log_name, "%s", "DataIn:");
 		FILE_LOG_HEX(file_log_name, pbDataIn, ulDataInLen);
+
 
 		ulResult = ckpFunctions->SKF_OpenContainer(global_data.hAppHandle, pContainerName, &hContainer);
 		if (ulResult)
@@ -2410,29 +2422,294 @@ end:
 			goto end;
 		}
 
-		if (ulContainerType == 1)
-		{
-			ulResult = ckpFunctions->SKF_RSAPriKeyOperation(hContainer, pbDataIn, ulDataInLen, pbDataOut, pulDataOutLen, FALSE);
+		CBS_init(&pkcs7, pbDataIn, ulDataInLen);
 
+		der_bytes = NULL;
+
+		if (!CBS_asn1_ber_to_der(&pkcs7, &der_bytes, &der_len)) {
+			ulResult = SOR_UNKNOWNERR;
+			goto end;
 		}
-		else if (ulContainerType == 2)
+		if (der_bytes != NULL) {
+			CBS_init(&in, der_bytes, der_len);
+		}
+		else {
+			CBS_init(&in, CBS_data(&pkcs7), CBS_len(&pkcs7));
+		}
+
+		/* See https://tools.ietf.org/html/rfc2315#section-7 */
+		if (!CBS_get_asn1(&in, &content_info, CBS_ASN1_SEQUENCE) ||
+			!CBS_get_asn1(&content_info, &content_type, CBS_ASN1_OBJECT)) {
+			ulResult = SOR_UNKNOWNERR;
+			goto end;
+		}
+
+		//if (OBJ_cbs2nid(&content_type) != NID_pkcs7_signed) {
+		//	ulResult = SOR_UNKNOWNERR;
+		//	goto end;
+		//}
+
+		/* See https://tools.ietf.org/html/rfc2315#section-9.1 */
+		if (!CBS_get_asn1(&content_info, &wrapped_seq,
+			CBS_ASN1_CONTEXT_SPECIFIC | CBS_ASN1_CONSTRUCTED | 0) ||
+			!CBS_get_asn1(&wrapped_seq, &seq, CBS_ASN1_SEQUENCE) ||
+			!CBS_get_asn1_uint64(&seq, &version) ||
+			!CBS_get_asn1(&seq, &recipInfos, CBS_ASN1_SET) ||
+			!CBS_get_asn1(&seq, &content, CBS_ASN1_SEQUENCE)) {
+			ulResult = SOR_UNKNOWNERR;
+			goto end;
+		}
+
+		if (!CBS_get_asn1(&recipInfos, &recipInfo, CBS_ASN1_SEQUENCE)) {
+			ulResult = SOR_UNKNOWNERR;
+			goto end;
+		}
+
+		
+		if (
+			!CBS_get_asn1(&recipInfo, NULL, CBS_ASN1_INTEGER) ||
+			!CBS_get_asn1(&recipInfo, NULL, CBS_ASN1_SEQUENCE) ||
+			!CBS_get_asn1(&recipInfo, NULL, CBS_ASN1_SEQUENCE) ||
+			!CBS_get_asn1(&recipInfo, &wrap_key, CBS_ASN1_OCTETSTRING)
+			) {
+			ulResult = SOR_UNKNOWNERR;
+			goto end;
+		}
+
+		if (
+			!CBS_get_asn1(&content, NULL, CBS_ASN1_OBJECT) ||
+			!CBS_get_asn1(&content, &sym_seq, CBS_ASN1_SEQUENCE) ||
+			!CBS_get_asn1(&content, &ciphertext, CBS_ASN1_CONTEXT_SPECIFIC)
+			) {
+			ulResult = SOR_UNKNOWNERR;
+			goto end;
+		}
+
+		if (!CBS_get_asn1(&sym_seq, &sym_alg, CBS_ASN1_OBJECT) ||
+			!CBS_get_asn1(&sym_seq, &sym_iv, CBS_ASN1_OCTETSTRING)
+			)
 		{
-			ulResult = ckpFunctions->SKF_ECCDecrypt(hContainer, pbDataIn, ulDataInLen, pbDataOut, pulDataOutLen);
-			FILE_LOG_FMT(file_log_name, "ulResult: %d", ulResult);
+			ulResult = SOR_UNKNOWNERR;
+			goto end;
 		}
+
+		FILE_WRITE_HEX( "D:/KKKK.TXT", (unsigned char *)CBS_data(&sym_alg), CBS_len(&sym_alg));
+
+
+		
+		static const uint8_t kDataSSF33_ECB[] = { 0x2a, 0x81, 0x1c, 0xcf, 0x55, 0x01, 0x67, 0x01 };
+		// 1.2.156.10197.1.103.2
+		static const uint8_t kDataSSF33_CBC[] = { 0x2a, 0x81, 0x1c, 0xcf, 0x55, 0x01, 0x67, 0x02 };
+		// 1.2.156.10197.1.103.4
+		static const uint8_t kDataSSF33_CFB[] = { 0x2a, 0x81, 0x1c, 0xcf, 0x55, 0x01, 0x67, 0x04 };
+		// 1.2.156.10197.1.103.3
+		static const uint8_t kDataSSF33_OFB[] = { 0x2a, 0x81, 0x1c, 0xcf, 0x55, 0x01, 0x67, 0x03 };
+		// 1.2.156.10197.1.104.1
+		static const uint8_t kDataSMS4_ECB[] = { 0x2a, 0x81, 0x1c, 0xcf, 0x55, 0x01, 0x68, 0x01 };
+		// 1.2.156.10197.1.104.2
+		static const uint8_t kDataSMS4_CBC[] = { 0x2a, 0x81, 0x1c, 0xcf, 0x55, 0x01, 0x68, 0x02 };
+		// 1.2.156.10197.1.104.4
+		static const uint8_t kDataSMS4_CFB[] = { 0x2a, 0x81, 0x1c, 0xcf, 0x55, 0x01, 0x68, 0x04 };
+		// 1.2.156.10197.1.104.3
+		static const uint8_t kDataSMS4_OFB[] = { 0x2a, 0x81, 0x1c, 0xcf, 0x55, 0x01, 0x68, 0x03 };
+		
+		if (0 == memcmp(CBS_data(&sym_alg), kDataSM1_ECB, sizeof(kDataSM1_ECB)))
+		{
+			ulSymAlg = SGD_SM1_ECB;
+		}
+		else if (0 == memcmp(CBS_data(&sym_alg), kDataSM1_CBC, sizeof(kDataSM1_CBC)))
+		{
+			ulSymAlg = SGD_SM1_CBC;
+		}
+		else if (0 == memcmp(CBS_data(&sym_alg), kDataSM1_CFB, sizeof(kDataSM1_CFB)))
+		{
+			ulSymAlg = SGD_SM1_CFB;
+		}
+		else if (0 == memcmp(CBS_data(&sym_alg), kDataSM1_OFB, sizeof(kDataSM1_OFB)))
+		{
+			ulSymAlg = SGD_SM1_OFB;
+		}
+
+		else if (0 == memcmp(CBS_data(&sym_alg), kDataSSF33_ECB, sizeof(kDataSSF33_ECB)))
+		{
+			ulSymAlg = SGD_SSF33_ECB;
+		}
+		else if (0 == memcmp(CBS_data(&sym_alg), kDataSSF33_CBC, sizeof(kDataSSF33_CBC)))
+		{
+			ulSymAlg = SGD_SSF33_CBC;
+		}
+		else if (0 == memcmp(CBS_data(&sym_alg), kDataSSF33_CFB, sizeof(kDataSSF33_CFB)))
+		{
+			ulSymAlg = SGD_SSF33_CFB;
+		}
+		else if (0 == memcmp(CBS_data(&sym_alg), kDataSSF33_OFB, sizeof(kDataSSF33_OFB)))
+		{
+			ulSymAlg = SGD_SSF33_OFB;
+		}
+		
+		else if (0 == memcmp(CBS_data(&sym_alg), kDataSMS4_ECB, sizeof(kDataSMS4_ECB)))
+		{
+			ulSymAlg = SGD_SMS4_ECB;
+		}
+		else if (0 == memcmp(CBS_data(&sym_alg), kDataSMS4_CBC, sizeof(kDataSMS4_CBC)))
+		{
+			ulSymAlg = SGD_SMS4_CBC;
+		}
+		else if (0 == memcmp(CBS_data(&sym_alg), kDataSMS4_CFB, sizeof(kDataSMS4_CFB)))
+		{
+			ulSymAlg = SGD_SMS4_CFB;
+		}
+		else if (0 == memcmp(CBS_data(&sym_alg), kDataSMS4_OFB, sizeof(kDataSMS4_OFB)))
+		{
+			ulSymAlg = SGD_SMS4_OFB;
+		}
+
 		else
+		{
+			ulResult = SOR_UNKNOWNERR;
+			goto end;
+		}
+
+
+		ulResult = ckpFunctions->SKF_ImportSessionKey(hContainer, ulSymAlg, (BYTE *)CBS_data(&wrap_key), CBS_len(&wrap_key), &hKey);
+
+		if (ulResult)
+		{
+			goto end;
+		}
+
+
+		switch (ulSymAlg)
+		{
+		case SGD_SM1_ECB:
+		{
+			blockCipherParam.IVLen = 0;
+			memcpy(blockCipherParam.IV, (BYTE *)CBS_data(&sym_iv), 16);
+			blockCipherParam.FeedBitLen = 0;
+			blockCipherParam.PaddingType = 1;
+		}
+		break;
+		case SGD_SM1_CBC:
+		{
+			blockCipherParam.IVLen = 16;
+			memcpy(blockCipherParam.IV, (BYTE *)CBS_data(&sym_iv), 16);
+			blockCipherParam.FeedBitLen = 0;
+			blockCipherParam.PaddingType = 1;
+		}
+		break;
+		case SGD_SM1_CFB:
+		{
+			blockCipherParam.IVLen = 16;
+			memcpy(blockCipherParam.IV, (BYTE *)CBS_data(&sym_iv), 16);
+			blockCipherParam.FeedBitLen = 0;
+			blockCipherParam.PaddingType = 1;
+		}
+		break;
+		case SGD_SM1_OFB:
+		{
+			blockCipherParam.IVLen = 16;
+			memcpy(blockCipherParam.IV, (BYTE *)CBS_data(&sym_iv), 16);
+			blockCipherParam.FeedBitLen = 0;
+			blockCipherParam.PaddingType = 1;
+		}
+		break;
+		case SGD_SSF33_ECB:
+		{
+			blockCipherParam.IVLen = 0;
+			memcpy(blockCipherParam.IV, (BYTE *)CBS_data(&sym_iv), 16);
+			blockCipherParam.FeedBitLen = 0;
+			blockCipherParam.PaddingType = 1;
+		}
+		break;
+		case 	SGD_SSF33_CBC:
+		{
+			blockCipherParam.IVLen = 16;
+			memcpy(blockCipherParam.IV, (BYTE *)CBS_data(&sym_iv), 16);
+			blockCipherParam.FeedBitLen = 0;
+			blockCipherParam.PaddingType = 1;
+		}
+		break;
+		case SGD_SSF33_CFB:
+		{
+			blockCipherParam.IVLen = 16;
+			memcpy(blockCipherParam.IV, (BYTE *)CBS_data(&sym_iv), 16);
+			blockCipherParam.FeedBitLen = 0;
+			blockCipherParam.PaddingType = 1;
+		}
+		break;
+		case SGD_SSF33_OFB:
+		{
+			blockCipherParam.IVLen = 16;
+			memcpy(blockCipherParam.IV, (BYTE *)CBS_data(&sym_iv), 16);
+			blockCipherParam.FeedBitLen = 0;
+			blockCipherParam.PaddingType = 1;
+		}
+		break;
+
+		break;
+		case SGD_SMS4_ECB:
+		{
+			blockCipherParam.IVLen = 0;
+			memcpy(blockCipherParam.IV, (BYTE *)CBS_data(&sym_iv), 16);
+			blockCipherParam.FeedBitLen = 0;
+			blockCipherParam.PaddingType = 1;
+		}
+		break;
+		case SGD_SMS4_CBC:
+		{
+			blockCipherParam.IVLen = 16;
+			memcpy(blockCipherParam.IV, (BYTE *)CBS_data(&sym_iv), 16);
+			blockCipherParam.FeedBitLen = 0;
+			blockCipherParam.PaddingType = 1;
+		}
+		break;
+		case SGD_SMS4_CFB:
+		{
+			blockCipherParam.IVLen = 16;
+			memcpy(blockCipherParam.IV, (BYTE *)CBS_data(&sym_iv), 16);
+			blockCipherParam.FeedBitLen = 0;
+			blockCipherParam.PaddingType = 1;
+		}
+		break;
+		case 	SGD_SMS4_OFB:
+		{
+			blockCipherParam.IVLen = 16;
+			memcpy(blockCipherParam.IV, (BYTE *)CBS_data(&sym_iv), 16);
+			blockCipherParam.FeedBitLen = 0;
+			blockCipherParam.PaddingType = 1;
+		}
+		break;
+
+		default:
 		{
 			ulResult = SOR_NOTSUPPORTYETERR;
 			goto end;
 		}
-		if(pbDataOut == NULL)
-			FILE_LOG_FMT(file_log_name, "ulDataOutLen: %d", *pulDataOutLen);
-		else
-		{
-			FILE_LOG_FMT(file_log_name, "%s", "DataOut:");
-			FILE_LOG_HEX(file_log_name, pbDataOut, *pulDataOutLen);
+		break;
 		}
+
+		ulResult = ckpFunctions->SKF_DecryptInit(hKey, blockCipherParam);
+		if (ulResult)
+		{
+			goto end;
+		}
+
+		ulResult = ckpFunctions->SKF_Decrypt(hKey, (BYTE *)CBS_data(&ciphertext), CBS_len(&ciphertext), pbDataOut, pulDataOutLen);
+		if (ulResult)
+		{
+			goto end;
+		}
+
 	end:
+
+		if (der_bytes) {
+			OPENSSL_free(der_bytes);
+		}
+
+		if (hKey)
+		{
+			ckpFunctions->SKF_CloseHandle(hKey);
+		}
 
 		if (hContainer)
 		{
@@ -3040,7 +3317,6 @@ end:
 	}
 
 	
-	extern "C" int CBS_asn1_ber_to_der(CBS *in, uint8_t **out, size_t *out_len);
 
 	ULONG CALL_CONVENTION SOF_VerifySignedMessage(void * p_ckpFunctions, BYTE *pbMessageData, ULONG ulMessageDataLen, BYTE *pbPlaintext, ULONG ulPlaintextLen)
 	{
