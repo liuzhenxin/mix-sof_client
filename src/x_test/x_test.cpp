@@ -20,9 +20,11 @@ int main(int argc, char * argv[])
 	unsigned char plain[32] = { 0 };
 	unsigned char signature[2048] = { 0 };
 	unsigned char sign_cert[2048] = { 0 };
+	unsigned char crypt_cert[2048] = { 0 };
 
 	ULONG plain_len = sizeof(plain);
 	ULONG sign_cert_len = sizeof(sign_cert);
+	ULONG crypt_cert_len = sizeof(crypt_cert);
 	ULONG signature_len = sizeof(signature);
 	int i = 0;
 
@@ -58,6 +60,11 @@ int main(int argc, char * argv[])
 		goto end;
 	}
 
+	ulResult = SOF_ExportUserCert(ckpFunctions, "RT_SM_CON", crypt_cert, &crypt_cert_len);
+	if (ulResult)
+	{
+		goto end;
+	}
 
 	ulResult = SOF_SetSignMethod(ckpFunctions, SGD_SM3_SM2);
 	if (ulResult)
@@ -126,6 +133,27 @@ int main(int argc, char * argv[])
 	{
 		goto end;
 	}
+
+
+	ulResult = SOF_SetEncryptMethod(ckpFunctions, SGD_SM1_ECB);
+	if (ulResult)
+	{
+		goto end;
+	}
+
+	ulResult = SOF_EncryptFile(ckpFunctions, crypt_cert, crypt_cert_len, "D:/test.txt", "D:/cipher.txt");
+	if (ulResult)
+	{
+		goto end;
+	}
+
+
+	ulResult = SOF_DecryptFile(ckpFunctions, "RT_SM_CON", "D:/cipher.txt", "D:/plain.txt" );
+	if (ulResult)
+	{
+		goto end;
+	}
+
 
 end:
 	

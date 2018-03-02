@@ -1588,7 +1588,7 @@ end:
 
 		int len = 0;
 
-		CBB out, outer_seq, oid, data_oid, sym_seq , sym_iv, sym_alg, ciphertext, wrapped_seq, seq, version_bytes, asym_oid, content_info, wrap_key, asym_alg, issue_and_sn, null_asn1, recipInfo, recipInfos, version_bytes1;
+		CBB out, outer_seq, oid, data_oid, sym_seq , sym_iv, ciphertext, wrapped_seq, seq, version_bytes, asym_oid, content_info, wrap_key, asym_alg, issue_and_sn, null_asn1, recipInfo, recipInfos, version_bytes1;
 
 		size_t result_len = 1024 * 1024 * 1024;
 
@@ -1602,14 +1602,11 @@ end:
 		BYTE *cipher_value = NULL;
 		ULONG cipher_len = 0;
 
-		const uint8_t *kSymData = 0;
-		size_t kSymLen = 0;
+		const uint8_t *kASymData = 0;
+		size_t kASymLen = 0;
 
 		const uint8_t *kPKCS7EnvelopedData = 0;
 		size_t kPKCS7EnvelopedLen = 0;
-
-		const uint8_t *kEncData = 0;
-		size_t kEncLen = 0;
 
 		CertificateItemParse certParse;
 
@@ -1620,6 +1617,7 @@ end:
 
 		const uint8_t *kPKCS7Data = 0;
 		size_t kPKCS7Len = 0;
+
 
 		BYTE *wrapper_key_value = NULL;
 		ULONG wrapper_key_len = 0;
@@ -1676,6 +1674,8 @@ end:
 			kPKCS7EnvelopedLen = sizeof(kPKCS7EnvelopedDataRFC);
 			kPKCS7Data = kPKCS7DataRFC;
 			kPKCS7Len = sizeof(kPKCS7DataRFC);
+			kASymData = kDataRSAEncrypt;
+			kASymLen = sizeof(kDataRSAEncrypt);
 
 			if (rsa != NULL)
 			{
@@ -1705,15 +1705,17 @@ end:
 			ECCPUBLICKEYBLOB pubkeyBlob = { 0 };
 			ULONG ulBlobLen = sizeof(pubkeyBlob);
 
+			unsigned char pk_data[32 * 2 + 1] = { 0 };
+			unsigned int pk_len = 65;
+
 			kPKCS7EnvelopedData = kPKCS7EnvelopedDataSM2;
 			kPKCS7EnvelopedLen = sizeof(kPKCS7EnvelopedDataSM2);
 
 			kPKCS7Data = kPKCS7DataSM2;
 			kPKCS7Len = sizeof(kPKCS7DataSM2);
 
-
-			unsigned char pk_data[32 * 2 + 1] = { 0 };
-			unsigned int pk_len = 65;
+			kASymData = kDataSM2Encrypt;
+			kASymLen = sizeof(kDataSM2Encrypt);
 
 			eccPublicKeyBlob.BitLen = 256;
 
@@ -1733,6 +1735,11 @@ end:
 					(PECCCIPHERBLOB)wrapper_key_value,
 					&hKey
 					);
+
+			if (ulResult)
+			{
+				goto end;
+			}
 
 			wrapper_key_len = ((PECCCIPHERBLOB)wrapper_key_value)->CipherLen + sizeof(ECCCIPHERBLOB)-1;
 
@@ -1892,8 +1899,7 @@ end:
 			!CBB_add_asn1(&wrapped_seq, &seq, CBS_ASN1_SEQUENCE) ||
 			!CBB_add_asn1(&seq, &version_bytes, CBS_ASN1_INTEGER) ||
 			!CBB_add_u8(&version_bytes, 1) ||
-			!CBB_add_asn1(&seq, &recipInfos, CBS_ASN1_SET)||
-			!CBB_add_asn1(&seq, &content_info, CBS_ASN1_SEQUENCE)
+			!CBB_add_asn1(&seq, &recipInfos, CBS_ASN1_SET)
 			)
 		{
 			ulResult = SOR_UNKNOWNERR;
@@ -1901,18 +1907,13 @@ end:
 		}
 
 
+
 		// recipInfos
 		if (
 			!CBB_add_asn1(&recipInfos, &recipInfo, CBS_ASN1_SEQUENCE) ||
 			!CBB_add_asn1(&recipInfo, &version_bytes1, CBS_ASN1_INTEGER) ||
 			!CBB_add_u8(&version_bytes1, 0) ||
-			!CBB_add_asn1(&recipInfo, &issue_and_sn, CBS_ASN1_SEQUENCE) ||
-			!CBB_add_asn1(&recipInfo, &asym_alg, CBS_ASN1_SEQUENCE) ||
-			!CBB_add_asn1(&asym_alg, &asym_oid, CBS_ASN1_OBJECT) ||
-			!CBB_add_bytes(&asym_oid, wrapper_key_value, wrapper_key_len)||
-			!CBB_add_asn1(&asym_alg, &null_asn1, CBS_ASN1_SEQUENCE) ||
-			!CBB_add_asn1(&recipInfo, &wrap_key, CBS_ASN1_OCTETSTRING) ||
-			!CBB_add_bytes(&wrap_key, wrapper_key_value, wrapper_key_len)
+			!CBB_add_asn1(&recipInfo, &issue_and_sn, CBS_ASN1_SEQUENCE)
 			)
 		{
 			ulResult = SOR_UNKNOWNERR;
@@ -1940,13 +1941,31 @@ end:
 			goto end;
 		}
 
+
+		if (
+			!CBB_add_asn1(&recipInfo, &asym_alg, CBS_ASN1_SEQUENCE) ||
+			!CBB_add_asn1(&asym_alg, &asym_oid, CBS_ASN1_OBJECT) ||
+			!CBB_add_bytes(&asym_oid, kASymData, kASymLen) ||
+			!CBB_add_asn1(&asym_alg, &null_asn1, CBS_ASN1_SEQUENCE) ||
+			!CBB_add_asn1(&recipInfo, &wrap_key, CBS_ASN1_OCTETSTRING) ||
+			!CBB_add_bytes(&wrap_key, wrapper_key_value, wrapper_key_len)
+			)
+		{
+			ulResult = SOR_UNKNOWNERR;
+			goto end;
+		}
+
+		if (!CBB_add_asn1(&seq, &content_info, CBS_ASN1_SEQUENCE)
+			)
+		{
+			ulResult = SOR_UNKNOWNERR;
+			goto end;
+		}
+
 		if (!CBB_add_asn1(&content_info, &data_oid, CBS_ASN1_OBJECT) ||  
-			!CBB_add_bytes(&ciphertext, kPKCS7Data, kPKCS7Len) ||
-			!CBB_add_asn1(&content_info, &sym_seq, CBS_ASN1_SEQUENCE) ||
-			!CBB_add_asn1(&sym_seq, &sym_alg, CBS_ASN1_OBJECT) ||
-			!CBB_add_asn1(&sym_seq, &sym_iv, CBS_ASN1_OCTETSTRING) ||
-			!CBB_add_asn1(&content_info, &ciphertext, CBS_ASN1_CONTEXT_SPECIFIC) ||
-			!CBB_add_bytes(&ciphertext, cipher_value, cipher_len)) {
+			!CBB_add_bytes(&data_oid, kPKCS7Data, kPKCS7Len) ||
+			!CBB_add_asn1(&content_info, &sym_seq, CBS_ASN1_SEQUENCE)
+			) {
 			ulResult = SOR_UNKNOWNERR;
 			goto end;
 		}
@@ -1959,7 +1978,7 @@ end:
 			ASN1_OBJECT *object = OBJ_txt2obj("1.2.156.10197.1.102.1", 1);
 
 			len = i2d_ASN1_OBJECT(object, NULL);
-			if (len < 0 || !CBB_add_space(&sym_alg, &buf, len) ||
+			if (len < 0 || !CBB_add_space(&sym_seq, &buf, len) ||
 				i2d_ASN1_OBJECT(object, &buf) < 0
 				)
 			{
@@ -1967,6 +1986,13 @@ end:
 				goto end;
 			}
 			
+
+			if (
+				!CBB_add_asn1(&sym_seq, &sym_iv, CBS_ASN1_OCTETSTRING))
+			{
+				ulResult = SOR_UNKNOWNERR;
+				goto end;
+			}
 		}
 		break;
 		case SGD_SM1_CBC:
@@ -1974,9 +2000,17 @@ end:
 			ASN1_OBJECT *object = OBJ_txt2obj("1.2.156.10197.1.102.2", 1);
 
 			len = i2d_ASN1_OBJECT(object, NULL);
-			if (len < 0 || !CBB_add_space(&sym_alg, &buf, len) ||
+			if (len < 0 || !CBB_add_space(&sym_seq, &buf, len) ||
 				i2d_ASN1_OBJECT(object, &buf) < 0
 				)
+			{
+				ulResult = SOR_UNKNOWNERR;
+				goto end;
+			}
+
+
+			if (
+				!CBB_add_asn1(&sym_seq, &sym_iv, CBS_ASN1_OCTETSTRING))
 			{
 				ulResult = SOR_UNKNOWNERR;
 				goto end;
@@ -1994,9 +2028,17 @@ end:
 			ASN1_OBJECT *object = OBJ_txt2obj("1.2.156.10197.1.102.4", 1);
 
 			len = i2d_ASN1_OBJECT(object, NULL);
-			if (len < 0 || !CBB_add_space(&sym_alg, &buf, len) ||
+			if (len < 0 || !CBB_add_space(&sym_seq, &buf, len) ||
 				i2d_ASN1_OBJECT(object, &buf) < 0
 				)
+			{
+				ulResult = SOR_UNKNOWNERR;
+				goto end;
+			}
+
+
+			if (
+				!CBB_add_asn1(&sym_seq, &sym_iv, CBS_ASN1_OCTETSTRING))
 			{
 				ulResult = SOR_UNKNOWNERR;
 				goto end;
@@ -2014,9 +2056,17 @@ end:
 			ASN1_OBJECT *object = OBJ_txt2obj("1.2.156.10197.1.102.3", 1);
 
 			len = i2d_ASN1_OBJECT(object, NULL);
-			if (len < 0 || !CBB_add_space(&sym_alg, &buf, len) ||
+			if (len < 0 || !CBB_add_space(&sym_seq, &buf, len) ||
 				i2d_ASN1_OBJECT(object, &buf) < 0
 				)
+			{
+				ulResult = SOR_UNKNOWNERR;
+				goto end;
+			}
+
+
+			if (
+				!CBB_add_asn1(&sym_seq, &sym_iv, CBS_ASN1_OCTETSTRING))
 			{
 				ulResult = SOR_UNKNOWNERR;
 				goto end;
@@ -2034,7 +2084,7 @@ end:
 			ASN1_OBJECT *object = OBJ_txt2obj("1.2.156.10197.1.103.1", 1);
 
 			len = i2d_ASN1_OBJECT(object, NULL);
-			if (len < 0 || !CBB_add_space(&sym_alg, &buf, len) ||
+			if (len < 0 || !CBB_add_space(&sym_seq, &buf, len) ||
 				i2d_ASN1_OBJECT(object, &buf) < 0
 				)
 			{
@@ -2043,15 +2093,30 @@ end:
 			}
 
 
+			if (
+				!CBB_add_asn1(&sym_seq, &sym_iv, CBS_ASN1_OCTETSTRING))
+			{
+				ulResult = SOR_UNKNOWNERR;
+				goto end;
+			}
+
 		}
 		break;
 		case 	SGD_SSF33_CBC:
 		{
 			ASN1_OBJECT *object = OBJ_txt2obj("1.2.156.10197.1.103.2", 1);
 			len = i2d_ASN1_OBJECT(object, NULL);
-			if (len < 0 || !CBB_add_space(&sym_alg, &buf, len) ||
+			if (len < 0 || !CBB_add_space(&sym_seq, &buf, len) ||
 				i2d_ASN1_OBJECT(object, &buf) < 0
 				)
+			{
+				ulResult = SOR_UNKNOWNERR;
+				goto end;
+			}
+
+
+			if (
+				!CBB_add_asn1(&sym_seq, &sym_iv, CBS_ASN1_OCTETSTRING))
 			{
 				ulResult = SOR_UNKNOWNERR;
 				goto end;
@@ -2069,9 +2134,17 @@ end:
 			ASN1_OBJECT *object = OBJ_txt2obj("1.2.156.10197.1.103.4", 1);
 
 			len = i2d_ASN1_OBJECT(object, NULL);
-			if (len < 0 || !CBB_add_space(&sym_alg, &buf, len) ||
+			if (len < 0 || !CBB_add_space(&sym_seq, &buf, len) ||
 				i2d_ASN1_OBJECT(object, &buf) < 0
 				)
+			{
+				ulResult = SOR_UNKNOWNERR;
+				goto end;
+			}
+
+
+			if (
+				!CBB_add_asn1(&sym_seq, &sym_iv, CBS_ASN1_OCTETSTRING))
 			{
 				ulResult = SOR_UNKNOWNERR;
 				goto end;
@@ -2089,9 +2162,17 @@ end:
 			ASN1_OBJECT *object = OBJ_txt2obj("1.2.156.10197.1.103.3", 1);
 
 			len = i2d_ASN1_OBJECT(object, NULL);
-			if (len < 0 || !CBB_add_space(&sym_alg, &buf, len) ||
+			if (len < 0 || !CBB_add_space(&sym_seq, &buf, len) ||
 				i2d_ASN1_OBJECT(object, &buf) < 0
 				)
+			{
+				ulResult = SOR_UNKNOWNERR;
+				goto end;
+			}
+
+
+			if (
+				!CBB_add_asn1(&sym_seq, &sym_iv, CBS_ASN1_OCTETSTRING))
 			{
 				ulResult = SOR_UNKNOWNERR;
 				goto end;
@@ -2111,9 +2192,17 @@ end:
 			ASN1_OBJECT *object = OBJ_txt2obj("1.2.156.10197.1.104.1", 1);
 
 			len = i2d_ASN1_OBJECT(object, NULL);
-			if (len < 0 || !CBB_add_space(&sym_alg, &buf, len) ||
+			if (len < 0 || !CBB_add_space(&sym_seq, &buf, len) ||
 				i2d_ASN1_OBJECT(object, &buf) < 0
 				)
+			{
+				ulResult = SOR_UNKNOWNERR;
+				goto end;
+			}
+
+
+			if (
+				!CBB_add_asn1(&sym_seq, &sym_iv, CBS_ASN1_OCTETSTRING))
 			{
 				ulResult = SOR_UNKNOWNERR;
 				goto end;
@@ -2126,9 +2215,17 @@ end:
 			ASN1_OBJECT *object = OBJ_txt2obj("1.2.156.10197.1.104.2", 1);
 
 			len = i2d_ASN1_OBJECT(object, NULL);
-			if (len < 0 || !CBB_add_space(&sym_alg, &buf, len) ||
+			if (len < 0 || !CBB_add_space(&sym_seq, &buf, len) ||
 				i2d_ASN1_OBJECT(object, &buf) < 0
 				)
+			{
+				ulResult = SOR_UNKNOWNERR;
+				goto end;
+			}
+
+
+			if (
+				!CBB_add_asn1(&sym_seq, &sym_iv, CBS_ASN1_OCTETSTRING))
 			{
 				ulResult = SOR_UNKNOWNERR;
 				goto end;
@@ -2145,9 +2242,17 @@ end:
 		{
 			ASN1_OBJECT *object = OBJ_txt2obj("1.2.156.10197.1.104.4", 1);
 			len = i2d_ASN1_OBJECT(object, NULL);
-			if (len < 0 || !CBB_add_space(&sym_alg, &buf, len) ||
+			if (len < 0 || !CBB_add_space(&sym_seq, &buf, len) ||
 				i2d_ASN1_OBJECT(object, &buf) < 0
 				)
+			{
+				ulResult = SOR_UNKNOWNERR;
+				goto end;
+			}
+
+
+			if (
+				!CBB_add_asn1(&sym_seq, &sym_iv, CBS_ASN1_OCTETSTRING))
 			{
 				ulResult = SOR_UNKNOWNERR;
 				goto end;
@@ -2165,9 +2270,17 @@ end:
 			ASN1_OBJECT *object = OBJ_txt2obj("1.2.156.10197.1.104.3", 1);
 
 			len = i2d_ASN1_OBJECT(object, NULL);
-			if (len < 0 || !CBB_add_space(&sym_alg, &buf, len) ||
+			if (len < 0 || !CBB_add_space(&sym_seq, &buf, len) ||
 				i2d_ASN1_OBJECT(object, &buf) < 0
 				)
+			{
+				ulResult = SOR_UNKNOWNERR;
+				goto end;
+			}
+
+
+			if (
+				!CBB_add_asn1(&sym_seq, &sym_iv, CBS_ASN1_OCTETSTRING))
 			{
 				ulResult = SOR_UNKNOWNERR;
 				goto end;
@@ -2189,6 +2302,13 @@ end:
 		break;
 		}
 
+		if (!CBB_add_asn1(&content_info, &ciphertext, CBS_ASN1_CONTEXT_SPECIFIC) ||
+			!CBB_add_bytes(&ciphertext, cipher_value, cipher_len))
+		{
+			ulResult = SOR_UNKNOWNERR;
+			goto end;
+		}
+		
 
 		// end
 		if (!CBB_flush(&out))
@@ -2262,125 +2382,6 @@ end:
 		ulResult = ErrorCodeConvert(ulResult);
 
 		return ulResult;
-
-
-		/*CK_SKF_FUNCTION_LIST_PTR ckpFunctions = (CK_SKF_FUNCTION_LIST_PTR)p_ckpFunctions;
-		HANDLE hContainer = NULL;
-
-		ULONG ulResult = SOR_OK;
-		ULONG ulContainerType = 0;
-
-		BYTE *pbTmp=NULL;
-		ULONG ulTmpLen;
-
-		RSA *rsa = NULL;
-
-		FILE_LOG_FMT(file_log_name, "\n%s %d %s", __FUNCTION__, __LINE__, "entering");
-		
-		FILE_LOG_FMT(file_log_name, "%s", "Cert:");
-		FILE_LOG_HEX(file_log_name, pbCert, ulCertLen);
-		FILE_LOG_FMT(file_log_name, "%s", "DataIn:");
-		FILE_LOG_HEX(file_log_name, pbDataIn, ulDataInLen);
-
-		RSAPUBLICKEYBLOB rsaPublicKeyBlob = { 0 };
-		ECCPUBLICKEYBLOB eccPublicKeyBlob = { 0 };
-
-		CertificateItemParse certParse;
-
-		certParse.setCertificate(pbCert, ulCertLen);
-
-		if (0 != certParse.parse())
-		{
-			ulResult = SOR_INDATAERR;
-			goto end;
-		}
-
-		if (ECertificate_KEY_ALG_RSA == certParse.m_iKeyAlg)
-		{
-			X509 * x509 = NULL;
-			unsigned char pbModulus[256];
-			int ulModulusLen = 0;
-			const unsigned char *ptr = NULL;
-			ptr = pbCert;
-
-			x509 = d2i_X509(NULL, &ptr, ulCertLen);
-
-			if (x509)
-			{
-				RSA *rsa = EVP_PKEY_get1_RSA(X509_get_pubkey(x509));
-
-				if (rsa != NULL)
-				{
-					ulModulusLen = BN_bn2bin(rsa->n, pbModulus);
-				}
-
-				rsaPublicKeyBlob.BitLen = ulModulusLen * 8;
-
-				memcpy(rsaPublicKeyBlob.PublicExponent, "\x00\x01\x00\x01", 4);
-
-				memcpy(rsaPublicKeyBlob.Modulus + 256 - ulModulusLen, pbModulus, ulModulusLen);
-				X509_free(x509);
-			}
-
-			ulResult = ckpFunctions->SKF_ExtRSAPubKeyOperation(global_data.hDevHandle, &rsaPublicKeyBlob, pbDataIn, ulDataInLen, pbDataOut, pulDataOutLen);
-		}
-		else if (ECertificate_KEY_ALG_EC == certParse.m_iKeyAlg)
-		{
-			unsigned char pk_data[32 * 2 + 1] = { 0 };
-			unsigned int pk_len = 65;
-
-			eccPublicKeyBlob.BitLen = 256;
-
-			OpenSSL_CertGetPubkey(pbCert, ulCertLen, pk_data, &pk_len);
-
-			memcpy(eccPublicKeyBlob.XCoordinate + 32, pk_data + 1, 32);
-			memcpy(eccPublicKeyBlob.YCoordinate + 32, pk_data + 1 + 32, 32);
-
-			ulTmpLen = ulDataInLen+sizeof(ECCCIPHERBLOB);
-			pbTmp = (BYTE*)malloc(ulTmpLen);
-			if(pbTmp == NULL)
-			{
-				ulResult = SOR_MEMORYERR;
-				goto end;
-			}
-			memset(pbTmp, 0x00, ulDataInLen+sizeof(ECCCIPHERBLOB));
-			ulResult = ckpFunctions->SKF_ExtECCEncrypt(global_data.hDevHandle, &eccPublicKeyBlob, pbDataIn, ulDataInLen, (PECCCIPHERBLOB)pbTmp);
-			
-			if (NULL == pbDataOut)
-			{
-				*pulDataOutLen = ulTmpLen;
-				ulResult = SOR_OK;
-				goto end;
-			}
-			else if (ulTmpLen >  *pulDataOutLen)
-			{
-				*pulDataOutLen = ulTmpLen;
-				ulResult = SOR_MEMORYERR;
-				goto end;
-			}
-			else
-			{
-				*pulDataOutLen = ulTmpLen;
-				memcpy(pbDataOut, pbTmp, ulTmpLen);
-			}
-			FILE_LOG_FMT(file_log_name, "%s", "DataOut:");
-			FILE_LOG_HEX(file_log_name, pbDataOut, ulTmpLen);
-		}
-		else
-		{
-			ulResult = SOR_NOTSUPPORTYETERR;
-			goto end;
-		}
-
-	end:
-
-		if(pbTmp != NULL)
-			free(pbTmp);
-		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting\n");
-
-		ulResult = ErrorCodeConvert(ulResult);
-
-		return ulResult;*/
 	}
 
 	ULONG CALL_CONVENTION SOF_DecryptData(void * p_ckpFunctions, LPSTR pContainerName, BYTE *pbDataIn, ULONG ulDataInLen, BYTE *pbDataOut, ULONG *pulDataOutLen)
