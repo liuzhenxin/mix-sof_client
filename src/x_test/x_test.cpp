@@ -77,7 +77,13 @@ int main(int argc, char * argv[])
 		goto end;
 	}
 	signature_len = sizeof(signature);
-	ulResult = SOF_SignMessage(ckpFunctions, "RT_SM_CON",1, plain, plain_len, signature, &signature_len);
+	ulResult = SOF_SignMessage(ckpFunctions, "RT_SM_CON",0, plain, plain_len, signature, &signature_len);
+	if (ulResult)
+	{
+		goto end;
+	}
+
+	ulResult = SOF_VerifySignedMessage(ckpFunctions,signature, signature_len, NULL, 0);
 	if (ulResult)
 	{
 		goto end;
@@ -92,21 +98,17 @@ int main(int argc, char * argv[])
 			goto end;
 		}
 	}
+	
 
-	ulResult = SOF_VerifySignedMessage(ckpFunctions, NULL, 0, signature, signature_len);
-	if (ulResult)
-	{
-		goto end;
-	}
 
 	signature_len = sizeof(signature);
-	ulResult = SOF_SignMessage(ckpFunctions, "RT_SM_CON", 0, plain, plain_len, signature, &signature_len);
+	ulResult = SOF_SignMessage(ckpFunctions, "RT_SM_CON", 1, plain, plain_len, signature, &signature_len);
 	if (ulResult)
 	{
 		goto end;
 	}
 
-	ulResult = SOF_VerifySignedMessage(ckpFunctions, plain, plain_len, signature, signature_len);
+	ulResult = SOF_VerifySignedMessage(ckpFunctions, signature, signature_len, plain, plain_len);
 	if (ulResult)
 	{
 		goto end;

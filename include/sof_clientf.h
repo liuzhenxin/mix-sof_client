@@ -174,7 +174,7 @@ CK_SOF_CLIENT_FUNCTION_INFO(SOF_SignMessage)
 
 CK_SOF_CLIENT_FUNCTION_INFO(SOF_VerifySignedMessage)
 #ifdef CK_NEED_ARG_LIST
-(void * p_ckpFunctions, BYTE *pbDataIn, ULONG ulDataInLen, BYTE *pbDataOut, ULONG ulDataOutLen);
+(void * p_ckpFunctions, BYTE *pbDataOut, ULONG ulDataOutLen, BYTE *pbDataIn, ULONG ulDataInLen);
 #endif
 
 

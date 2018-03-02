@@ -53,13 +53,13 @@ static const uint8_t kPKCS7DataSM2[] = { 0x2a , 0x81 , 0x1c , 0xcf , 0x55 , 0x06
 static const uint8_t kPKCS7SignedDataSM2[] = { 0x2a , 0x81 , 0x1c , 0xcf , 0x55 , 0x06, 0x01, 0x04, 0x02, 0x02 };
 
 // 1.2.156.10197.6.1.4.2.3
-static const uint8_t kPKCS7EnvelopedDataDataSM2[] = { 0x2a , 0x81 , 0x1c , 0xcf , 0x55 , 0x06, 0x01, 0x04, 0x02, 0x03 };
+static const uint8_t kPKCS7EnvelopedDataSM2[] = { 0x2a , 0x81 , 0x1c , 0xcf , 0x55 , 0x06, 0x01, 0x04, 0x02, 0x03 };
 
 // 1.2.156.10197.1.401
 static const uint8_t kDataSM3[] = { 0x2a , 0x81 , 0x1c , 0xcf , 0x55 , 0x01, 0x83, 0x11 };
 
-// 1.2.156.10197.1.301
-static const uint8_t kDataSM2[] = { 0x2a , 0x81 , 0x1c , 0xcf , 0x55 , 0x01, 0x82, 0x2d };
+// 1.2.156.10197.1.301.1
+static const uint8_t kDataSM2Sign[] = { 0x2a , 0x81 , 0x1c , 0xcf , 0x55 , 0x01, 0x82, 0x2d, 0x01};
 
 // 2.16.840.1.101.3.4.2.1 
 static const uint8_t kDataSHA256[] = { 0x60, 0x86 , 0x48 , 0x01 , 0x65 , 0x03, 0x04, 0x02, 0x01 };
@@ -67,8 +67,39 @@ static const uint8_t kDataSHA256[] = { 0x60, 0x86 , 0x48 , 0x01 , 0x65 , 0x03, 0
 static const uint8_t kDataSHA1[] = { 0x2B, 0x0E , 0x03 , 0x02 , 0x1A };
 
 // 1.2.840.113549.1.1.1
-static const uint8_t kDataRSA[] = { 0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d,0x01, 0x01,0x01 };
+static const uint8_t kDataRSASign[] = { 0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d,0x01, 0x01,0x01 };
 
+// 1.2.840.113549.1.1.7
+static const uint8_t kDataRSAEncrypt[] = { 0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d,0x01, 0x01,0x07 };
+
+// 1.2.156.10197.1.301.3
+static const uint8_t kDataSM2Encrypt[] = { 0x2a , 0x81 , 0x1c , 0xcf , 0x55 , 0x01, 0x82, 0x2d, 0x03 };
+
+
+//// 1.2.156.10197.1.102.1
+//static const uint8_t kDataSM1_ECB[] = { 0 };
+//// 1.2.156.10197.1.102.2
+//static const uint8_t kDataSM1_CBC = { 0 };
+//// 1.2.156.10197.1.102.4
+//static const uint8_t kDataSM1_CFB = { 0 };
+//// 1.2.156.10197.1.102.3
+//static const uint8_t kDataSM1_OFB = { 0 };
+//// 1.2.156.10197.1.103.1
+//static const uint8_t kDataSSF33_ECB = { 0 };
+//// 1.2.156.10197.1.103.2
+//static const uint8_t kDataSSF33_CBC = { 0 };
+//// 1.2.156.10197.1.103.4
+//static const uint8_t kDataSSF33_CFB = { 0 };
+//// 1.2.156.10197.1.103.3
+//static const uint8_t kDataSSF33_OFB = { 0 };
+//// 1.2.156.10197.1.104.1
+//static const uint8_t kDataSMS4_ECB = { 0 };
+//// 1.2.156.10197.1.104.2
+//static const uint8_t kDataSMS4_CBC = { 0 };
+//// 1.2.156.10197.1.104.4
+//static const uint8_t kDataSMS4_CFB = { 0 };
+//// 1.2.156.10197.1.104.3
+//static const uint8_t kDataSMS4_OFB = { 0 };
 
 
 #ifdef __cplusplus
@@ -795,7 +826,6 @@ end:
 		BIO *bio = NULL;
 		char *pszUserID = pOidString;//(char*)"2.16.840.1.113732.2";		
 
-		unsigned char bType;
 		const unsigned char *p=NULL;
 		X509 *pX509 = NULL;
 
@@ -1541,7 +1571,700 @@ end:
 
 	ULONG CALL_CONVENTION SOF_EncryptData(void * p_ckpFunctions, BYTE *pbCert, ULONG ulCertLen, BYTE *pbDataIn, ULONG ulDataInLen, BYTE *pbDataOut, ULONG *pulDataOutLen)
 	{
+		const unsigned char *ptr = NULL;
+		ASN1_INTEGER *serial_number = NULL;
 		CK_SKF_FUNCTION_LIST_PTR ckpFunctions = (CK_SKF_FUNCTION_LIST_PTR)p_ckpFunctions;
+		HANDLE hContainer = NULL;
+		X509 * x509 = NULL;
+		uint8_t *buf;
+		X509_NAME *issue_name = NULL;
+		ULONG ulResult = 0;
+
+		HANDLE hKey = 0;
+
+		BYTE sym_key_plain[1024] = { 0 };
+
+		size_t require_len = 0;
+
+		int len = 0;
+
+		CBB out, outer_seq, oid, data_oid, sym_seq , sym_iv, sym_alg, ciphertext, wrapped_seq, seq, version_bytes, asym_oid, content_info, wrap_key, asym_alg, issue_and_sn, null_asn1, recipInfo, recipInfos, version_bytes1;
+
+		size_t result_len = 1024 * 1024 * 1024;
+
+		ECCCIPHERBLOB blob = { 0 };
+
+		uint8_t *out_buf = NULL;
+
+		char data_info_value[1024] = { 0 };
+		int data_info_len = sizeof(data_info_value);
+
+		BYTE *cipher_value = NULL;
+		ULONG cipher_len = 0;
+
+		const uint8_t *kSymData = 0;
+		size_t kSymLen = 0;
+
+		const uint8_t *kPKCS7EnvelopedData = 0;
+		size_t kPKCS7EnvelopedLen = 0;
+
+		const uint8_t *kEncData = 0;
+		size_t kEncLen = 0;
+
+		CertificateItemParse certParse;
+
+		BLOCKCIPHERPARAM blockCipherParam = {0};
+
+		RSAPUBLICKEYBLOB rsaPublicKeyBlob = { 0 };
+		ECCPUBLICKEYBLOB eccPublicKeyBlob = { 0 };
+
+		const uint8_t *kPKCS7Data = 0;
+		size_t kPKCS7Len = 0;
+
+		BYTE *wrapper_key_value = NULL;
+		ULONG wrapper_key_len = 0;
+
+		char buffer_containers[1024] = { 0 };
+		ULONG buffer_containers_len = sizeof(buffer_containers);
+
+		FILE_LOG_FMT(file_log_name, "\n%s %d %s", __FUNCTION__, __LINE__, "entering");
+		FILE_LOG_FMT(file_log_name, "%s", "DataIn:");
+		FILE_LOG_HEX(file_log_name, pbDataIn, ulDataInLen);
+
+		FILE_LOG_FMT(file_log_name, "%s", "Cert:");
+		FILE_LOG_HEX(file_log_name, pbCert, ulCertLen);
+
+		ulResult = ckpFunctions->SKF_EnumContainer(global_data.hAppHandle, buffer_containers, &buffer_containers_len);
+		if (ulResult)
+		{
+			goto end;
+		}
+
+		ulResult = ckpFunctions->SKF_OpenContainer(global_data.hAppHandle, buffer_containers, &hContainer);
+		if (ulResult)
+		{
+			goto end;
+		}
+
+		certParse.setCertificate(pbCert, ulCertLen);
+
+		if (0 != certParse.parse())
+		{
+			ulResult = SOR_INDATAERR;
+			goto end;
+		}
+
+		ptr = pbCert;
+
+		x509 = d2i_X509(NULL, &ptr, ulCertLen);
+		if (!x509)
+		{
+			ulResult = SOR_UNKNOWNERR;
+			goto end;
+		}
+
+		issue_name = X509_get_issuer_name(x509);
+
+		if (ECertificate_KEY_ALG_RSA == certParse.m_iKeyAlg)
+		{
+			unsigned char pbModulus[256];
+			int ulModulusLen = 0;
+
+			RSA *rsa = EVP_PKEY_get1_RSA(X509_get_pubkey(x509));
+
+			kPKCS7EnvelopedData = kPKCS7EnvelopedDataRFC;
+			kPKCS7EnvelopedLen = sizeof(kPKCS7EnvelopedDataRFC);
+			kPKCS7Data = kPKCS7DataRFC;
+			kPKCS7Len = sizeof(kPKCS7DataRFC);
+
+			if (rsa != NULL)
+			{
+				ulModulusLen = BN_bn2bin(rsa->n, pbModulus);
+			}
+
+			rsaPublicKeyBlob.BitLen = ulModulusLen * 8;
+
+			memcpy(rsaPublicKeyBlob.PublicExponent, "\x00\x01\x00\x01", 4);
+
+			memcpy(rsaPublicKeyBlob.Modulus + 256 - ulModulusLen, pbModulus, ulModulusLen);
+
+			ulResult = ckpFunctions->SKF_RSAExportSessionKey(hContainer, global_data.encrypt_method, &rsaPublicKeyBlob, wrapper_key_value, &wrapper_key_len,  &hKey);
+			if (ulResult)
+			{
+				goto end;
+			}
+			wrapper_key_value = new BYTE[wrapper_key_len];
+			ulResult = ckpFunctions->SKF_RSAExportSessionKey(hContainer, global_data.encrypt_method, &rsaPublicKeyBlob, wrapper_key_value, &wrapper_key_len, &hKey);
+			if (ulResult)
+			{
+				goto end;
+			}
+		}
+		else if (ECertificate_KEY_ALG_EC == certParse.m_iKeyAlg)
+		{
+			ECCPUBLICKEYBLOB pubkeyBlob = { 0 };
+			ULONG ulBlobLen = sizeof(pubkeyBlob);
+
+			kPKCS7EnvelopedData = kPKCS7EnvelopedDataSM2;
+			kPKCS7EnvelopedLen = sizeof(kPKCS7EnvelopedDataSM2);
+
+			kPKCS7Data = kPKCS7DataSM2;
+			kPKCS7Len = sizeof(kPKCS7DataSM2);
+
+
+			unsigned char pk_data[32 * 2 + 1] = { 0 };
+			unsigned int pk_len = 65;
+
+			eccPublicKeyBlob.BitLen = 256;
+
+			OpenSSL_CertGetPubkey(pbCert, ulCertLen, pk_data, &pk_len);
+
+			memcpy(eccPublicKeyBlob.XCoordinate + 32, pk_data + 1, 32);
+			memcpy(eccPublicKeyBlob.YCoordinate + 32, pk_data + 1 + 32, 32);
+
+			wrapper_key_value = new BYTE[32 + sizeof(ECCCIPHERBLOB)];
+			
+			memset(wrapper_key_value, 0x00, 32 + sizeof(ECCCIPHERBLOB));
+
+			ulResult = ckpFunctions->SKF_ECCExportSessionKey(
+					hContainer,
+					global_data.encrypt_method,
+					&eccPublicKeyBlob,
+					(PECCCIPHERBLOB)wrapper_key_value,
+					&hKey
+					);
+
+			wrapper_key_len = ((PECCCIPHERBLOB)wrapper_key_value)->CipherLen + sizeof(ECCCIPHERBLOB)-1;
+
+		}
+		else
+		{
+			ulResult = SOR_NOTSUPPORTYETERR;
+			goto end;
+		}
+
+		if (ulResult)
+		{
+			goto end;
+		}
+
+		switch (global_data.encrypt_method)
+		{
+		case SGD_SM1_ECB:
+		{ 
+			blockCipherParam.IVLen = 0;
+			memset(blockCipherParam.IV, 0, 32);
+			blockCipherParam.FeedBitLen = 0;
+			blockCipherParam.PaddingType = 1;
+		}
+		break;
+		case SGD_SM1_CBC:
+		{
+			blockCipherParam.IVLen = 16;
+			memset(blockCipherParam.IV, 0, 32);
+			blockCipherParam.FeedBitLen = 0;
+			blockCipherParam.PaddingType = 1;
+		}
+		break;
+		case SGD_SM1_CFB:
+		{
+			blockCipherParam.IVLen = 16;
+			memset(blockCipherParam.IV, 0, 32);
+			blockCipherParam.FeedBitLen = 0;
+			blockCipherParam.PaddingType = 1;
+		}
+		break;
+		case SGD_SM1_OFB:
+		{
+			blockCipherParam.IVLen = 16;
+			memset(blockCipherParam.IV, 0, 32);
+			blockCipherParam.FeedBitLen = 0;
+			blockCipherParam.PaddingType = 1;
+		}
+		break;
+		case SGD_SSF33_ECB:
+		{
+			blockCipherParam.IVLen = 0;
+			memset(blockCipherParam.IV, 0, 32);
+			blockCipherParam.FeedBitLen = 0;
+			blockCipherParam.PaddingType = 1;
+		}
+		break;
+		case 	SGD_SSF33_CBC:
+		{
+			blockCipherParam.IVLen = 16;
+			memset(blockCipherParam.IV, 0, 32);
+			blockCipherParam.FeedBitLen = 0;
+			blockCipherParam.PaddingType = 1;
+		}
+		break;
+		case SGD_SSF33_CFB:
+		{
+			blockCipherParam.IVLen = 16;
+			memset(blockCipherParam.IV, 0, 32);
+			blockCipherParam.FeedBitLen = 0;
+			blockCipherParam.PaddingType = 1;
+		}
+		break;
+		case SGD_SSF33_OFB:
+		{
+			blockCipherParam.IVLen = 16;
+			memset(blockCipherParam.IV, 0, 32);
+			blockCipherParam.FeedBitLen = 0;
+			blockCipherParam.PaddingType = 1;
+		}
+		break;
+
+		break;
+		case SGD_SMS4_ECB:
+		{
+			blockCipherParam.IVLen = 0;
+			memset(blockCipherParam.IV, 0, 32);
+			blockCipherParam.FeedBitLen = 0;
+			blockCipherParam.PaddingType = 1;
+		}
+		break;
+		case SGD_SMS4_CBC:
+		{
+			blockCipherParam.IVLen = 16;
+			memset(blockCipherParam.IV, 0, 32);
+			blockCipherParam.FeedBitLen = 0;
+			blockCipherParam.PaddingType = 1;
+		}
+		break;
+		case SGD_SMS4_CFB:
+		{
+			blockCipherParam.IVLen = 16;
+			memset(blockCipherParam.IV, 0, 32);
+			blockCipherParam.FeedBitLen = 0;
+			blockCipherParam.PaddingType = 1;
+		}
+		break;
+		case 	SGD_SMS4_OFB:
+		{
+			blockCipherParam.IVLen = 16;
+			memset(blockCipherParam.IV, 0, 32);
+			blockCipherParam.FeedBitLen = 0;
+			blockCipherParam.PaddingType = 1;
+		}
+		break;
+
+		default:
+		{
+			ulResult = SOR_NOTSUPPORTYETERR;
+			goto end;
+		}
+		break;
+		}
+
+		ulResult = ckpFunctions->SKF_EncryptInit(hKey, blockCipherParam);
+
+		if (ulResult)
+		{
+			goto end;
+		}
+
+		ulResult = ckpFunctions->SKF_Encrypt(hKey, pbDataIn, ulDataInLen, cipher_value, &cipher_len);
+
+		if (ulResult)
+		{
+			goto end;
+		}
+
+		cipher_value = new BYTE[cipher_len];
+
+		ulResult = ckpFunctions->SKF_Encrypt(hKey, pbDataIn, ulDataInLen, cipher_value, &cipher_len);
+
+		if (ulResult)
+		{
+			goto end;
+		}
+
+		CBB_init(&out, 1024 * 1024 * 10);
+
+		// See https://tools.ietf.org/html/rfc2315#section-7
+		if (!CBB_add_asn1(&out, &outer_seq, CBS_ASN1_SEQUENCE) ||
+			!CBB_add_asn1(&outer_seq, &oid, CBS_ASN1_OBJECT) ||
+			!CBB_add_bytes(&oid, kPKCS7EnvelopedData, kPKCS7EnvelopedLen) ||                            // P7 类型
+			!CBB_add_asn1(&outer_seq, &wrapped_seq,
+				CBS_ASN1_CONTEXT_SPECIFIC | CBS_ASN1_CONSTRUCTED | 0) ||
+			// See https://tools.ietf.org/html/rfc2315#section-9.1
+			!CBB_add_asn1(&wrapped_seq, &seq, CBS_ASN1_SEQUENCE) ||
+			!CBB_add_asn1(&seq, &version_bytes, CBS_ASN1_INTEGER) ||
+			!CBB_add_u8(&version_bytes, 1) ||
+			!CBB_add_asn1(&seq, &recipInfos, CBS_ASN1_SET)||
+			!CBB_add_asn1(&seq, &content_info, CBS_ASN1_SEQUENCE)
+			)
+		{
+			ulResult = SOR_UNKNOWNERR;
+			goto end;
+		}
+
+
+		// recipInfos
+		if (
+			!CBB_add_asn1(&recipInfos, &recipInfo, CBS_ASN1_SEQUENCE) ||
+			!CBB_add_asn1(&recipInfo, &version_bytes1, CBS_ASN1_INTEGER) ||
+			!CBB_add_u8(&version_bytes1, 0) ||
+			!CBB_add_asn1(&recipInfo, &issue_and_sn, CBS_ASN1_SEQUENCE) ||
+			!CBB_add_asn1(&recipInfo, &asym_alg, CBS_ASN1_SEQUENCE) ||
+			!CBB_add_asn1(&asym_alg, &asym_oid, CBS_ASN1_OBJECT) ||
+			!CBB_add_bytes(&asym_oid, wrapper_key_value, wrapper_key_len)||
+			!CBB_add_asn1(&asym_alg, &null_asn1, CBS_ASN1_SEQUENCE) ||
+			!CBB_add_asn1(&recipInfo, &wrap_key, CBS_ASN1_OCTETSTRING) ||
+			!CBB_add_bytes(&wrap_key, wrapper_key_value, wrapper_key_len)
+			)
+		{
+			ulResult = SOR_UNKNOWNERR;
+			goto end;
+		}
+
+		len = i2d_X509_NAME(issue_name, NULL);
+
+		if (len < 0 || !CBB_add_space(&issue_and_sn, &buf, len) ||
+			i2d_X509_NAME(issue_name, &buf) < 0
+			)
+		{
+			ulResult = SOR_UNKNOWNERR;
+			goto end;
+		}
+
+		// 序列号
+		serial_number = X509_get_serialNumber(x509);
+		len = i2d_ASN1_INTEGER(serial_number, NULL);
+		if (len < 0 || !CBB_add_space(&issue_and_sn, &buf, len) ||
+			i2d_ASN1_INTEGER(serial_number, &buf) < 0
+			)
+		{
+			ulResult = SOR_UNKNOWNERR;
+			goto end;
+		}
+
+		if (!CBB_add_asn1(&content_info, &data_oid, CBS_ASN1_OBJECT) ||  
+			!CBB_add_bytes(&ciphertext, kPKCS7Data, kPKCS7Len) ||
+			!CBB_add_asn1(&content_info, &sym_seq, CBS_ASN1_SEQUENCE) ||
+			!CBB_add_asn1(&sym_seq, &sym_alg, CBS_ASN1_OBJECT) ||
+			!CBB_add_asn1(&sym_seq, &sym_iv, CBS_ASN1_OCTETSTRING) ||
+			!CBB_add_asn1(&content_info, &ciphertext, CBS_ASN1_CONTEXT_SPECIFIC) ||
+			!CBB_add_bytes(&ciphertext, cipher_value, cipher_len)) {
+			ulResult = SOR_UNKNOWNERR;
+			goto end;
+		}
+		
+
+		switch (global_data.encrypt_method)
+		{
+		case SGD_SM1_ECB:
+		{
+			ASN1_OBJECT *object = OBJ_txt2obj("1.2.156.10197.1.102.1", 1);
+
+			len = i2d_ASN1_OBJECT(object, NULL);
+			if (len < 0 || !CBB_add_space(&sym_alg, &buf, len) ||
+				i2d_ASN1_OBJECT(object, &buf) < 0
+				)
+			{
+				ulResult = SOR_UNKNOWNERR;
+				goto end;
+			}
+			
+		}
+		break;
+		case SGD_SM1_CBC:
+		{
+			ASN1_OBJECT *object = OBJ_txt2obj("1.2.156.10197.1.102.2", 1);
+
+			len = i2d_ASN1_OBJECT(object, NULL);
+			if (len < 0 || !CBB_add_space(&sym_alg, &buf, len) ||
+				i2d_ASN1_OBJECT(object, &buf) < 0
+				)
+			{
+				ulResult = SOR_UNKNOWNERR;
+				goto end;
+			}
+
+			if (!CBB_add_bytes(&sym_iv, blockCipherParam.IV, 16))
+			{
+				ulResult = SOR_UNKNOWNERR;
+				goto end;
+			}
+		}
+		break;
+		case SGD_SM1_CFB:
+		{
+			ASN1_OBJECT *object = OBJ_txt2obj("1.2.156.10197.1.102.4", 1);
+
+			len = i2d_ASN1_OBJECT(object, NULL);
+			if (len < 0 || !CBB_add_space(&sym_alg, &buf, len) ||
+				i2d_ASN1_OBJECT(object, &buf) < 0
+				)
+			{
+				ulResult = SOR_UNKNOWNERR;
+				goto end;
+			}
+
+			if (!CBB_add_bytes(&sym_iv, blockCipherParam.IV, 16))
+			{
+				ulResult = SOR_UNKNOWNERR;
+				goto end;
+			}
+		}
+		break;
+		case SGD_SM1_OFB:
+		{
+			ASN1_OBJECT *object = OBJ_txt2obj("1.2.156.10197.1.102.3", 1);
+
+			len = i2d_ASN1_OBJECT(object, NULL);
+			if (len < 0 || !CBB_add_space(&sym_alg, &buf, len) ||
+				i2d_ASN1_OBJECT(object, &buf) < 0
+				)
+			{
+				ulResult = SOR_UNKNOWNERR;
+				goto end;
+			}
+
+			if (!CBB_add_bytes(&sym_iv, blockCipherParam.IV, 16))
+			{
+				ulResult = SOR_UNKNOWNERR;
+				goto end;
+			}
+		}
+		break;
+		case SGD_SSF33_ECB:
+		{
+			ASN1_OBJECT *object = OBJ_txt2obj("1.2.156.10197.1.103.1", 1);
+
+			len = i2d_ASN1_OBJECT(object, NULL);
+			if (len < 0 || !CBB_add_space(&sym_alg, &buf, len) ||
+				i2d_ASN1_OBJECT(object, &buf) < 0
+				)
+			{
+				ulResult = SOR_UNKNOWNERR;
+				goto end;
+			}
+
+
+		}
+		break;
+		case 	SGD_SSF33_CBC:
+		{
+			ASN1_OBJECT *object = OBJ_txt2obj("1.2.156.10197.1.103.2", 1);
+			len = i2d_ASN1_OBJECT(object, NULL);
+			if (len < 0 || !CBB_add_space(&sym_alg, &buf, len) ||
+				i2d_ASN1_OBJECT(object, &buf) < 0
+				)
+			{
+				ulResult = SOR_UNKNOWNERR;
+				goto end;
+			}
+
+			if (!CBB_add_bytes(&sym_iv, blockCipherParam.IV, 16))
+			{
+				ulResult = SOR_UNKNOWNERR;
+				goto end;
+			}
+		}
+		break;
+		case SGD_SSF33_CFB:
+		{
+			ASN1_OBJECT *object = OBJ_txt2obj("1.2.156.10197.1.103.4", 1);
+
+			len = i2d_ASN1_OBJECT(object, NULL);
+			if (len < 0 || !CBB_add_space(&sym_alg, &buf, len) ||
+				i2d_ASN1_OBJECT(object, &buf) < 0
+				)
+			{
+				ulResult = SOR_UNKNOWNERR;
+				goto end;
+			}
+
+			if (!CBB_add_bytes(&sym_iv, blockCipherParam.IV, 16))
+			{
+				ulResult = SOR_UNKNOWNERR;
+				goto end;
+			}
+		}
+		break;
+		case SGD_SSF33_OFB:
+		{
+			ASN1_OBJECT *object = OBJ_txt2obj("1.2.156.10197.1.103.3", 1);
+
+			len = i2d_ASN1_OBJECT(object, NULL);
+			if (len < 0 || !CBB_add_space(&sym_alg, &buf, len) ||
+				i2d_ASN1_OBJECT(object, &buf) < 0
+				)
+			{
+				ulResult = SOR_UNKNOWNERR;
+				goto end;
+			}
+
+			if (!CBB_add_bytes(&sym_iv, blockCipherParam.IV, 16))
+			{
+				ulResult = SOR_UNKNOWNERR;
+				goto end;
+			}
+		}
+		break;
+
+		break;
+		case SGD_SMS4_ECB:
+		{
+			ASN1_OBJECT *object = OBJ_txt2obj("1.2.156.10197.1.104.1", 1);
+
+			len = i2d_ASN1_OBJECT(object, NULL);
+			if (len < 0 || !CBB_add_space(&sym_alg, &buf, len) ||
+				i2d_ASN1_OBJECT(object, &buf) < 0
+				)
+			{
+				ulResult = SOR_UNKNOWNERR;
+				goto end;
+			}
+
+		}
+		break;
+		case SGD_SMS4_CBC:
+		{
+			ASN1_OBJECT *object = OBJ_txt2obj("1.2.156.10197.1.104.2", 1);
+
+			len = i2d_ASN1_OBJECT(object, NULL);
+			if (len < 0 || !CBB_add_space(&sym_alg, &buf, len) ||
+				i2d_ASN1_OBJECT(object, &buf) < 0
+				)
+			{
+				ulResult = SOR_UNKNOWNERR;
+				goto end;
+			}
+
+			if (!CBB_add_bytes(&sym_iv, blockCipherParam.IV, 16))
+			{
+				ulResult = SOR_UNKNOWNERR;
+				goto end;
+			}
+		}
+		break;
+		case SGD_SMS4_CFB:
+		{
+			ASN1_OBJECT *object = OBJ_txt2obj("1.2.156.10197.1.104.4", 1);
+			len = i2d_ASN1_OBJECT(object, NULL);
+			if (len < 0 || !CBB_add_space(&sym_alg, &buf, len) ||
+				i2d_ASN1_OBJECT(object, &buf) < 0
+				)
+			{
+				ulResult = SOR_UNKNOWNERR;
+				goto end;
+			}
+
+			if (!CBB_add_bytes(&sym_iv, blockCipherParam.IV, 16))
+			{
+				ulResult = SOR_UNKNOWNERR;
+				goto end;
+			}
+		}
+		break;
+		case 	SGD_SMS4_OFB:
+		{
+			ASN1_OBJECT *object = OBJ_txt2obj("1.2.156.10197.1.104.3", 1);
+
+			len = i2d_ASN1_OBJECT(object, NULL);
+			if (len < 0 || !CBB_add_space(&sym_alg, &buf, len) ||
+				i2d_ASN1_OBJECT(object, &buf) < 0
+				)
+			{
+				ulResult = SOR_UNKNOWNERR;
+				goto end;
+			}
+
+			if (!CBB_add_bytes(&sym_iv, blockCipherParam.IV, 16))
+			{
+				ulResult = SOR_UNKNOWNERR;
+				goto end;
+			}
+		}
+		break;
+
+		default:
+		{
+			ulResult = SOR_NOTSUPPORTYETERR;
+			goto end;
+		}
+		break;
+		}
+
+
+		// end
+		if (!CBB_flush(&out))
+		{
+			ulResult = SOR_UNKNOWNERR;
+			goto end;
+		}
+
+		if (!CBB_finish(&out, &out_buf, &require_len))
+		{
+			ulResult = SOR_UNKNOWNERR;
+			goto end;
+		}
+		FILE_LOG_FMT(file_log_name, "require_len: %d", require_len);
+
+		FILE_LOG_FMT(file_log_name, "%s", "out_buf:");
+		FILE_LOG_HEX(file_log_name, out_buf, require_len);
+
+
+		if (NULL == pbDataOut)
+		{
+			*pulDataOutLen = require_len;
+			ulResult = SOR_OK;
+			goto end;
+		}
+		else if (require_len >  *pulDataOutLen)
+		{
+			*pulDataOutLen = require_len;
+			ulResult = SOR_MEMORYERR;
+			goto end;
+		}
+		else
+		{
+			*pulDataOutLen = require_len;
+			memcpy(pbDataOut, out_buf, require_len);
+			ulResult = SOR_OK;
+		}
+		FILE_LOG_FMT(file_log_name, "%s", "pbDataOut:");
+		FILE_LOG_HEX(file_log_name, pbDataOut, *pulDataOutLen);
+
+
+	end:
+
+		if (hKey)
+		{
+			ckpFunctions->SKF_CloseHandle(hKey);
+		}
+
+		if (x509)
+		{
+			X509_free(x509);
+		}
+
+		if (wrapper_key_value)
+		{
+			delete[]wrapper_key_value;
+		}
+
+		if (cipher_value)
+		{
+			delete []cipher_value;
+		}
+
+		if (hContainer)
+		{
+			ckpFunctions->SKF_CloseContainer(hContainer);
+		}
+
+		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting\n");
+
+		ulResult = ErrorCodeConvert(ulResult);
+
+		return ulResult;
+
+
+		/*CK_SKF_FUNCTION_LIST_PTR ckpFunctions = (CK_SKF_FUNCTION_LIST_PTR)p_ckpFunctions;
 		HANDLE hContainer = NULL;
 
 		ULONG ulResult = SOR_OK;
@@ -1657,7 +2380,7 @@ end:
 
 		ulResult = ErrorCodeConvert(ulResult);
 
-		return ulResult;
+		return ulResult;*/
 	}
 
 	ULONG CALL_CONVENTION SOF_DecryptData(void * p_ckpFunctions, LPSTR pContainerName, BYTE *pbDataIn, ULONG ulDataInLen, BYTE *pbDataOut, ULONG *pulDataOutLen)
@@ -2023,8 +2746,8 @@ end:
 
 			if (global_data.sign_method == SGD_SM3_RSA)
 			{
-				kEncData = kDataRSA;
-				kEncLen = sizeof(kDataRSA);
+				kEncData = kDataRSASign;
+				kEncLen = sizeof(kDataRSASign);
 				kHashData = kDataSM3;
 				kHashLen = sizeof(kDataSM3);
 
@@ -2033,8 +2756,8 @@ end:
 			}
 			else if (global_data.sign_method == SGD_SHA1_RSA)
 			{
-				kEncData = kDataRSA;
-				kEncLen = sizeof(kDataRSA);
+				kEncData = kDataRSASign;
+				kEncLen = sizeof(kDataRSASign);
 				kHashData = kDataSHA1;
 				kHashLen = sizeof(kDataSHA1);
 
@@ -2043,8 +2766,8 @@ end:
 			}
 			else if (global_data.sign_method == SGD_SHA256_RSA)
 			{
-				kEncData = kDataRSA;
-				kEncLen = sizeof(kDataRSA);
+				kEncData = kDataRSASign;
+				kEncLen = sizeof(kDataRSASign);
 				kHashData = kDataSHA256;
 				kHashLen = sizeof(kDataSHA256);
 
@@ -2088,8 +2811,8 @@ end:
 
 			if (global_data.sign_method == SGD_SM3_SM2)
 			{
-				kEncData = kDataSM2;
-				kEncLen = sizeof(kDataSM2);
+				kEncData = kDataSM2Sign;
+				kEncLen = sizeof(kDataSM2Sign);
 				kHashData = kDataSM3;
 				kHashLen = sizeof(kDataSM3);
 

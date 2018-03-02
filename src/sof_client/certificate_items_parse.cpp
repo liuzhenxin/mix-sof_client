@@ -659,10 +659,10 @@ int CertificateItemParse::parse()
 
 err:
 
-	if (serial)
-	{
-		free(serial);
-	}
+	//if (serial)
+	//{
+	//	free(serial);
+	//}
 
 	if (bignum)
 	{
