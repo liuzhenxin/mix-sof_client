@@ -60,79 +60,79 @@ int main(int argc, char * argv[])
 		goto end;
 	}
 
-	ulResult = SOF_ExportUserCert(ckpFunctions, "RT_SM_CON", crypt_cert, &crypt_cert_len);
+	ulResult = SOF_ExportExChangeUserCert(ckpFunctions, "RT_SM_CON", crypt_cert, &crypt_cert_len);
 	if (ulResult)
 	{
 		goto end;
 	}
 
-	ulResult = SOF_SetSignMethod(ckpFunctions, SGD_SM3_SM2);
-	if (ulResult)
-	{
-		goto end;
-	}
+	//ulResult = SOF_SetSignMethod(ckpFunctions, SGD_SM3_SM2);
+	//if (ulResult)
+	//{
+	//	goto end;
+	//}
 
-	ulResult = SOF_SignData(ckpFunctions, "RT_SM_CON", plain, plain_len, signature, &signature_len);
-	if (ulResult)
-	{
-		goto end;
-	}
+	//ulResult = SOF_SignData(ckpFunctions, "RT_SM_CON", plain, plain_len, signature, &signature_len);
+	//if (ulResult)
+	//{
+	//	goto end;
+	//}
 
-	ulResult = SOF_VerifySignedData(ckpFunctions, sign_cert, sign_cert_len, plain, plain_len, signature, signature_len);
-	if (ulResult)
-	{
-		goto end;
-	}
-	signature_len = sizeof(signature);
-	ulResult = SOF_SignMessage(ckpFunctions, "RT_SM_CON",0, plain, plain_len, signature, &signature_len);
-	if (ulResult)
-	{
-		goto end;
-	}
+	//ulResult = SOF_VerifySignedData(ckpFunctions, sign_cert, sign_cert_len, plain, plain_len, signature, signature_len);
+	//if (ulResult)
+	//{
+	//	goto end;
+	//}
+	//signature_len = sizeof(signature);
+	//ulResult = SOF_SignMessage(ckpFunctions, "RT_SM_CON",0, plain, plain_len, signature, &signature_len);
+	//if (ulResult)
+	//{
+	//	goto end;
+	//}
 
-	ulResult = SOF_VerifySignedMessage(ckpFunctions,signature, signature_len, NULL, 0);
-	if (ulResult)
-	{
-		goto end;
-	}
+	//ulResult = SOF_VerifySignedMessage(ckpFunctions,signature, signature_len, NULL, 0);
+	//if (ulResult)
+	//{
+	//	goto end;
+	//}
 
-	for (i = 1; i < 4; i++)
-	{
-		info_len = sizeof(info);
-		ulResult = SOF_GetInfoFromSignedMessage(ckpFunctions, i, signature, signature_len, info, &info_len);
-		if (ulResult)
-		{
-			goto end;
-		}
-	}
-	
+	//for (i = 1; i < 4; i++)
+	//{
+	//	info_len = sizeof(info);
+	//	ulResult = SOF_GetInfoFromSignedMessage(ckpFunctions, i, signature, signature_len, info, &info_len);
+	//	if (ulResult)
+	//	{
+	//		goto end;
+	//	}
+	//}
+	//
 
 
-	signature_len = sizeof(signature);
-	ulResult = SOF_SignMessage(ckpFunctions, "RT_SM_CON", 1, plain, plain_len, signature, &signature_len);
-	if (ulResult)
-	{
-		goto end;
-	}
+	//signature_len = sizeof(signature);
+	//ulResult = SOF_SignMessage(ckpFunctions, "RT_SM_CON", 1, plain, plain_len, signature, &signature_len);
+	//if (ulResult)
+	//{
+	//	goto end;
+	//}
 
-	ulResult = SOF_VerifySignedMessage(ckpFunctions, signature, signature_len, plain, plain_len);
-	if (ulResult)
-	{
-		goto end;
-	}
+	//ulResult = SOF_VerifySignedMessage(ckpFunctions, signature, signature_len, plain, plain_len);
+	//if (ulResult)
+	//{
+	//	goto end;
+	//}
 
-	signature_len = sizeof(signature);
-	ulResult = SOF_SignFile(ckpFunctions, "RT_SM_CON", "D:/test.txt", signature, &signature_len);
-	if (ulResult)
-	{
-		goto end;
-	}
+	//signature_len = sizeof(signature);
+	//ulResult = SOF_SignFile(ckpFunctions, "RT_SM_CON", "D:/test.txt", signature, &signature_len);
+	//if (ulResult)
+	//{
+	//	goto end;
+	//}
 
-	ulResult = SOF_VerifySignedFile(ckpFunctions, sign_cert, sign_cert_len, "D:/test.txt", signature, signature_len);
-	if (ulResult)
-	{
-		goto end;
-	}
+	//ulResult = SOF_VerifySignedFile(ckpFunctions, sign_cert, sign_cert_len, "D:/test.txt", signature, signature_len);
+	//if (ulResult)
+	//{
+	//	goto end;
+	//}
 
 
 	ulResult = SOF_SetEncryptMethod(ckpFunctions, SGD_SM1_ECB);
