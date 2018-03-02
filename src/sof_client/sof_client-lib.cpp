@@ -1624,6 +1624,9 @@ end:
 		BYTE *wrapper_key_value = NULL;
 		ULONG wrapper_key_len = 0;
 
+		BYTE *wrapper_key_value_fmt = NULL;
+		ULONG wrapper_key_len_fmt = 0;
+
 		char buffer_containers[1024] = { 0 };
 		ULONG buffer_containers_len = sizeof(buffer_containers);
 
@@ -1701,6 +1704,9 @@ end:
 			{
 				goto end;
 			}
+			wrapper_key_len_fmt = wrapper_key_len;
+			wrapper_key_value_fmt = new BYTE[wrapper_key_len_fmt];
+			memcpy(wrapper_key_value_fmt, wrapper_key_value, wrapper_key_len_fmt);
 		}
 		else if (ECertificate_KEY_ALG_EC == certParse.m_iKeyAlg)
 		{
@@ -1745,6 +1751,16 @@ end:
 
 			wrapper_key_len = ((PECCCIPHERBLOB)wrapper_key_value)->CipherLen + sizeof(ECCCIPHERBLOB)-1;
 
+
+			wrapper_key_len_fmt = wrapper_key_len + 1024;
+			wrapper_key_value_fmt = new BYTE[wrapper_key_len_fmt];
+
+			SM2EncryptAsn1Convert(((PECCCIPHERBLOB)wrapper_key_value)->XCoordinate + 32, 32, 
+				((PECCCIPHERBLOB)wrapper_key_value)->YCoordinate + 32, 32,
+				((PECCCIPHERBLOB)wrapper_key_value)->HASH, 32,
+				((PECCCIPHERBLOB)wrapper_key_value)->Cipher, ((PECCCIPHERBLOB)wrapper_key_value)->CipherLen, 
+				wrapper_key_value_fmt, (int *)&wrapper_key_len_fmt
+				);
 		}
 		else
 		{
@@ -1950,7 +1966,7 @@ end:
 			!CBB_add_bytes(&asym_oid, kASymData, kASymLen) ||
 			!CBB_add_asn1(&asym_alg, &null_asn1, CBS_ASN1_SEQUENCE) ||
 			!CBB_add_asn1(&recipInfo, &wrap_key, CBS_ASN1_OCTETSTRING) ||
-			!CBB_add_bytes(&wrap_key, wrapper_key_value, wrapper_key_len)
+			!CBB_add_bytes(&wrap_key, wrapper_key_value_fmt, wrapper_key_len_fmt)
 			)
 		{
 			ulResult = SOR_UNKNOWNERR;
@@ -2368,6 +2384,10 @@ end:
 		{
 			delete[]wrapper_key_value;
 		}
+		if (wrapper_key_value_fmt)
+		{
+			delete[]wrapper_key_value_fmt;
+		}
 
 		if (cipher_value)
 		{
@@ -2400,6 +2420,10 @@ end:
 		size_t der_len;
 		CBS in, content_info, content, sym_seq, sym_iv, sym_alg, content_type, oid,  ciphertext, wrapped_seq, seq, wrap_key, recipInfo, recipInfos;
 		uint64_t version;
+
+		ECCCIPHERBLOB *cipherBlob = (ECCCIPHERBLOB*)malloc(sizeof (ECCCIPHERBLOB) + 1024);
+		BYTE wrapper_key_value[97 + 32] = { 0 };
+		int	wrapper_key_len = 97 +32;
 
 		ULONG ulSymAlg = 0;
 
@@ -2551,12 +2575,36 @@ end:
 		}
 
 
-		ulResult = ckpFunctions->SKF_ImportSessionKey(hContainer, ulSymAlg, (BYTE *)CBS_data(&wrap_key), CBS_len(&wrap_key), &hKey);
-
-		if (ulResult)
+		if (ulContainerType == 1)
 		{
-			goto end;
+			ulResult = ckpFunctions->SKF_ImportSessionKey(hContainer, ulSymAlg, (BYTE *)CBS_data(&wrap_key), CBS_len(&wrap_key), &hKey);
+
+			if (ulResult)
+			{
+				goto end;
+			}
 		}
+		else
+		{
+			SM2CryptD2i((BYTE *)CBS_data(&wrap_key), CBS_len(&wrap_key), wrapper_key_value, &wrapper_key_len);
+
+			memset(cipherBlob, 0, sizeof(ECCCIPHERBLOB) - 1);
+
+			cipherBlob->CipherLen = wrapper_key_len - 97;
+			memcpy(cipherBlob->HASH, wrapper_key_value + wrapper_key_len - 32, 32);
+			memcpy(cipherBlob->XCoordinate+32, wrapper_key_value  +1, 32);
+			memcpy(cipherBlob->YCoordinate+32, wrapper_key_value + 32+1, 32);
+			memcpy(cipherBlob->Cipher, wrapper_key_value + 64 + 1, wrapper_key_len - 97);
+
+			ulResult = ckpFunctions->SKF_ImportSessionKey(hContainer, ulSymAlg, (BYTE*)cipherBlob, sizeof(ECCCIPHERBLOB) -1 + cipherBlob->CipherLen, &hKey);
+
+			if (ulResult)
+			{
+				goto end;
+			}
+			
+		}
+
 
 
 		switch (ulSymAlg)
@@ -2684,6 +2732,11 @@ end:
 
 		if (der_bytes) {
 			OPENSSL_free(der_bytes);
+		}
+
+		if (cipherBlob)
+		{
+			free(cipherBlob);
 		}
 
 		if (hKey)
