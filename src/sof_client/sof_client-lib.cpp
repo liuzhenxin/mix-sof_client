@@ -16,6 +16,13 @@
 #include <sm2_boringssl.h>
 #include <openssl/mem.h>
 
+#include <libxml/parser.h>
+#include <xmlsec/templates.h>
+#include <xmlsec/app.h>
+#include <xmlsec/xmldsig.h>
+
+#include <xmlsec/keysdata.h>
+
 
 extern "C" int CBS_asn1_ber_to_der(CBS *in, uint8_t **out, size_t *out_len);
 
@@ -3908,11 +3915,251 @@ end:
 
 	ULONG CALL_CONVENTION SOF_SignDataXML(void * p_ckpFunctions, LPSTR pContainerName, BYTE *pbDataIn, ULONG ulDataInLen, BYTE *pbDataOut, ULONG *pulDataOutLen)
 	{
-		FILE_LOG_FMT(file_log_name, "\n%s %d %s", __FUNCTION__, __LINE__, "entering");
-		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting\n");
-		ErrorCodeConvert(SOR_OK);
+		CK_SKF_FUNCTION_LIST_PTR ckpFunctions = (CK_SKF_FUNCTION_LIST_PTR)p_ckpFunctions;
+		HANDLE hContainer = NULL;
+		ULONG ulResult = 0;
+		ULONG ulContainerType = 0;
+		HANDLE hHash = 0;
 
-		return SOR_OK;
+
+		ECCSIGNATUREBLOB blob = { 0 };
+
+		char data_info_value[1024] = { 0 };
+		int data_info_len = sizeof(data_info_value);
+
+		BYTE hash_value[1024] = { 0 };
+		ULONG hash_len = sizeof(data_info_value);
+
+		xmlDocPtr doc = NULL;
+		xmlNodePtr signNode = NULL;
+		xmlSecDSigCtxPtr dsigCtx = NULL;
+		xmlNodePtr refNode = NULL;
+		xmlNodePtr keyInfoNode = NULL;
+		xmlNodePtr x509DataNode = NULL;
+
+
+		const char * kRSAKeyTmp =  "-----BEGIN RSA PRIVATE KEY-----\n \
+									MIIBPAIBAAJBANPQbQ92nlbeg1Q5JNHSO1Yey46nZ7GJltLWw1ccSvp7pnvmfUm+\n \
+									M521CpFpfr4EAE3UVBMoU9j/hqq3dFAc2H0CAwEAAQJBALFVCjmsAZyQ5jqZLO5N\n \
+									qEfNuHZSSUol+xPBogFIOq3BWa269eNNcAK5or5g0XWWon7EPdyGT4qyDVH9KzXK\n \
+									RLECIQDzm/Nj0epUGN51/rKJgRXWkXW/nfSCMO9fvQR6Ujoq3wIhAN6WeHK9vgWg\n \
+									wBWqMdq5sR211+LlDH7rOUQ6rBpbsoQjAiEA7jzpfglgPPZFOOfo+oh/LuP6X3a+\n \
+									FER/FQXpRyb7M8kCIETUrwZ8WkiPPxbz/Fqw1W5kjw/g2I5e2uSYaCP2eyuVAiEA\n \
+									mOI6RhRyMqgxQyy0plJVjG1s4fdu92AWYy9AwYeyd/8=\n \
+									-----END RSA PRIVATE KEY-----";
+									
+		const char * kRSACertTmp = "-----BEGIN CERTIFICATE-----\n \
+									MIIDpzCCA1GgAwIBAgIJAK+ii7kzrdqvMA0GCSqGSIb3DQEBBQUAMIGcMQswCQYD\n \
+									VQQGEwJVUzETMBEGA1UECBMKQ2FsaWZvcm5pYTE9MDsGA1UEChM0WE1MIFNlY3Vy\n \
+									aXR5IExpYnJhcnkgKGh0dHA6Ly93d3cuYWxla3NleS5jb20veG1sc2VjKTEWMBQG\n \
+									A1UEAxMNQWxla3NleSBTYW5pbjEhMB8GCSqGSIb3DQEJARYSeG1sc2VjQGFsZWtz\n \
+									ZXkuY29tMCAXDTE0MDUyMzE3NTUzNFoYDzIxMTQwNDI5MTc1NTM0WjCBxzELMAkG\n \
+									A1UEBhMCVVMxEzARBgNVBAgTCkNhbGlmb3JuaWExPTA7BgNVBAoTNFhNTCBTZWN1\n \
+									cml0eSBMaWJyYXJ5IChodHRwOi8vd3d3LmFsZWtzZXkuY29tL3htbHNlYykxKTAn\n \
+									BgNVBAsTIFRlc3QgVGhpcmQgTGV2ZWwgUlNBIENlcnRpZmljYXRlMRYwFAYDVQQD\n \
+									Ew1BbGVrc2V5IFNhbmluMSEwHwYJKoZIhvcNAQkBFhJ4bWxzZWNAYWxla3NleS5j\n \
+									b20wXDANBgkqhkiG9w0BAQEFAANLADBIAkEA09BtD3aeVt6DVDkk0dI7Vh7Ljqdn\n \
+									sYmW0tbDVxxK+nume+Z9Sb4znbUKkWl+vgQATdRUEyhT2P+Gqrd0UBzYfQIDAQAB\n \
+									o4IBRTCCAUEwDAYDVR0TBAUwAwEB/zAsBglghkgBhvhCAQ0EHxYdT3BlblNTTCBH\n \
+									ZW5lcmF0ZWQgQ2VydGlmaWNhdGUwHQYDVR0OBBYEFNf0xkZ3zjcEI60pVPuwDqTM\n \
+									QygZMIHjBgNVHSMEgdswgdiAFP7k7FMk8JWVxxC14US1XTllWuN+oYG0pIGxMIGu\n \
+									MQswCQYDVQQGEwJVUzETMBEGA1UECBMKQ2FsaWZvcm5pYTE9MDsGA1UEChM0WE1M\n \
+									IFNlY3VyaXR5IExpYnJhcnkgKGh0dHA6Ly93d3cuYWxla3NleS5jb20veG1sc2Vj\n \
+									KTEQMA4GA1UECxMHUm9vdCBDQTEWMBQGA1UEAxMNQWxla3NleSBTYW5pbjEhMB8G\n \
+									CSqGSIb3DQEJARYSeG1sc2VjQGFsZWtzZXkuY29tggkAr6KLuTOt2q0wDQYJKoZI\n \
+									hvcNAQEFBQADQQAOXBj0yICp1RmHXqnUlsppryLCW3pKBD1dkb4HWarO7RjA1yJJ\n \
+									fBjXssrERn05kpBcrRfzou4r3DCgQFPhjxga\n \
+									-----END CERTIFICATE-----";
+						
+		FILE_LOG_FMT(file_log_name, "\n%s %d %s", __FUNCTION__, __LINE__, "entering");
+		FILE_LOG_FMT(file_log_name, "ContainerName: %s", pContainerName);
+		FILE_LOG_FMT(file_log_name, "%s", "DataIn: ");
+		FILE_LOG_HEX(file_log_name, pbDataIn, ulDataInLen);
+
+#ifndef XMLSEC_NO_XSLT
+		xsltSecurityPrefsPtr xsltSecPrefs = NULL;
+#endif /* XMLSEC_NO_XSLT */
+
+		/* Init libxml and libxslt libraries */
+		xmlInitParser();
+		LIBXML_TEST_VERSION
+			xmlLoadExtDtdDefaultValue = XML_DETECT_IDS | XML_COMPLETE_ATTRS;
+		xmlSubstituteEntitiesDefault(1);
+#ifndef XMLSEC_NO_XSLT
+		xmlIndentTreeOutput = 1;
+#endif /* XMLSEC_NO_XSLT */
+
+		/* Init libxslt */
+#ifndef XMLSEC_NO_XSLT
+		/* disable everything */
+		xsltSecPrefs = xsltNewSecurityPrefs();
+		xsltSetSecurityPrefs(xsltSecPrefs, XSLT_SECPREF_READ_FILE, xsltSecurityForbid);
+		xsltSetSecurityPrefs(xsltSecPrefs, XSLT_SECPREF_WRITE_FILE, xsltSecurityForbid);
+		xsltSetSecurityPrefs(xsltSecPrefs, XSLT_SECPREF_CREATE_DIRECTORY, xsltSecurityForbid);
+		xsltSetSecurityPrefs(xsltSecPrefs, XSLT_SECPREF_READ_NETWORK, xsltSecurityForbid);
+		xsltSetSecurityPrefs(xsltSecPrefs, XSLT_SECPREF_WRITE_NETWORK, xsltSecurityForbid);
+		xsltSetDefaultSecurityPrefs(xsltSecPrefs);
+#endif /* XMLSEC_NO_XSLT */
+
+		/* Init xmlsec library */
+		if (xmlSecInit() < 0) {
+			ulResult = SOR_UNKNOWNERR;
+			goto end;
+		}
+
+		/* Check loaded library version */
+		if (xmlSecCheckVersion() != 1) {
+			ulResult = SOR_UNKNOWNERR;
+			goto end;
+		}
+
+		/* Load default crypto engine if we are supporting dynamic
+		* loading for xmlsec-crypto libraries. Use the crypto library
+		* name ("openssl", "nss", etc.) to load corresponding
+		* xmlsec-crypto library.
+		*/
+#ifdef XMLSEC_CRYPTO_DYNAMIC_LOADING
+		if (xmlSecCryptoDLLoadLibrary(NULL) < 0) {
+			ulResult = SOR_UNKNOWNERR;
+			goto end;
+		}
+#endif /* XMLSEC_CRYPTO_DYNAMIC_LOADING */
+
+		/* Init crypto library */
+		if (xmlSecCryptoAppInit(NULL) < 0) {
+			ulResult = SOR_UNKNOWNERR;
+			goto end;
+		}
+
+		/* Init xmlsec-crypto library */
+		if (xmlSecCryptoInit() < 0) {
+			ulResult = SOR_UNKNOWNERR;
+			goto end;
+		}
+
+		doc = xmlParseMemory((char *)pbDataIn, ulDataInLen);
+
+		if ((doc == NULL) || (xmlDocGetRootElement(doc) == NULL)) {
+			ulResult = SOR_XMLENCODEERR;
+			goto end;
+		}
+
+		/* create signature template for RSA-SHA1 enveloped signature */
+		signNode = xmlSecTmplSignatureCreate(doc, xmlSecTransformExclC14NId,
+			xmlSecTransformRsaSha1Id, NULL);
+		if (signNode == NULL) {
+			ulResult = SOR_UNKNOWNERR;
+			goto end;
+		}
+
+
+		/* add <dsig:Signature/> node to the doc */
+		xmlAddChild(xmlDocGetRootElement(doc), signNode);
+
+		/* add reference */
+		refNode = xmlSecTmplSignatureAddReference(signNode, xmlSecTransformSha1Id,
+			NULL, NULL, NULL);
+		if (refNode == NULL) {
+			ulResult = SOR_UNKNOWNERR;
+			goto end;
+		}
+
+		/* add enveloped transform */
+		if (xmlSecTmplReferenceAddTransform(refNode, xmlSecTransformEnvelopedId) == NULL) {
+			ulResult = SOR_UNKNOWNERR;
+			goto end;
+		}
+
+		/* add <dsig:KeyInfo/> and <dsig:X509Data/> */
+		keyInfoNode = xmlSecTmplSignatureEnsureKeyInfo(signNode, NULL);
+		if (keyInfoNode == NULL) {
+			ulResult = SOR_UNKNOWNERR;
+			goto end;
+		}
+
+		x509DataNode = xmlSecTmplKeyInfoAddX509Data(keyInfoNode);
+		if (x509DataNode == NULL) {
+			ulResult = SOR_UNKNOWNERR;
+			goto end;
+		}
+
+		if (xmlSecTmplX509DataAddSubjectName(x509DataNode) == NULL) {
+			ulResult = SOR_UNKNOWNERR;
+			goto end;
+		}
+
+		if (xmlSecTmplX509DataAddCertificate(x509DataNode) == NULL) {
+			ulResult = SOR_UNKNOWNERR;
+			goto end;
+		}
+
+		/* create signature context, we don't need keys manager in this example */
+		dsigCtx = xmlSecDSigCtxCreate(NULL);
+		if (dsigCtx == NULL) {
+			ulResult = SOR_UNKNOWNERR;
+			goto end;
+		}
+
+		/* load private key, assuming that there is not password */
+		dsigCtx->signKey = xmlSecCryptoAppKeyLoadMemory((unsigned char *)kRSAKeyTmp, strlen(kRSAKeyTmp), xmlSecKeyDataFormatPem, NULL, NULL, NULL);
+		if (dsigCtx->signKey == NULL) {
+			ulResult = SOR_UNKNOWNERR;
+			goto end;
+		}
+
+		/* load certificate and add to the key */
+		if (xmlSecCryptoAppKeyCertLoadMemory(dsigCtx->signKey, (unsigned char *)kRSACertTmp, strlen(kRSACertTmp), xmlSecKeyDataFormatPem) < 0) {
+			ulResult = SOR_UNKNOWNERR;
+			goto end;
+		}
+
+		/* set key name to the file name, this is just an example! */
+		if (xmlSecKeySetName(dsigCtx->signKey, (const xmlChar *)"null") < 0) {
+			ulResult = SOR_UNKNOWNERR;
+			goto end;
+		}
+
+		/* sign the template */
+		if (xmlSecDSigCtxSign(dsigCtx, signNode) < 0) {
+			ulResult = SOR_UNKNOWNERR;
+			goto end;
+		}
+
+		/* print signed document to stdout */
+		xmlDocDump(stdout, doc);
+
+	end:
+
+		/* cleanup */
+		if (dsigCtx != NULL) {
+			xmlSecDSigCtxDestroy(dsigCtx);
+		}
+
+		if (doc != NULL) {
+			xmlFreeDoc(doc);
+		}
+
+		/* Shutdown xmlsec-crypto library */
+		xmlSecCryptoShutdown();
+
+		/* Shutdown crypto library */
+		xmlSecCryptoAppShutdown();
+
+		/* Shutdown xmlsec library */
+		xmlSecShutdown();
+
+		/* Shutdown libxslt/libxml */
+#ifndef XMLSEC_NO_XSLT
+		xsltFreeSecurityPrefs(xsltSecPrefs);
+		xsltCleanupGlobals();
+#endif /* XMLSEC_NO_XSLT */
+		xmlCleanupParser();
+
+		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting\n");
+
+		ulResult = ErrorCodeConvert(ulResult);
+
+		return ulResult;
 	}
 
 

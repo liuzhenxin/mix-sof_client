@@ -1,7 +1,11 @@
 include_directories(../../include)
+include_directories(../../include/xmlsec_inc/iconv)
+include_directories(../../include/xmlsec_inc/)
+include_directories(../../include/xmlsec_inc/)
+include_directories(../../include/xmlsec_inc/)
+include_directories(../../include/xmlsec_inc/)
 
-
-add_definitions(-DUNICODE -D_UNICODE -DNOCRYPT -DMIX_BORINGSSL)
+add_definitions(-DUNICODE -D_UNICODE -DNOCRYPT -DMIX_BORINGSSL -DXMLSEC_CRYPTO_DYNAMIC_LOADING)
 
 
 set(
@@ -66,5 +70,13 @@ IF (MSVC_VERSION EQUAL 1900)
 ENDIF()
 
 target_link_libraries(sof_client crypt32)
+
+target_link_libraries(sof_client libxmlsec)
+
+target_link_libraries(sof_client libxml2)
+
+target_link_libraries(sof_client libxslt)
+
+
 
 
