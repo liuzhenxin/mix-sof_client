@@ -4045,7 +4045,7 @@ end:
 		}
 
 		/* create signature template for RSA-SHA1 enveloped signature */
-		signNode = xmlSecTmplSignatureCreate(doc, xmlSecTransformEnvelopedId,
+		signNode = xmlSecTmplSignatureCreate(doc, xmlSecTransformExclC14NId,
 			xmlSecTransformRsaSha1Id, NULL);
 		if (signNode == NULL) {
 			ulResult = SOR_UNKNOWNERR;
@@ -4114,10 +4114,10 @@ end:
 		}
 
 		/* set key name to the file name, this is just an example! */
-		//if (xmlSecKeySetName(dsigCtx->signKey, (const xmlChar *)"null") < 0) {
-		//	ulResult = SOR_UNKNOWNERR;
-		//	goto end;
-		//}
+		if (xmlSecKeySetName(dsigCtx->signKey, (const xmlChar *)"null.key") < 0) {
+			ulResult = SOR_UNKNOWNERR;
+			goto end;
+		}
 
 		/* sign the template */
 		if (xmlSecDSigCtxSign(dsigCtx, signNode) < 0) {
