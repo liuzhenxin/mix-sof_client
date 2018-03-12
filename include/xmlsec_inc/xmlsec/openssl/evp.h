@@ -1,10 +1,10 @@
-/**
- * XMLSec library
+/*
+ * XML Security Library (http://www.aleksey.com/xmlsec).
  *
  * This is free software; see Copyright file in the source
  * distribution for preciese wording.
  *
- * Copyright (C) 2002-2003 Aleksey Sanin <aleksey@aleksey.com>
+ * Copyright (C) 2002-2016 Aleksey Sanin <aleksey@aleksey.com>. All Rights Reserved.
  */
 #ifndef __XMLSEC_OPENSSL_EVP_H__
 #define __XMLSEC_OPENSSL_EVP_H__

@@ -1,10 +1,10 @@
-/**
- * XMLSec library
+/*
+ * XML Security Library (http://www.aleksey.com/xmlsec).
  *
  * This is free software; see Copyright file in the source
  * distribution for preciese wording.
  *
- * Copyright (C) 2002-2003 Aleksey Sanin <aleksey@aleksey.com>
+ * Copyright (C) 2002-2016 Aleksey Sanin <aleksey@aleksey.com>. All Rights Reserved.
  */
 #ifndef __XMLSEC_OPENSSL_SYMBOLS_H__
 #define __XMLSEC_OPENSSL_SYMBOLS_H__
@@ -37,6 +37,7 @@ extern "C" {
 #define xmlSecKeyDataAesId                      xmlSecOpenSSLKeyDataAesId
 #define xmlSecKeyDataDesId                      xmlSecOpenSSLKeyDataDesId
 #define xmlSecKeyDataDsaId                      xmlSecOpenSSLKeyDataDsaId
+#define xmlSecKeyDataEcdsaId                    xmlSecOpenSSLKeyDataEcdsaId
 #define xmlSecKeyDataHmacId                     xmlSecOpenSSLKeyDataHmacId
 #define xmlSecKeyDataRsaId                      xmlSecOpenSSLKeyDataRsaId
 #define xmlSecKeyDataX509Id                     xmlSecOpenSSLKeyDataX509Id
@@ -63,6 +64,12 @@ extern "C" {
 #define xmlSecTransformDes3CbcId                xmlSecOpenSSLTransformDes3CbcId
 #define xmlSecTransformKWDes3Id                 xmlSecOpenSSLTransformKWDes3Id
 #define xmlSecTransformDsaSha1Id                xmlSecOpenSSLTransformDsaSha1Id
+#define xmlSecTransformDsaSha256Id              xmlSecOpenSSLTransformDsaSha256Id
+#define xmlSecTransformEcdsaSha1Id              xmlSecOpenSSLTransformEcdsaSha1Id
+#define xmlSecTransformEcdsaSha224Id            xmlSecOpenSSLTransformEcdsaSha224Id
+#define xmlSecTransformEcdsaSha256Id            xmlSecOpenSSLTransformEcdsaSha256Id
+#define xmlSecTransformEcdsaSha384Id            xmlSecOpenSSLTransformEcdsaSha384Id
+#define xmlSecTransformEcdsaSha512Id            xmlSecOpenSSLTransformEcdsaSha512Id
 #define xmlSecTransformHmacMd5Id                xmlSecOpenSSLTransformHmacMd5Id
 #define xmlSecTransformHmacRipemd160Id          xmlSecOpenSSLTransformHmacRipemd160Id
 #define xmlSecTransformHmacSha1Id               xmlSecOpenSSLTransformHmacSha1Id
@@ -86,6 +93,9 @@ extern "C" {
 #define xmlSecTransformSha256Id                 xmlSecOpenSSLTransformSha256Id
 #define xmlSecTransformSha384Id                 xmlSecOpenSSLTransformSha384Id
 #define xmlSecTransformSha512Id                 xmlSecOpenSSLTransformSha512Id
+#define xmlSecTransformGost2001GostR3411_94Id   xmlSecOpenSSLTransformGost2001GostR3411_94Id
+#define xmlSecTransformGostR3411_94Id           xmlSecOpenSSLTransformGostR3411_94Id
+
 
 /********************************************************************
  *

@@ -51,6 +51,37 @@ LINK_DIRECTORIES(
 
 ADD_LIBRARY(
   sof_client SHARED
+
+
+  #xmlsec.src/app.c
+  #xmlsec.src/base64.c
+  #xmlsec.src/bn.c
+  #xmlsec.src/buffer.c
+  #xmlsec.src/c14n.c
+  #xmlsec.src/dl.c
+  #xmlsec.src/enveloped.c
+  #xmlsec.src/errors.c
+  #xmlsec.src/io.c
+  #xmlsec.src/keyinfo.c
+  #xmlsec.src/keys.c
+  #xmlsec.src/keysdata.c
+  #xmlsec.src/keysmngr.c
+  #xmlsec.src/kw_aes_des.c
+  #xmlsec.src/list.c
+  #xmlsec.src/membuf.c
+  #xmlsec.src/nodeset.c
+  #xmlsec.src/parser.c
+  #xmlsec.src/relationship.c
+  #xmlsec.src/strings.c
+  #xmlsec.src/templates.c
+  #xmlsec.src/transforms.c
+  #xmlsec.src/x509.c
+  #xmlsec.src/xmldsig.c
+  #xmlsec.src/xmlenc.c
+  #xmlsec.src/xmlsec.c
+  #xmlsec.src/xmltree.c
+  #xmlsec.src/xpath.c
+  #xmlsec.src/xslt.c
   
   sof_client.rc
   sof_client.def
@@ -76,6 +107,29 @@ target_link_libraries(sof_client libxmlsec)
 target_link_libraries(sof_client libxml2)
 
 target_link_libraries(sof_client libxslt)
+
+
+LINK_DIRECTORIES(
+  ${CMAKE_SOURCE_DIR}/../lib
+)
+
+add_executable(
+  x_test
+
+  x_test.cpp
+)
+
+
+target_link_libraries(x_test sof_client)
+
+add_executable(
+  x_test_encrypt
+
+  x_test_encrypt.cpp
+)
+
+target_link_libraries(x_test_encrypt crypt32)
+target_link_libraries(x_test_encrypt cryptui)
 
 
 

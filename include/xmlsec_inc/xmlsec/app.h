@@ -1,11 +1,11 @@
-/**
+/*
  * XML Security Library (http://www.aleksey.com/xmlsec).
  *
  *
  * This is free software; see Copyright file in the source
  * distribution for preciese wording.
  *
- * Copyright (C) 2002-2003 Aleksey Sanin <aleksey@aleksey.com>
+ * Copyright (C) 2002-2016 Aleksey Sanin <aleksey@aleksey.com>. All Rights Reserved.
  */
 #ifndef __XMLSEC_APP_H__
 #define __XMLSEC_APP_H__
@@ -66,12 +66,33 @@ XMLSEC_EXPORT xmlSecKeyDataId                   xmlSecKeyDataDesGetKlass        
 #define xmlSecKeyDataDsaId                      xmlSecKeyDataDsaGetKlass()
 XMLSEC_EXPORT xmlSecKeyDataId                   xmlSecKeyDataDsaGetKlass        (void);
 /**
+ * xmlSecKeyDataEcdsaId:
+ *
+ * The ECDSA key klass.
+ */
+#define xmlSecKeyDataEcdsaId                    xmlSecKeyDataEcdsaGetKlass()
+XMLSEC_EXPORT xmlSecKeyDataId                   xmlSecKeyDataEcdsaGetKlass      (void);
+/**
  * xmlSecKeyDataGost2001Id:
  *
  * The GOST2001 key klass.
  */
 #define xmlSecKeyDataGost2001Id                 xmlSecKeyDataGost2001GetKlass()
 XMLSEC_EXPORT xmlSecKeyDataId                   xmlSecKeyDataGost2001GetKlass   (void);
+/**
+ * xmlSecKeyDataGostR3410_2012_256Id:
+ *
+ * The GOST R 34.10-2012 256 bit key klass.
+ */
+#define xmlSecKeyDataGostR3410_2012_256Id       xmlSecKeyDataGostR3410_2012_256GetKlass()
+XMLSEC_EXPORT xmlSecKeyDataId                   xmlSecKeyDataGostR3410_2012_256GetKlass (void);
+/**
+ * xmlSecKeyDataGostR3410_2012_512Id:
+ *
+ * The GOST R 34.10-2012 512 bit key klass.
+ */
+#define xmlSecKeyDataGostR3410_2012_512Id       xmlSecKeyDataGostR3410_2012_512GetKlass()
+XMLSEC_EXPORT xmlSecKeyDataId                   xmlSecKeyDataGostR3410_2012_512GetKlass (void);
 /**
  * xmlSecKeyDataHmacId:
  *
@@ -182,6 +203,48 @@ XMLSEC_EXPORT xmlSecTransformId                 xmlSecTransformKWDes3GetKlass   
  */
 #define xmlSecTransformDsaSha1Id                xmlSecTransformDsaSha1GetKlass()
 XMLSEC_EXPORT xmlSecTransformId                 xmlSecTransformDsaSha1GetKlass  (void);
+/**
+ * xmlSecTransformDsaSha256Id:
+ *
+ * The DSA-SHA256 signature transform klass.
+ */
+#define xmlSecTransformDsaSha256Id              xmlSecTransformDsaSha256GetKlass()
+XMLSEC_EXPORT xmlSecTransformId                 xmlSecTransformDsaSha256GetKlass  (void);
+/**
+ * xmlSecTransformEcdsaSha1Id:
+ *
+ * The ECDSA-SHA1 signature transform klass.
+ */
+#define xmlSecTransformEcdsaSha1Id              xmlSecTransformEcdsaSha1GetKlass()
+XMLSEC_EXPORT xmlSecTransformId                 xmlSecTransformEcdsaSha1GetKlass  (void);
+/**
+ * xmlSecTransformEcdsaSha224Id:
+ *
+ * The ECDSA-SHA224 signature transform klass.
+ */
+#define xmlSecTransformEcdsaSha224Id            xmlSecTransformEcdsaSha224GetKlass()
+XMLSEC_EXPORT xmlSecTransformId                 xmlSecTransformEcdsaSha224GetKlass  (void);
+/**
+ * xmlSecTransformEcdsaSha256Id:
+ *
+ * The ECDSA-SHA256 signature transform klass.
+ */
+#define xmlSecTransformEcdsaSha256Id            xmlSecTransformEcdsaSha256GetKlass()
+XMLSEC_EXPORT xmlSecTransformId                 xmlSecTransformEcdsaSha256GetKlass  (void);
+/**
+ * xmlSecTransformEcdsaSha384Id:
+ *
+ * The ECDS-SHA384 signature transform klass.
+ */
+#define xmlSecTransformEcdsaSha384Id            xmlSecTransformEcdsaSha384GetKlass()
+XMLSEC_EXPORT xmlSecTransformId                 xmlSecTransformEcdsaSha384GetKlass  (void);
+/**
+ * xmlSecTransformEcdsaSha512Id:
+ *
+ * The ECDSA-SHA512 signature transform klass.
+ */
+#define xmlSecTransformEcdsaSha512Id            xmlSecTransformEcdsaSha512GetKlass()
+XMLSEC_EXPORT xmlSecTransformId                 xmlSecTransformEcdsaSha512GetKlass  (void);
 
 /**
  * xmlSecTransformGost2001GostR3411_94Id:
@@ -190,6 +253,22 @@ XMLSEC_EXPORT xmlSecTransformId                 xmlSecTransformDsaSha1GetKlass  
  */
 #define xmlSecTransformGost2001GostR3411_94Id           xmlSecTransformGost2001GostR3411_94GetKlass()
 XMLSEC_EXPORT xmlSecTransformId                 xmlSecTransformGost2001GostR3411_94GetKlass     (void);
+
+/**
+ * xmlSecTransformGostR3410_2012GostR3411_2012_256Id:
+ *
+ * The GOST R 34.10-2012 - GOST R 34.11-2012 256 bit signature transform klass.
+ */
+#define xmlSecTransformGostR3410_2012GostR3411_2012_256Id   xmlSecTransformGostR3410_2012GostR3411_2012_256GetKlass()
+XMLSEC_EXPORT xmlSecTransformId                 xmlSecTransformGostR3410_2012GostR3411_2012_256GetKlass     (void);
+
+/**
+ * xmlSecTransformGostR3410_2012GostR3411_2012_512Id:
+ *
+ * The GOST R 34.10-2012 - GOST R 34.11-2012 512 bit signature transform klass.
+ */
+#define xmlSecTransformGostR3410_2012GostR3411_2012_512Id   xmlSecTransformGostR3410_2012GostR3411_2012_512GetKlass()
+XMLSEC_EXPORT xmlSecTransformId                 xmlSecTransformGostR3410_2012GostR3411_2012_512GetKlass     (void);
 
 /**
  * xmlSecTransformHmacMd5Id:
@@ -325,6 +404,21 @@ XMLSEC_EXPORT xmlSecTransformId                 xmlSecTransformRsaOaepGetKlass  
  */
 #define xmlSecTransformGostR3411_94Id                   xmlSecTransformGostR3411_94GetKlass()
 XMLSEC_EXPORT xmlSecTransformId                 xmlSecTransformGostR3411_94GetKlass     (void);
+/**
+ * xmlSecTransformGostR3411_2012_256Id:
+ *
+ * The GOST R 34.11-2012 256 bit digest transform klass.
+ */
+#define xmlSecTransformGostR3411_2012_256Id     xmlSecTransformGostR3411_2012_256GetKlass()
+XMLSEC_EXPORT xmlSecTransformId                 xmlSecTransformGostR3411_2012_256GetKlass     (void);
+/**
+ * xmlSecTransformGostR3411_2012_512Id:
+ *
+ * The GOST R 34.11-2012 512 bit digest transform klass.
+ */
+#define xmlSecTransformGostR3411_2012_512Id     xmlSecTransformGostR3411_2012_512GetKlass()
+XMLSEC_EXPORT xmlSecTransformId                 xmlSecTransformGostR3411_2012_512GetKlass     (void);
+
 /**
  * xmlSecTransformSha1Id:
  *

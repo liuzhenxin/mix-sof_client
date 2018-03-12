@@ -1,10 +1,10 @@
-/**
+/*
  * XML Security Library (http://www.aleksey.com/xmlsec).
  *
  * This is free software; see Copyright file in the source
  * distribution for preciese wording.
  *
- * Copyright (C) 2002-2003 Aleksey Sanin <aleksey@aleksey.com>
+ * Copyright (C) 2002-2016 Aleksey Sanin <aleksey@aleksey.com>. All Rights Reserved.
  */
 #ifndef __XMLSEC_X509_H__
 #define __XMLSEC_X509_H__
@@ -48,7 +48,7 @@ extern "C" {
 /**
  * XMLSEC_X509DATA_SKI_NODE:
  *
- * <dsig:/X509SKI> node found or would be written back.
+ * <dsig:X509SKI/> node found or would be written back.
  */
 #define XMLSEC_X509DATA_SKI_NODE                                0x00000008
 /**
@@ -67,7 +67,6 @@ extern "C" {
         (XMLSEC_X509DATA_CERTIFICATE_NODE | XMLSEC_X509DATA_CRL_NODE)
 
 XMLSEC_EXPORT int               xmlSecX509DataGetNodeContent    (xmlNodePtr node,
-                                                                 int deleteChildren,
                                                                  xmlSecKeyInfoCtxPtr keyInfoCtx);
 
 #ifdef __cplusplus

@@ -1,4 +1,4 @@
-/**
+/*
  * XML Security Library (http://www.aleksey.com/xmlsec).
  *
  * Version information
@@ -6,7 +6,7 @@
  * This is free software; see Copyright file in the source
  * distribution for preciese wording.
  *
- * Copyright (C) 2002-2003 Aleksey Sanin <aleksey@aleksey.com>
+ * Copyright (C) 2002-2016 Aleksey Sanin <aleksey@aleksey.com>. All Rights Reserved.
  */
 #ifndef __XMLSEC_VERSION_H__
 #define __XMLSEC_VERSION_H__
@@ -19,9 +19,9 @@ extern "C" {
  * XMLSEC_VERSION:
  *
  * The library version string in the format
- * "<major-number>.<minor-number>.<sub-minor-number>".
+ * "$major_number.$minor_number.$sub_minor_number".
  */
-#define XMLSEC_VERSION			"1.2.18"
+#define XMLSEC_VERSION			"1.2.25"
 
 /**
  * XMLSEC_VERSION_MAJOR:
@@ -42,15 +42,15 @@ extern "C" {
  *
  * The library sub-minor version number.
  */
-#define XMLSEC_VERSION_SUBMINOR		18
+#define XMLSEC_VERSION_SUBMINOR		25
 
 /**
  * XMLSEC_VERSION_INFO:
  *
  * The library version info string in the format
- * "<major-number>+<minor-number>:<sub-minor-number>:<minor-number>".
+ * "$major_number+$minor_number:$sub_minor_number:$minor_number".
  */
-#define XMLSEC_VERSION_INFO		"3:18:2"
+#define XMLSEC_VERSION_INFO		"3:25:2"
 
 
 #ifdef __cplusplus

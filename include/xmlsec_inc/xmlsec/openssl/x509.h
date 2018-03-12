@@ -1,10 +1,10 @@
-/**
- * XMLSec library
+/*
+ * XML Security Library (http://www.aleksey.com/xmlsec).
  *
  * This is free software; see Copyright file in the source
  * distribution for preciese wording.
  *
- * Copyright (C) 2002-2003 Aleksey Sanin <aleksey@aleksey.com>
+ * Copyright (C) 2002-2016 Aleksey Sanin <aleksey@aleksey.com>. All Rights Reserved.
  */
 #ifndef __XMLSEC_OPENSSL_X509_H__
 #define __XMLSEC_OPENSSL_X509_H__
@@ -98,7 +98,7 @@ XMLSEC_CRYPTO_EXPORT int                xmlSecOpenSSLX509StoreAdoptCrl  (xmlSecK
 XMLSEC_CRYPTO_EXPORT int                xmlSecOpenSSLX509StoreAddCertsPath(xmlSecKeyDataStorePtr store,
                                                                          const char* path);
 XMLSEC_CRYPTO_EXPORT int                xmlSecOpenSSLX509StoreAddCertsFile(xmlSecKeyDataStorePtr store,
-                                                                         const char* file);
+                                                                         const char* filename);
 
 #endif /* XMLSEC_NO_X509 */
 

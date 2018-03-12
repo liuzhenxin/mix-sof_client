@@ -34,7 +34,7 @@ add_subdirectory(sof_client)
 
 
 ##
-add_subdirectory(x_test)
+##add_subdirectory(x_test)
 
 
 

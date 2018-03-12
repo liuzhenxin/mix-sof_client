@@ -1,19 +1,19 @@
-/**
+/*
  * XML Security Library (http://www.aleksey.com/xmlsec).
  *
  * These are internal private declarations. You don't want to use this file
- * unless you are building xmlsec or xmlsec-<crypto> library.
+ * unless you are building xmlsec or xmlsec-$crypto library.
  *
  * This is free software; see Copyright file in the source
  * distribution for preciese wording.
  *
- * Copyright (C) 2002-2003 Aleksey Sanin <aleksey@aleksey.com>
+ * Copyright (C) 2002-2016 Aleksey Sanin <aleksey@aleksey.com>. All Rights Reserved.
  */
 #ifndef __XMLSEC_PRIVATE_H__
 #define __XMLSEC_PRIVATE_H__
 
 #ifndef XMLSEC_PRIVATE
-#error "xmlsec/private.h file contains private xmlsec definitions and should not be used outside xmlsec or xmlsec-<crypto> libraries"
+#error "xmlsec/private.h file contains private xmlsec definitions and should not be used outside xmlsec or xmlsec-$crypto libraries"
 #endif /* XMLSEC_PRIVATE */
 
 #ifdef __cplusplus
@@ -334,7 +334,10 @@ typedef int                     (*xmlSecCryptoAppKeyCertLoadMemoryMethod)(xmlSec
  * @keyDataAesGetKlass:         the method to get pointer to AES key data klass.
  * @keyDataDesGetKlass:         the method to get pointer to DES key data klass.
  * @keyDataDsaGetKlass:         the method to get pointer to DSA key data klass.
+ * @keyDataEcdsaGetKlass:       the method to get pointer to ECDSA key data klass.
  * @keyDataGost2001GetKlass:    the method to get pointer to GOST 2001 key data klass.
+ * @keyDataGostR3410_2012_256GetKlass: the method to get pointer to GOST R 34.10-2012 256 bit key data klass.
+ * @keyDataGostR3410_2012_512GetKlass: the method to get pointer to GOST R 34.10-2012 512 bit key data klass.
  * @keyDataHmacGetKlass:        the method to get pointer to HMAC key data klass.
  * @keyDataRsaGetKlass:         the method to get pointer to RSA key data klass.
  * @keyDataX509GetKlass:        the method to get pointer to X509 key data klass.
@@ -349,7 +352,15 @@ typedef int                     (*xmlSecCryptoAppKeyCertLoadMemoryMethod)(xmlSec
  * @transformDes3CbcGetKlass:   the method to get pointer to Triple DES encryption transform.
  * @transformKWDes3GetKlass:    the method to get pointer to Triple DES key wrapper transform.
  * @transformDsaSha1GetKlass:   the method to get pointer to DSA-SHA1 signature transform.
+ * @transformDsaSha256GetKlass: the method to get pointer to DSA-SHA256 signature transform.
+ * @transformEcdsaSha1GetKlass: the method to get pointer to ECDSA-SHA1 signature transform.
+ * @transformEcdsaSha224GetKlass: the method to get pointer to ECDSA-SHA224 signature transform.
+ * @transformEcdsaSha256GetKlass: the method to get pointer to ECDSA-SHA256 signature transform.
+ * @transformEcdsaSha384GetKlass: the method to get pointer to ECDSA-SHA384 signature transform.
+ * @transformEcdsaSha512GetKlass: the method to get pointer to ECDSA-SHA512 signature transform.
  * @transformGost2001GostR3411_94GetKlass: the method to get pointer to GOST2001 transform.
+ * @transformGostR3410_2012GostR3411_2012_256GetKlass: the method to get pointer to GOST R 34.10-2012 - GOST R 34.11-2012 256bit transform.
+ * @transformGostR3410_2012GostR3411_2012_512GetKlass: the method to get pointer to GOST R 34.10-2012 - GOST R 34.11_2012 512bit transform.
  * @transformHmacMd5GetKlass:   the method to get pointer to HMAC-MD5 transform.
  * @transformHmacRipemd160GetKlass: the method to get pointer to HMAC-RIPEMD160 transform.
  * @transformHmacSha1GetKlass:  the method to get pointer to HMAC-SHA1 transform.
@@ -369,6 +380,8 @@ typedef int                     (*xmlSecCryptoAppKeyCertLoadMemoryMethod)(xmlSec
  * @transformRsaPkcs1GetKlass:  the method to get pointer to RSA-PKCS1_5 key transport transform.
  * @transformRsaOaepGetKlass:   the method to get pointer to RSA-OAEP key transport transform.
  * @transformGostR3411_94GetKlass: the method to get pointer to GOST R3411 transform.
+ * @transformGostR3411_2012_256GetKlass: the method to get pointer to GOST R 34.11-2012 256 bit transform.
+ * @transformGostR3411_2012_512GetKlass: the method to get pointer to GOST R 34.11-2012 512 bit transform.
  * @transformSha1GetKlass:      the method to get pointer to SHA1 digest transform.
  * @transformSha224GetKlass:    the method to get pointer to SHA224 digest transform.
  * @transformSha256GetKlass:    the method to get pointer to SHA256 digest transform.
@@ -402,7 +415,10 @@ struct _xmlSecCryptoDLFunctions {
     xmlSecCryptoKeyDataGetKlassMethod            keyDataAesGetKlass;
     xmlSecCryptoKeyDataGetKlassMethod            keyDataDesGetKlass;
     xmlSecCryptoKeyDataGetKlassMethod            keyDataDsaGetKlass;
+    xmlSecCryptoKeyDataGetKlassMethod            keyDataEcdsaGetKlass;
     xmlSecCryptoKeyDataGetKlassMethod            keyDataGost2001GetKlass;
+    xmlSecCryptoKeyDataGetKlassMethod            keyDataGostR3410_2012_256GetKlass;
+    xmlSecCryptoKeyDataGetKlassMethod            keyDataGostR3410_2012_512GetKlass;
     xmlSecCryptoKeyDataGetKlassMethod            keyDataHmacGetKlass;
     xmlSecCryptoKeyDataGetKlassMethod            keyDataRsaGetKlass;
     xmlSecCryptoKeyDataGetKlassMethod            keyDataX509GetKlass;
@@ -421,7 +437,15 @@ struct _xmlSecCryptoDLFunctions {
     xmlSecCryptoTransformGetKlassMethod          transformDes3CbcGetKlass;
     xmlSecCryptoTransformGetKlassMethod          transformKWDes3GetKlass;
     xmlSecCryptoTransformGetKlassMethod          transformDsaSha1GetKlass;
+    xmlSecCryptoTransformGetKlassMethod          transformDsaSha256GetKlass;
+    xmlSecCryptoTransformGetKlassMethod          transformEcdsaSha1GetKlass;
+    xmlSecCryptoTransformGetKlassMethod          transformEcdsaSha224GetKlass;
+    xmlSecCryptoTransformGetKlassMethod          transformEcdsaSha256GetKlass;
+    xmlSecCryptoTransformGetKlassMethod          transformEcdsaSha384GetKlass;
+    xmlSecCryptoTransformGetKlassMethod          transformEcdsaSha512GetKlass;
     xmlSecCryptoTransformGetKlassMethod          transformGost2001GostR3411_94GetKlass;
+    xmlSecCryptoTransformGetKlassMethod          transformGostR3410_2012GostR3411_2012_256GetKlass;
+    xmlSecCryptoTransformGetKlassMethod          transformGostR3410_2012GostR3411_2012_512GetKlass;
     xmlSecCryptoTransformGetKlassMethod          transformHmacMd5GetKlass;
     xmlSecCryptoTransformGetKlassMethod          transformHmacRipemd160GetKlass;
     xmlSecCryptoTransformGetKlassMethod          transformHmacSha1GetKlass;
@@ -441,6 +465,8 @@ struct _xmlSecCryptoDLFunctions {
     xmlSecCryptoTransformGetKlassMethod          transformRsaPkcs1GetKlass;
     xmlSecCryptoTransformGetKlassMethod          transformRsaOaepGetKlass;
     xmlSecCryptoTransformGetKlassMethod          transformGostR3411_94GetKlass;
+    xmlSecCryptoTransformGetKlassMethod          transformGostR3411_2012_256GetKlass;
+    xmlSecCryptoTransformGetKlassMethod          transformGostR3411_2012_512GetKlass;
     xmlSecCryptoTransformGetKlassMethod          transformSha1GetKlass;
     xmlSecCryptoTransformGetKlassMethod          transformSha224GetKlass;
     xmlSecCryptoTransformGetKlassMethod          transformSha256GetKlass;
@@ -465,21 +491,91 @@ struct _xmlSecCryptoDLFunctions {
     void*                                        cryptoAppDefaultPwdCallback;
 };
 
-#include <libxml/xmlstring.h>
+/**
+ * ATTRIBUTE_UNUSED:
+ *
+ * Macro used to signal to GCC unused function parameters
+ */
+#ifdef __GNUC__
+#ifdef HAVE_ANSIDECL_H
+#include <ansidecl.h>
+#endif
+#ifndef ATTRIBUTE_UNUSED
+#define ATTRIBUTE_UNUSED
+#endif
+#else
+#define ATTRIBUTE_UNUSED
+#endif
+
+/***********************************************************************
+ *
+ * Helpers to convert from void* to function pointer, this silence
+ * gcc warning
+ *
+ *     warning: ISO C forbids conversion of object pointer to function
+ *     pointer type
+ *
+ * The workaround is to declare a union that does the conversion. This is
+ * guaranteed (ISO/IEC 9899:1990 "C89"/"C90") to match exactly.
+ *
+ ***********************************************************************/
 
 /**
- * xmlSecStrPrintf:
+ * XMLSEC_PTR_TO_FUNC_IMPL:
+ * @func_type:          the function type.
  *
- * Prints a string (see @xmlStrPrintf).
+ * Macro declares helper functions to convert from "void *" pointer to
+ * function pointer.
  */
-#define xmlSecStrPrintf         xmlStrPrintf
+#define XMLSEC_PTR_TO_FUNC_IMPL(func_type) \
+    union xmlSecPtrToFuncUnion_ ##func_type { \
+        void *ptr; \
+        func_type * func; \
+    } ; \
+    static func_type * xmlSecPtrToFunc_ ##func_type(void * ptr) { \
+         union xmlSecPtrToFuncUnion_ ##func_type x; \
+         x.ptr = ptr; \
+         return (x.func); \
+    }
 
 /**
- * xmlSecStrVPrintf:
+ * XMLSEC_PTR_TO_FUNC:
+ * @func_type:          the function type.
+ * @ptr:                the "void*" pointer to be converted.
  *
- * Prints a string (see @xmlStrVPrintf).
+ * Macro converts from "void*" pointer to "func_type" function pointer.
  */
-#define xmlSecStrVPrintf        xmlStrVPrintf
+#define XMLSEC_PTR_TO_FUNC(func_type, ptr) \
+    xmlSecPtrToFunc_ ##func_type((ptr))
+
+/**
+ * XMLSEC_FUNC_TO_PTR_IMPL:
+ * @func_type:          the function type.
+ *
+ * Macro declares helper functions to convert from function pointer to
+ * "void *" pointer;
+ */
+#define XMLSEC_FUNC_TO_PTR_IMPL(func_type) \
+    union xmlSecFuncToPtrUnion_ ##func_type { \
+        void *ptr; \
+        func_type * func; \
+    } ; \
+    static void * xmlSecFuncToPtr_ ##func_type(func_type * func) { \
+         union xmlSecFuncToPtrUnion_ ##func_type x; \
+         x.func = func; \
+         return (x.ptr); \
+    }
+
+/**
+ * XMLSEC_FUNC_TO_PTR:
+ * @func_type:          the function type.
+ * @func:               the "func_type" function pointer to be converted.
+ *
+ * Macro converts from "func_type" function pointer to "void*" pointer.
+ */
+#define XMLSEC_FUNC_TO_PTR(func_type, func) \
+    xmlSecFuncToPtr_ ##func_type((func))
+
 
 #ifdef __cplusplus
 }

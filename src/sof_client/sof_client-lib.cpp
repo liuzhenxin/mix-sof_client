@@ -3938,38 +3938,38 @@ end:
 		xmlNodePtr x509DataNode = NULL;
 
 
-		const char * kRSAKeyTmp =  "-----BEGIN RSA PRIVATE KEY-----\n \
-									MIIBPAIBAAJBANPQbQ92nlbeg1Q5JNHSO1Yey46nZ7GJltLWw1ccSvp7pnvmfUm+\n \
-									M521CpFpfr4EAE3UVBMoU9j/hqq3dFAc2H0CAwEAAQJBALFVCjmsAZyQ5jqZLO5N\n \
-									qEfNuHZSSUol+xPBogFIOq3BWa269eNNcAK5or5g0XWWon7EPdyGT4qyDVH9KzXK\n \
-									RLECIQDzm/Nj0epUGN51/rKJgRXWkXW/nfSCMO9fvQR6Ujoq3wIhAN6WeHK9vgWg\n \
-									wBWqMdq5sR211+LlDH7rOUQ6rBpbsoQjAiEA7jzpfglgPPZFOOfo+oh/LuP6X3a+\n \
-									FER/FQXpRyb7M8kCIETUrwZ8WkiPPxbz/Fqw1W5kjw/g2I5e2uSYaCP2eyuVAiEA\n \
-									mOI6RhRyMqgxQyy0plJVjG1s4fdu92AWYy9AwYeyd/8=\n \
-									-----END RSA PRIVATE KEY-----";
-									
-		const char * kRSACertTmp = "-----BEGIN CERTIFICATE-----\n \
-									MIIDpzCCA1GgAwIBAgIJAK+ii7kzrdqvMA0GCSqGSIb3DQEBBQUAMIGcMQswCQYD\n \
-									VQQGEwJVUzETMBEGA1UECBMKQ2FsaWZvcm5pYTE9MDsGA1UEChM0WE1MIFNlY3Vy\n \
-									aXR5IExpYnJhcnkgKGh0dHA6Ly93d3cuYWxla3NleS5jb20veG1sc2VjKTEWMBQG\n \
-									A1UEAxMNQWxla3NleSBTYW5pbjEhMB8GCSqGSIb3DQEJARYSeG1sc2VjQGFsZWtz\n \
-									ZXkuY29tMCAXDTE0MDUyMzE3NTUzNFoYDzIxMTQwNDI5MTc1NTM0WjCBxzELMAkG\n \
-									A1UEBhMCVVMxEzARBgNVBAgTCkNhbGlmb3JuaWExPTA7BgNVBAoTNFhNTCBTZWN1\n \
-									cml0eSBMaWJyYXJ5IChodHRwOi8vd3d3LmFsZWtzZXkuY29tL3htbHNlYykxKTAn\n \
-									BgNVBAsTIFRlc3QgVGhpcmQgTGV2ZWwgUlNBIENlcnRpZmljYXRlMRYwFAYDVQQD\n \
-									Ew1BbGVrc2V5IFNhbmluMSEwHwYJKoZIhvcNAQkBFhJ4bWxzZWNAYWxla3NleS5j\n \
-									b20wXDANBgkqhkiG9w0BAQEFAANLADBIAkEA09BtD3aeVt6DVDkk0dI7Vh7Ljqdn\n \
-									sYmW0tbDVxxK+nume+Z9Sb4znbUKkWl+vgQATdRUEyhT2P+Gqrd0UBzYfQIDAQAB\n \
-									o4IBRTCCAUEwDAYDVR0TBAUwAwEB/zAsBglghkgBhvhCAQ0EHxYdT3BlblNTTCBH\n \
-									ZW5lcmF0ZWQgQ2VydGlmaWNhdGUwHQYDVR0OBBYEFNf0xkZ3zjcEI60pVPuwDqTM\n \
-									QygZMIHjBgNVHSMEgdswgdiAFP7k7FMk8JWVxxC14US1XTllWuN+oYG0pIGxMIGu\n \
-									MQswCQYDVQQGEwJVUzETMBEGA1UECBMKQ2FsaWZvcm5pYTE9MDsGA1UEChM0WE1M\n \
-									IFNlY3VyaXR5IExpYnJhcnkgKGh0dHA6Ly93d3cuYWxla3NleS5jb20veG1sc2Vj\n \
-									KTEQMA4GA1UECxMHUm9vdCBDQTEWMBQGA1UEAxMNQWxla3NleSBTYW5pbjEhMB8G\n \
-									CSqGSIb3DQEJARYSeG1sc2VjQGFsZWtzZXkuY29tggkAr6KLuTOt2q0wDQYJKoZI\n \
-									hvcNAQEFBQADQQAOXBj0yICp1RmHXqnUlsppryLCW3pKBD1dkb4HWarO7RjA1yJJ\n \
-									fBjXssrERn05kpBcrRfzou4r3DCgQFPhjxga\n \
-									-----END CERTIFICATE-----";
+		const char * kRSAKeyTmp = "-----BEGIN RSA PRIVATE KEY-----\n" \
+			"MIIBPAIBAAJBANPQbQ92nlbeg1Q5JNHSO1Yey46nZ7GJltLWw1ccSvp7pnvmfUm+\n" \
+			"M521CpFpfr4EAE3UVBMoU9j/hqq3dFAc2H0CAwEAAQJBALFVCjmsAZyQ5jqZLO5N\n" \
+			"qEfNuHZSSUol+xPBogFIOq3BWa269eNNcAK5or5g0XWWon7EPdyGT4qyDVH9KzXK\n" \
+			"RLECIQDzm/Nj0epUGN51/rKJgRXWkXW/nfSCMO9fvQR6Ujoq3wIhAN6WeHK9vgWg\n" \
+			"wBWqMdq5sR211+LlDH7rOUQ6rBpbsoQjAiEA7jzpfglgPPZFOOfo+oh/LuP6X3a+\n" \
+			"FER/FQXpRyb7M8kCIETUrwZ8WkiPPxbz/Fqw1W5kjw/g2I5e2uSYaCP2eyuVAiEA\n" \
+			"mOI6RhRyMqgxQyy0plJVjG1s4fdu92AWYy9AwYeyd/8=\n" \
+			"-----END RSA PRIVATE KEY-----";
+
+		const char * kRSACertTmp = "-----BEGIN CERTIFICATE-----\n" \
+			"MIIDpzCCA1GgAwIBAgIJAK+ii7kzrdqvMA0GCSqGSIb3DQEBBQUAMIGcMQswCQYD\n" \
+			"VQQGEwJVUzETMBEGA1UECBMKQ2FsaWZvcm5pYTE9MDsGA1UEChM0WE1MIFNlY3Vy\n" \
+			"aXR5IExpYnJhcnkgKGh0dHA6Ly93d3cuYWxla3NleS5jb20veG1sc2VjKTEWMBQG\n" \
+			"A1UEAxMNQWxla3NleSBTYW5pbjEhMB8GCSqGSIb3DQEJARYSeG1sc2VjQGFsZWtz\n" \
+			"ZXkuY29tMCAXDTE0MDUyMzE3NTUzNFoYDzIxMTQwNDI5MTc1NTM0WjCBxzELMAkG\n" \
+			"A1UEBhMCVVMxEzARBgNVBAgTCkNhbGlmb3JuaWExPTA7BgNVBAoTNFhNTCBTZWN1\n" \
+			"cml0eSBMaWJyYXJ5IChodHRwOi8vd3d3LmFsZWtzZXkuY29tL3htbHNlYykxKTAn\n" \
+			"BgNVBAsTIFRlc3QgVGhpcmQgTGV2ZWwgUlNBIENlcnRpZmljYXRlMRYwFAYDVQQD\n" \
+			"Ew1BbGVrc2V5IFNhbmluMSEwHwYJKoZIhvcNAQkBFhJ4bWxzZWNAYWxla3NleS5j\n" \
+			"b20wXDANBgkqhkiG9w0BAQEFAANLADBIAkEA09BtD3aeVt6DVDkk0dI7Vh7Ljqdn\n" \
+			"sYmW0tbDVxxK+nume+Z9Sb4znbUKkWl+vgQATdRUEyhT2P+Gqrd0UBzYfQIDAQAB\n" \
+			"o4IBRTCCAUEwDAYDVR0TBAUwAwEB/zAsBglghkgBhvhCAQ0EHxYdT3BlblNTTCBH\n" \
+			"ZW5lcmF0ZWQgQ2VydGlmaWNhdGUwHQYDVR0OBBYEFNf0xkZ3zjcEI60pVPuwDqTM\n" \
+			"QygZMIHjBgNVHSMEgdswgdiAFP7k7FMk8JWVxxC14US1XTllWuN+oYG0pIGxMIGu\n" \
+			"MQswCQYDVQQGEwJVUzETMBEGA1UECBMKQ2FsaWZvcm5pYTE9MDsGA1UEChM0WE1M\n" \
+			"IFNlY3VyaXR5IExpYnJhcnkgKGh0dHA6Ly93d3cuYWxla3NleS5jb20veG1sc2Vj\n" \
+			"KTEQMA4GA1UECxMHUm9vdCBDQTEWMBQGA1UEAxMNQWxla3NleSBTYW5pbjEhMB8G\n" \
+			"CSqGSIb3DQEJARYSeG1sc2VjQGFsZWtzZXkuY29tggkAr6KLuTOt2q0wDQYJKoZI\n" \
+			"hvcNAQEFBQADQQAOXBj0yICp1RmHXqnUlsppryLCW3pKBD1dkb4HWarO7RjA1yJJ\n" \
+			"fBjXssrERn05kpBcrRfzou4r3DCgQFPhjxga\n" \
+			"-----END CERTIFICATE-----";
 						
 		FILE_LOG_FMT(file_log_name, "\n%s %d %s", __FUNCTION__, __LINE__, "entering");
 		FILE_LOG_FMT(file_log_name, "ContainerName: %s", pContainerName);
@@ -4019,7 +4019,7 @@ end:
 		* xmlsec-crypto library.
 		*/
 #ifdef XMLSEC_CRYPTO_DYNAMIC_LOADING
-		if (xmlSecCryptoDLLoadLibrary(NULL) < 0) {
+		if (xmlSecCryptoDLLoadLibrary((const xmlChar*)"openssl") < 0) {
 			ulResult = SOR_UNKNOWNERR;
 			goto end;
 		}
@@ -4045,7 +4045,7 @@ end:
 		}
 
 		/* create signature template for RSA-SHA1 enveloped signature */
-		signNode = xmlSecTmplSignatureCreate(doc, xmlSecTransformExclC14NId,
+		signNode = xmlSecTmplSignatureCreate(doc, xmlSecTransformEnvelopedId,
 			xmlSecTransformRsaSha1Id, NULL);
 		if (signNode == NULL) {
 			ulResult = SOR_UNKNOWNERR;
@@ -4114,10 +4114,10 @@ end:
 		}
 
 		/* set key name to the file name, this is just an example! */
-		if (xmlSecKeySetName(dsigCtx->signKey, (const xmlChar *)"null") < 0) {
-			ulResult = SOR_UNKNOWNERR;
-			goto end;
-		}
+		//if (xmlSecKeySetName(dsigCtx->signKey, (const xmlChar *)"null") < 0) {
+		//	ulResult = SOR_UNKNOWNERR;
+		//	goto end;
+		//}
 
 		/* sign the template */
 		if (xmlSecDSigCtxSign(dsigCtx, signNode) < 0) {

@@ -1,4 +1,4 @@
-/**
+/*
  * XML Security Library (http://www.aleksey.com/xmlsec).
  *
  * The transforms engine
@@ -6,7 +6,7 @@
  * This is free software; see Copyright file in the source
  * distribution for preciese wording.
  *
- * Copyright (C) 2002-2003 Aleksey Sanin <aleksey@aleksey.com>
+ * Copyright (C) 2002-2016 Aleksey Sanin <aleksey@aleksey.com>. All Rights Reserved.
  */
 #ifndef __XMLSEC_TRANSFORMS_H__
 #define __XMLSEC_TRANSFORMS_H__
@@ -33,7 +33,7 @@ typedef const struct _xmlSecTransformKlass              xmlSecTransformKlass,
  * The binary data chunks size. XMLSec processes binary data one chunk
  * at a time. Changing this impacts xmlsec memory usage and performance.
  */
-#define XMLSEC_TRANSFORM_BINARY_CHUNK                   64
+#define XMLSEC_TRANSFORM_BINARY_CHUNK                   1024
 
 /**********************************************************************
  *
@@ -949,6 +949,15 @@ XMLSEC_EXPORT int               xmlSecTransformXPointerSetExpr          (xmlSecT
                                                                          const xmlChar* expr,
                                                                          xmlSecNodeSetType nodeSetType,
                                                                          xmlNodePtr hereNode);
+/**
+ * xmlSecTransformRelationshipId:
+ *
+ * The Relationship transform klass.
+ */
+#define xmlSecTransformRelationshipId \
+        xmlSecTransformRelationshipGetKlass()
+XMLSEC_EXPORT xmlSecTransformId xmlSecTransformRelationshipGetKlass     (void);
+
 #ifndef XMLSEC_NO_XSLT
 #include <libxslt/security.h>
 

@@ -1,4 +1,4 @@
-/**
+/*
  * XML Security Library (http://www.aleksey.com/xmlsec).
  *
  * "XML Digital Signature" implementation
@@ -8,7 +8,7 @@
  * This is free software; see Copyright file in the source
  * distribution for preciese wording.
  *
- * Copyright (C) 2002-2003 Aleksey Sanin <aleksey@aleksey.com>
+ * Copyright (C) 2002-2016 Aleksey Sanin <aleksey@aleksey.com>. All Rights Reserved.
  */
 #ifndef __XMLSEC_XMLDSIG_H__
 #define __XMLSEC_XMLDSIG_H__
@@ -36,7 +36,7 @@ typedef struct _xmlSecDSigReferenceCtx          xmlSecDSigReferenceCtx,
 
 /**
  * xmlSecDSigStatus:
- * @xmlSecDSigStatusUnknown:    the status is unknow.
+ * @xmlSecDSigStatusUnknown:    the status is unknown.
  * @xmlSecDSigStatusSucceeded:  the processing succeeded.
  * @xmlSecDSigStatusInvalid:    the processing failed.
  *
@@ -113,8 +113,8 @@ typedef enum {
  *                              before calling #xmlSecDSigCtxSign or #xmlSecDSigCtxVerify
  *                              functions.
  * @operation:                  the operation: sign or verify.
- * @result:                     the pointer to signature (not valid for signature verificaction).
- * @status:                     the <dsig:Signatuire/> procesisng status.
+ * @result:                     the pointer to signature (not valid for signature verification).
+ * @status:                     the <dsig:Signatuire/> processing status.
  * @signMethod:                 the pointer to signature transform.
  * @c14nMethod:                 the pointer to c14n transform.
  * @preSignMemBufMethod:        the pointer to binary buffer right before signature

@@ -1,4 +1,4 @@
-/**
+/*
  * XML Security Library (http://www.aleksey.com/xmlsec).
  *
  * Common XML utility functions
@@ -6,7 +6,7 @@
  * This is free software; see Copyright file in the source
  * distribution for preciese wording.
  *
- * Copyright (C) 2002-2003 Aleksey Sanin <aleksey@aleksey.com>
+ * Copyright (C) 2002-2016 Aleksey Sanin <aleksey@aleksey.com>. All Rights Reserved.
  */
 #ifndef __XMLSEC_TREE_H__
 #define __XMLSEC_TREE_H__
@@ -30,11 +30,17 @@ extern "C" {
 #define xmlSecNodeGetName(node) \
     (((node)) ? ((const char*)((node)->name)) : NULL)
 
+XMLSEC_EXPORT const xmlChar*	xmlSecGetDefaultLineFeed(void);
+XMLSEC_EXPORT void		xmlSecSetDefaultLineFeed(const xmlChar *linefeed);
+
 XMLSEC_EXPORT const xmlChar*    xmlSecGetNodeNsHref     (const xmlNodePtr cur);
 XMLSEC_EXPORT int               xmlSecCheckNodeName     (const xmlNodePtr cur,
                                                          const xmlChar *name,
                                                          const xmlChar *ns);
 XMLSEC_EXPORT xmlNodePtr        xmlSecGetNextElementNode(xmlNodePtr cur);
+XMLSEC_EXPORT xmlNodePtr        xmlSecFindSibling       (const xmlNodePtr cur,
+                                                         const xmlChar *name,
+                                                         const xmlChar *ns);
 XMLSEC_EXPORT xmlNodePtr        xmlSecFindChild         (const xmlNodePtr parent,
                                                          const xmlChar *name,
                                                          const xmlChar *ns);
@@ -45,6 +51,9 @@ XMLSEC_EXPORT xmlNodePtr        xmlSecFindNode          (const xmlNodePtr parent
                                                          const xmlChar *name,
                                                          const xmlChar *ns);
 XMLSEC_EXPORT xmlNodePtr        xmlSecAddChild          (xmlNodePtr parent,
+                                                         const xmlChar *name,
+                                                         const xmlChar *ns);
+XMLSEC_EXPORT xmlNodePtr        xmlSecEnsureEmptyChild  (xmlNodePtr parent,
                                                          const xmlChar *name,
                                                          const xmlChar *ns);
 XMLSEC_EXPORT xmlNodePtr        xmlSecAddChildNode      (xmlNodePtr parent,
@@ -82,13 +91,6 @@ XMLSEC_EXPORT int               xmlSecNodeEncodeAndSetContent
 XMLSEC_EXPORT void              xmlSecAddIDs            (xmlDocPtr doc,
                                                          xmlNodePtr cur,
                                                          const xmlChar** ids);
-XMLSEC_EXPORT int               xmlSecGenerateAndAddID  (xmlNodePtr node,
-                                                         const xmlChar* attrName,
-                                                         const xmlChar* prefix,
-                                                         xmlSecSize len);
-XMLSEC_EXPORT xmlChar*          xmlSecGenerateID        (const xmlChar* prefix,
-                                                         xmlSecSize len);
-
 XMLSEC_EXPORT xmlDocPtr         xmlSecCreateTree        (const xmlChar* rootNodeName,
                                                          const xmlChar* rootNodeNs);
 XMLSEC_EXPORT int               xmlSecIsEmptyNode       (xmlNodePtr node);

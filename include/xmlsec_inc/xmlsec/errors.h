@@ -1,4 +1,4 @@
-/**
+/*
  * XML Security Library (http://www.aleksey.com/xmlsec).
  *
  * Error codes and error reporting functions.
@@ -6,7 +6,7 @@
  * This is free software; see Copyright file in the source
  * distribution for preciese wording.
  *
- * Copyright (C) 2002-2003 Aleksey Sanin <aleksey@aleksey.com>
+ * Copyright (C) 2002-2016 Aleksey Sanin <aleksey@aleksey.com>. All Rights Reserved.
  */
 #ifndef __XMLSEC_ERRORS_H__
 #define __XMLSEC_ERRORS_H__
@@ -23,7 +23,7 @@ extern "C" {
 /**
  * XMLSEC_ERRORS_R_XMLSEC_FAILED:
  *
- * An XMLSec function failed (error subject is the failed function).
+ * An XMLSec function failed.
  */
 #define XMLSEC_ERRORS_R_XMLSEC_FAILED                   1
 
@@ -44,21 +44,21 @@ extern "C" {
 /**
  * XMLSEC_ERRORS_R_CRYPTO_FAILED:
  *
- * Crypto (OpenSSL) function failed (error subject is the failed function).
+ * Crypto (e.g. OpenSSL) function failed.
  */
 #define XMLSEC_ERRORS_R_CRYPTO_FAILED                   4
 
 /**
  * XMLSEC_ERRORS_R_XML_FAILED:
  *
- * LibXML function failed (error subject is the failed function).
+ * LibXML function failed.
  */
 #define XMLSEC_ERRORS_R_XML_FAILED                      5
 
 /**
  * XMLSEC_ERRORS_R_XSLT_FAILED:
  *
- * LibXSLT function failed (error subject is the failed function).
+ * LibXSLT function failed.
  */
 #define XMLSEC_ERRORS_R_XSLT_FAILED                     6
 
@@ -84,6 +84,13 @@ extern "C" {
  * Feature is not implemented.
  */
 #define XMLSEC_ERRORS_R_NOT_IMPLEMENTED                 9
+
+/**
+ * XMLSEC_ERRORS_R_INVALID_CONFIG:
+ *
+ * The configuration is invalid.
+ */
+#define XMLSEC_ERRORS_R_INVALID_CONFIG                  10
 
 /**
  * XMLSEC_ERRORS_R_INVALID_SIZE:
@@ -142,30 +149,37 @@ extern "C" {
 #define XMLSEC_ERRORS_R_DATA_NOT_MATCH                  18
 
 /**
+ * XMLSEC_ERRORS_R_INVALID_VERSION:
+ *
+ * Version mismatch.
+ */
+#define XMLSEC_ERRORS_R_INVALID_VERSION                 19
+
+/**
  * XMLSEC_ERRORS_R_INVALID_NODE:
  *
- * Invalid node (error subject is the node name).
+ * Invalid node.
  */
 #define XMLSEC_ERRORS_R_INVALID_NODE                    21
 
 /**
  * XMLSEC_ERRORS_R_INVALID_NODE_CONTENT:
  *
- * Invalid node content (error subject is the node name).
+ * Invalid node content.
  */
 #define XMLSEC_ERRORS_R_INVALID_NODE_CONTENT            22
 
 /**
  * XMLSEC_ERRORS_R_INVALID_NODE_ATTRIBUTE:
  *
- * Invalid node attribute (error subject is the node name).
+ * Invalid node attribute.
  */
 #define XMLSEC_ERRORS_R_INVALID_NODE_ATTRIBUTE          23
 
 /**
  * XMLSEC_ERRORS_R_MISSING_NODE_ATTRIBUTE:
  *
- * Missing node attribute (error subject is the node name).
+ * Missing node attribute.
  */
 #define XMLSEC_ERRORS_R_MISSING_NODE_ATTRIBUTE          25
 
@@ -179,21 +193,21 @@ extern "C" {
 /**
  * XMLSEC_ERRORS_R_UNEXPECTED_NODE:
  *
- * Unexpected node (error subject is the node name).
+ * Unexpected node.
  */
 #define XMLSEC_ERRORS_R_UNEXPECTED_NODE                 27
 
 /**
  * XMLSEC_ERRORS_R_NODE_NOT_FOUND:
  *
- * Node not found (error subject is the required node name).
+ * Node not found.
  */
 #define XMLSEC_ERRORS_R_NODE_NOT_FOUND                  28
 
 /**
  * XMLSEC_ERRORS_R_INVALID_TRANSFORM:
  *
- * This transform is invlaid here.
+ * This transform is invalid.
  */
 #define XMLSEC_ERRORS_R_INVALID_TRANSFORM               31
 
@@ -235,7 +249,7 @@ extern "C" {
 /**
  * XMLSEC_ERRORS_R_KEY_DATA_NOT_FOUND:
  *
- * Data is not found (error subject is the data name).
+ * Data is not found.
  */
 #define XMLSEC_ERRORS_R_KEY_DATA_NOT_FOUND              42
 
@@ -370,7 +384,7 @@ extern "C" {
  * xmlSecErrorsCallback:
  * @file:               the error location file name (__FILE__ macro).
  * @line:               the error location line number (__LINE__ macro).
- * @func:               the error location function name (__FUNCTION__ macro).
+ * @func:               the error location function name (__func__ macro).
  * @errorObject:        the error specific error object
  * @errorSubject:       the error specific error subject.
  * @reason:             the error code.
@@ -407,7 +421,7 @@ XMLSEC_EXPORT const char*       xmlSecErrorsGetMsg              (xmlSecSize pos)
 
 /* __FUNCTION__ is defined for MSC compiler < MS VS .NET 2003 */
 #if defined(_MSC_VER) && (_MSC_VER >= 1300)
-#define __XMLSEC_FUNCTION__  __FUNCTION__
+#define __XMLSEC_FUNCTION__ __FUNCTION__
 #endif /* _MSC_VER */
 
 /* fallback for __FUNCTION__ */
@@ -435,7 +449,7 @@ XMLSEC_EXPORT const char*       xmlSecErrorsGetMsg              (xmlSecSize pos)
  * Macro. Returns @str if it is not NULL or pointer to "NULL" otherwise.
  */
 #define xmlSecErrorsSafeString(str) \
-        (((str) != NULL) ? ((char*)(str)) : (char*)"NULL")
+        (((str) != NULL) ? ((const char*)(str)) : (const char*)"NULL")
 
 /**
  * XMLSEC_ERRORS_NO_MESSAGE:
@@ -452,8 +466,6 @@ XMLSEC_EXPORT void xmlSecError                          (const char* file,
                                                          const char* errorSubject,
                                                          int reason,
                                                          const char* msg, ...) XMLSEC_ERRORS_PRINTF_ATTRIBUTE;
-
-
 
 /**********************************************************************
  *
@@ -492,7 +504,6 @@ XMLSEC_EXPORT void xmlSecError                          (const char* file,
                         XMLSEC_ERRORS_NO_MESSAGE); \
             return(ret); \
         }
-
 
 
 #ifdef __cplusplus
