@@ -6,7 +6,7 @@ include_directories(../../../include/xmlsec_inc/)
 include_directories(../../../include/xmlsec_inc/)
 include_directories(../include/)
 
-add_definitions(-DUNICODE -D_UNICODE -DNOCRYPT -DMIX_BORINGSSL -D_WIN32 -DIN_XMLSEC_CRYPTO -DXMLSEC_CRYPTO_DYNAMIC_LOADING=1)
+add_definitions(-DUNICODE -D_UNICODE -DNOCRYPT -DMIX_BORINGSSL -D_WIN32)
 
 set(
     ARCH_SOURCES
@@ -33,7 +33,7 @@ LINK_DIRECTORIES(
 )
 
 ADD_LIBRARY(
-  libxmlsec-openssl SHARED
+  libxmlsec-openssl-crypto SHARED
 
   app.c
   bn.c
@@ -52,5 +52,5 @@ ADD_LIBRARY(
   x509vfy.c 
 )
 
-target_link_libraries(libxmlsec-openssl libxmlsec)
-target_link_libraries(libxmlsec-openssl libcrypto)
+target_link_libraries(libxmlsec-openssl-crypto libxmlsec)
+target_link_libraries(libxmlsec-openssl-crypto libcrypto)

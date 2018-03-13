@@ -6,7 +6,7 @@ include_directories(../../include/xmlsec_inc/)
 include_directories(../../include/xmlsec_inc/)
 include_directories(./include/)
 
-add_definitions(-DUNICODE -D_UNICODE -DNOCRYPT -DMIX_BORINGSSL -DPACKAGE=\"xmlsec\" -DXMLSEC_DL_WIN32 -DIN_XMLSEC -D_WIN32 -DIN_XMLSEC_CRYPTO)
+add_definitions(-DUNICODE -D_UNICODE -DNOCRYPT -DMIX_BORINGSSL -D_WIN32 -DXMLSEC_DL_WIN32 -DPACKAGE=\"xmlsec\")
 
 set(
     ARCH_SOURCES
@@ -88,6 +88,47 @@ ADD_LIBRARY(
 target_link_libraries(libxmlsec-openssl libxml2)
 target_link_libraries(libxmlsec-openssl libxslt)
 target_link_libraries(libxmlsec-openssl libcrypto)
+
+
+
+ADD_LIBRARY(
+  libxmlsec SHARED
+
+  app.c
+  base64.c
+  bn.c
+  buffer.c
+  c14n.c
+  dl.c
+  enveloped.c
+  errors.c
+  io.c
+  keyinfo.c
+  keys.c
+  keysdata.c
+  keysmngr.c
+  kw_aes_des.c
+  list.c
+  membuf.c
+  nodeset.c
+  parser.c
+  relationship.c
+  strings.c
+  templates.c
+  transforms.c
+  x509.c
+  xmldsig.c
+  xmlenc.c
+  xmlsec.c
+  xmltree.c
+  xpath.c
+  xslt.c
+
+)
+
+target_link_libraries(libxmlsec libxml2)
+target_link_libraries(libxmlsec libxslt)
+
 
 
 

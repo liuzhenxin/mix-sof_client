@@ -1,6 +1,6 @@
 cmake_minimum_required (VERSION 2.8.10)
 
-project (mix-x)
+project (mix-sof_client)
 
 set(CompilerFlags
         CMAKE_CXX_FLAGS
@@ -35,7 +35,7 @@ add_subdirectory(sof_client)
 
 ##
 
-#add_subdirectory(libxmlsec/openssl)
+add_subdirectory(libxmlsec/openssl)
 
 
 add_subdirectory(libxmlsec)
