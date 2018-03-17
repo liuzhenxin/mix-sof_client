@@ -79,6 +79,15 @@ xmlSecOpenSSLEvpDigestCheckId(xmlSecTransformPtr transform) {
     } else
 #endif /* XMLSEC_NO_SHA1 */
 
+
+#ifndef XMLSEC_NO_SM3
+		if (xmlSecTransformCheckId(transform, xmlSecOpenSSLTransformSM3Id)) {
+			return(1);
+		}
+		else
+#endif /* XMLSEC_NO_SM3 */
+
+
 #ifndef XMLSEC_NO_SHA224
     if(xmlSecTransformCheckId(transform, xmlSecOpenSSLTransformSha224Id)) {
         return(1);
@@ -156,6 +165,13 @@ xmlSecOpenSSLEvpDigestInitialize(xmlSecTransformPtr transform) {
         ctx->digest = EVP_sha1();
     } else
 #endif /* XMLSEC_NO_SHA1 */
+
+#ifndef XMLSEC_NO_SM3
+		if (xmlSecTransformCheckId(transform, xmlSecOpenSSLTransformSM3Id)) {
+			ctx->digest = EVP_sha1();
+		}
+		else
+#endif /* XMLSEC_NO_SM3 */
 
 #ifndef XMLSEC_NO_SHA224
     if(xmlSecTransformCheckId(transform, xmlSecOpenSSLTransformSha224Id)) {
@@ -509,6 +525,54 @@ xmlSecOpenSSLTransformSha1GetKlass(void) {
     return(&xmlSecOpenSSLSha1Klass);
 }
 #endif /* XMLSEC_NO_SHA1 */
+
+
+
+#ifndef XMLSEC_NO_SM3
+/******************************************************************************
+*
+* SM3
+*
+*****************************************************************************/
+static xmlSecTransformKlass xmlSecOpenSSLSM3Klass = {
+	/* klass/object sizes */
+	sizeof(xmlSecTransformKlass),               /* xmlSecSize klassSize */
+	xmlSecOpenSSLEvpDigestSize,                 /* xmlSecSize objSize */
+
+	xmlSecNameSM3,                             /* const xmlChar* name; */
+	xmlSecHrefSM3,                             /* const xmlChar* href; */
+	xmlSecTransformUsageDigestMethod,           /* xmlSecTransformUsage usage; */
+
+	xmlSecOpenSSLEvpDigestInitialize,           /* xmlSecTransformInitializeMethod initialize; */
+	xmlSecOpenSSLEvpDigestFinalize,             /* xmlSecTransformFinalizeMethod finalize; */
+	NULL,                                       /* xmlSecTransformNodeReadMethod readNode; */
+	NULL,                                       /* xmlSecTransformNodeWriteMethod writeNode; */
+	NULL,                                       /* xmlSecTransformSetKeyReqMethod setKeyReq; */
+	NULL,                                       /* xmlSecTransformSetKeyMethod setKey; */
+	xmlSecOpenSSLEvpDigestVerify,               /* xmlSecTransformVerifyMethod verify; */
+	xmlSecTransformDefaultGetDataType,          /* xmlSecTransformGetDataTypeMethod getDataType; */
+	xmlSecTransformDefaultPushBin,              /* xmlSecTransformPushBinMethod pushBin; */
+	xmlSecTransformDefaultPopBin,               /* xmlSecTransformPopBinMethod popBin; */
+	NULL,                                       /* xmlSecTransformPushXmlMethod pushXml; */
+	NULL,                                       /* xmlSecTransformPopXmlMethod popXml; */
+	xmlSecOpenSSLEvpDigestExecute,              /* xmlSecTransformExecuteMethod execute; */
+
+	NULL,                                       /* void* reserved0; */
+	NULL,                                       /* void* reserved1; */
+};
+
+/**
+* xmlSecOpenSSLTransformSM3GetKlass:
+*
+* SHA-1 digest transform klass.
+*
+* Returns: pointer to SHA-1 digest transform klass.
+*/
+xmlSecTransformId
+xmlSecOpenSSLTransformSM3GetKlass(void) {
+	return(&xmlSecOpenSSLSM3Klass);
+}
+#endif /* XMLSEC_NO_SM3 */
 
 #ifndef XMLSEC_NO_SHA224
 /******************************************************************************

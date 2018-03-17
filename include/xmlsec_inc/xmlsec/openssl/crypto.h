@@ -652,6 +652,20 @@ XMLSEC_CRYPTO_EXPORT xmlSecTransformId xmlSecOpenSSLTransformRsaRipemd160GetKlas
 XMLSEC_CRYPTO_EXPORT xmlSecTransformId xmlSecOpenSSLTransformRsaSha1GetKlass(void);
 #endif /* XMLSEC_NO_SHA1 */
 
+
+#ifndef XMLSEC_NO_SM3
+#define xmlSecOpenSSLTransformRsaSM3Id \
+        xmlSecOpenSSLTransformRsaSM3GetKlass()
+XMLSEC_CRYPTO_EXPORT xmlSecTransformId xmlSecOpenSSLTransformRsaSM3GetKlass(void);
+
+#define xmlSecOpenSSLTransformSM2SM3Id \
+        xmlSecOpenSSLTransformSM2SM3GetKlass()
+XMLSEC_CRYPTO_EXPORT xmlSecTransformId xmlSecOpenSSLTransformSM2SM3GetKlass(void);
+#endif /* XMLSEC_NO_SM3 */
+
+
+
+
 #ifndef XMLSEC_NO_SHA224
 /**
  * xmlSecOpenSSLTransformRsaSha224Id:
@@ -732,6 +746,25 @@ XMLSEC_CRYPTO_EXPORT xmlSecTransformId xmlSecOpenSSLTransformRsaOaepGetKlass(voi
         xmlSecOpenSSLTransformSha1GetKlass()
 XMLSEC_CRYPTO_EXPORT xmlSecTransformId xmlSecOpenSSLTransformSha1GetKlass(void);
 #endif /* XMLSEC_NO_SHA1 */
+
+
+/********************************************************************
+*
+* SHA1 transform
+*
+*******************************************************************/
+#ifndef XMLSEC_NO_SM3
+/**
+* xmlSecOpenSSLTransformSM3Id:
+*
+* The SM3 digest transform klass.
+*/
+#define xmlSecOpenSSLTransformSM3Id \
+        xmlSecOpenSSLTransformSM3GetKlass()
+XMLSEC_CRYPTO_EXPORT xmlSecTransformId xmlSecOpenSSLTransformSM3GetKlass(void);
+#endif /* XMLSEC_NO_SM3 */
+
+
 
 
 /********************************************************************

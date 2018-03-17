@@ -383,6 +383,13 @@ XMLSEC_EXPORT_VAR const xmlChar xmlSecHrefRsaRipemd160[];
 XMLSEC_EXPORT_VAR const xmlChar xmlSecNameRsaSha1[];
 XMLSEC_EXPORT_VAR const xmlChar xmlSecHrefRsaSha1[];
 
+XMLSEC_EXPORT_VAR const xmlChar xmlSecNameRsaSM3[];
+XMLSEC_EXPORT_VAR const xmlChar xmlSecHrefRsaSM3[];
+
+XMLSEC_EXPORT_VAR const xmlChar xmlSecNameSM2SM3[];
+XMLSEC_EXPORT_VAR const xmlChar xmlSecHrefSM2SM3[];
+
+
 XMLSEC_EXPORT_VAR const xmlChar xmlSecNameRsaSha224[];
 XMLSEC_EXPORT_VAR const xmlChar xmlSecHrefRsaSha224[];
 
@@ -427,6 +434,9 @@ XMLSEC_EXPORT_VAR const xmlChar xmlSecHrefGostR3411_2012_512[];
  ************************************************************************/
 XMLSEC_EXPORT_VAR const xmlChar xmlSecNameSha1[];
 XMLSEC_EXPORT_VAR const xmlChar xmlSecHrefSha1[];
+
+XMLSEC_EXPORT_VAR const xmlChar xmlSecNameSM3[];
+XMLSEC_EXPORT_VAR const xmlChar xmlSecHrefSM3[];
 
 XMLSEC_EXPORT_VAR const xmlChar xmlSecNameSha224[];
 XMLSEC_EXPORT_VAR const xmlChar xmlSecHrefSha224[];

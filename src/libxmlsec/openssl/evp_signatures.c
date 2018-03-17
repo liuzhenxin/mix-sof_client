@@ -633,6 +633,81 @@ xmlSecOpenSSLTransformRsaSha1GetKlass(void) {
 
 #endif /* XMLSEC_NO_SHA1 */
 
+
+
+#ifndef XMLSEC_NO_SM3
+/****************************************************************************
+*
+* RSA-SM3 signature transform
+*
+***************************************************************************/
+static xmlSecTransformKlass xmlSecOpenSSLRsaSM3Klass = {
+	/* klass/object sizes */
+	sizeof(xmlSecTransformKlass),               /* xmlSecSize klassSize */
+	xmlSecOpenSSLEvpSignatureSize,              /* xmlSecSize objSize */
+
+	xmlSecNameRsaSM3,                          /* const xmlChar* name; */
+	xmlSecHrefRsaSM3,                          /* const xmlChar* href; */
+	xmlSecTransformUsageSignatureMethod,        /* xmlSecTransformUsage usage; */
+
+	xmlSecOpenSSLEvpSignatureInitialize,        /* xmlSecTransformInitializeMethod initialize; */
+	xmlSecOpenSSLEvpSignatureFinalize,          /* xmlSecTransformFinalizeMethod finalize; */
+	NULL,                                       /* xmlSecTransformNodeReadMethod readNode; */
+	NULL,                                       /* xmlSecTransformNodeWriteMethod writeNode; */
+	xmlSecOpenSSLEvpSignatureSetKeyReq,         /* xmlSecTransformSetKeyReqMethod setKeyReq; */
+	xmlSecOpenSSLEvpSignatureSetKey,            /* xmlSecTransformSetKeyMethod setKey; */
+	xmlSecOpenSSLEvpSignatureVerify,            /* xmlSecTransformVerifyMethod verify; */
+	xmlSecTransformDefaultGetDataType,          /* xmlSecTransformGetDataTypeMethod getDataType; */
+	xmlSecTransformDefaultPushBin,              /* xmlSecTransformPushBinMethod pushBin; */
+	xmlSecTransformDefaultPopBin,               /* xmlSecTransformPopBinMethod popBin; */
+	NULL,                                       /* xmlSecTransformPushXmlMethod pushXml; */
+	NULL,                                       /* xmlSecTransformPopXmlMethod popXml; */
+	xmlSecOpenSSLEvpSignatureExecute,           /* xmlSecTransformExecuteMethod execute; */
+
+	NULL,                                       /* void* reserved0; */
+	NULL,                                       /* void* reserved1; */
+};
+
+static xmlSecTransformKlass xmlSecOpenSSLSM2SM3Klass = {
+	/* klass/object sizes */
+	sizeof(xmlSecTransformKlass),               /* xmlSecSize klassSize */
+	xmlSecOpenSSLEvpSignatureSize,              /* xmlSecSize objSize */
+
+	xmlSecNameSM2SM3,                          /* const xmlChar* name; */
+	xmlSecHrefSM2SM3,                          /* const xmlChar* href; */
+	xmlSecTransformUsageSignatureMethod,        /* xmlSecTransformUsage usage; */
+
+	xmlSecOpenSSLEvpSignatureInitialize,        /* xmlSecTransformInitializeMethod initialize; */
+	xmlSecOpenSSLEvpSignatureFinalize,          /* xmlSecTransformFinalizeMethod finalize; */
+	NULL,                                       /* xmlSecTransformNodeReadMethod readNode; */
+	NULL,                                       /* xmlSecTransformNodeWriteMethod writeNode; */
+	xmlSecOpenSSLEvpSignatureSetKeyReq,         /* xmlSecTransformSetKeyReqMethod setKeyReq; */
+	xmlSecOpenSSLEvpSignatureSetKey,            /* xmlSecTransformSetKeyMethod setKey; */
+	xmlSecOpenSSLEvpSignatureVerify,            /* xmlSecTransformVerifyMethod verify; */
+	xmlSecTransformDefaultGetDataType,          /* xmlSecTransformGetDataTypeMethod getDataType; */
+	xmlSecTransformDefaultPushBin,              /* xmlSecTransformPushBinMethod pushBin; */
+	xmlSecTransformDefaultPopBin,               /* xmlSecTransformPopBinMethod popBin; */
+	NULL,                                       /* xmlSecTransformPushXmlMethod pushXml; */
+	NULL,                                       /* xmlSecTransformPopXmlMethod popXml; */
+	xmlSecOpenSSLEvpSignatureExecute,           /* xmlSecTransformExecuteMethod execute; */
+
+	NULL,                                       /* void* reserved0; */
+	NULL,                                       /* void* reserved1; */
+};
+
+xmlSecTransformId
+xmlSecOpenSSLTransformRsaSM3GetKlass(void) {
+	return(&xmlSecOpenSSLRsaSM3Klass);
+}
+
+xmlSecTransformId
+xmlSecOpenSSLTransformSM2SM3GetKlass(void) {
+	return(&xmlSecOpenSSLSM2SM3Klass);
+}
+
+
+#endif /* XMLSEC_NO_SM3 */
+
 #ifndef XMLSEC_NO_SHA224
 /****************************************************************************
  *

@@ -286,6 +286,7 @@ xmlSecDSigCtxSign(xmlSecDSigCtxPtr dsigCtx, xmlNodePtr tmpl) {
         xmlSecInternalError("xmlSecDSigCtxSignatureProcessNode", NULL);
         return(-1);
     }
+#if 0 || 0
     xmlSecAssert2(dsigCtx->signMethod != NULL, -1);
     xmlSecAssert2(dsigCtx->signValueNode != NULL, -1);
 
@@ -308,6 +309,7 @@ xmlSecDSigCtxSign(xmlSecDSigCtxPtr dsigCtx, xmlNodePtr tmpl) {
 
     /* set success status and we are done */
     dsigCtx->status = xmlSecDSigStatusSucceeded;
+#endif
     return(0);
 }
 
@@ -516,7 +518,7 @@ xmlSecDSigCtxProcessSignatureNode(xmlSecDSigCtxPtr dsigCtx, xmlNodePtr node) {
     if(dsigCtx->status != xmlSecDSigStatusUnknown) {
         return(0);
     }
-
+#if 0 || 0
     /* if we need to write result to xml node then we need base64 encode result */
     if(dsigCtx->operation == xmlSecTransformOperationSign) {
         xmlSecTransformPtr base64Encode;
@@ -557,6 +559,7 @@ xmlSecDSigCtxProcessSignatureNode(xmlSecDSigCtxPtr dsigCtx, xmlNodePtr node) {
         xmlSecNotImplementedError("binary c14n transforms");
         return(-1);
     }
+#endif
     return(0);
 }
 
@@ -743,19 +746,20 @@ xmlSecDSigCtxProcessReferences(xmlSecDSigCtxPtr dsigCtx, xmlNodePtr firstReferen
             return(-1);
         }
 
-        /* process */
+        /* process by liqiangqiang digest*/
         ret = xmlSecDSigReferenceCtxProcessNode(dsigRefCtx, cur);
         if(ret < 0) {
             xmlSecInternalError("xmlSecDSigReferenceCtxProcessNode",
                                 xmlSecNodeGetName(cur));
             return(-1);
         }
-
+#if 0 || 0
         /* bail out if next Reference processing failed */
         if(dsigRefCtx->status != xmlSecDSigStatusSucceeded) {
             dsigCtx->status = xmlSecDSigStatusInvalid;
             return(0);
         }
+#endif
     }
 
     /* done */
@@ -1303,7 +1307,7 @@ xmlSecDSigReferenceCtxProcessNode(xmlSecDSigReferenceCtxPtr dsigRefCtx, xmlNodeP
     dsigRefCtx->id  = xmlGetProp(node, xmlSecAttrId);
     dsigRefCtx->type= xmlGetProp(node, xmlSecAttrType);
 
-    /* set start URI (and check that it is enabled!) */
+    /* set start URI (and check that it is enabled!) by liqangqiang url*/
     ret = xmlSecTransformCtxSetUri(transformCtx, dsigRefCtx->uri, node);
     if(ret < 0) {
         xmlSecInternalError2("xmlSecTransformCtxSetUri", NULL,
@@ -1406,7 +1410,7 @@ xmlSecDSigReferenceCtxProcessNode(xmlSecDSigReferenceCtxPtr dsigRefCtx, xmlNodeP
         return(-1);
     }
     dsigRefCtx->result = transformCtx->result;
-
+#if 0 || 0
     if(dsigRefCtx->dsigCtx->operation == xmlSecTransformOperationSign) {
         if((dsigRefCtx->result == NULL) || (xmlSecBufferGetData(dsigRefCtx->result) == NULL)) {
             xmlSecInternalError("xmlSecTransformCtxExecute", NULL);
@@ -1436,7 +1440,7 @@ xmlSecDSigReferenceCtxProcessNode(xmlSecDSigReferenceCtxPtr dsigRefCtx, xmlNodeP
             dsigRefCtx->status = xmlSecDSigStatusInvalid;
         }
     }
-
+#endif
     return(0);
 }
 

@@ -354,6 +354,14 @@ XMLSEC_EXPORT xmlSecTransformId                 xmlSecTransformRsaRipemd160GetKl
  */
 #define xmlSecTransformRsaSha1Id                xmlSecTransformRsaSha1GetKlass()
 XMLSEC_EXPORT xmlSecTransformId                 xmlSecTransformRsaSha1GetKlass  (void);
+
+
+#define xmlSecTransformRsaSM3Id                xmlSecTransformRsaSM3GetKlass()
+XMLSEC_EXPORT xmlSecTransformId                 xmlSecTransformRsaSM3GetKlass(void);
+
+#define xmlSecTransformSM2SM3Id                xmlSecTransformSM2SM3GetKlass()
+XMLSEC_EXPORT xmlSecTransformId                 xmlSecTransformSM2SM3GetKlass(void);
+
 /**
  * xmlSecTransformRsaSha224Id:
  *

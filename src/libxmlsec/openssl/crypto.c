@@ -240,6 +240,12 @@ xmlSecCryptoGetFunctions_openssl(void) {
     gXmlSecOpenSSLFunctions->transformRsaSha1GetKlass           = xmlSecOpenSSLTransformRsaSha1GetKlass;
 #endif /* XMLSEC_NO_SHA1 */
 
+
+#ifndef XMLSEC_NO_SM3
+	gXmlSecOpenSSLFunctions->transformRsaSM3GetKlass = xmlSecOpenSSLTransformRsaSM3GetKlass;
+	gXmlSecOpenSSLFunctions->transformSM2SM3GetKlass = xmlSecOpenSSLTransformSM2SM3GetKlass;
+#endif /* XMLSEC_NO_SHA1 */
+
 #ifndef XMLSEC_NO_SHA224
     gXmlSecOpenSSLFunctions->transformRsaSha224GetKlass         = xmlSecOpenSSLTransformRsaSha224GetKlass;
 #endif /* XMLSEC_NO_SHA224 */

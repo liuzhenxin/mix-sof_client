@@ -374,6 +374,12 @@ const xmlChar xmlSecHrefRsaRipemd160[]          = "http://www.w3.org/2001/04/xml
 const xmlChar xmlSecNameRsaSha1[]               = "rsa-sha1";
 const xmlChar xmlSecHrefRsaSha1[]               = "http://www.w3.org/2000/09/xmldsig#rsa-sha1";
 
+const xmlChar xmlSecNameRsaSM3[] = "rsa-sm3";
+const xmlChar xmlSecHrefRsaSM3[] = "http://www.w3.org/2000/09/xmldsig#rsa-sm3";
+
+const xmlChar xmlSecNameSM2SM3[] = "sm2-sm3";
+const xmlChar xmlSecHrefSM2SM3[] = "http://www.w3.org/2000/09/xmldsig#sm2-sm3";
+
 const xmlChar xmlSecNameRsaSha224[]             = "rsa-sha224";
 const xmlChar xmlSecHrefRsaSha224[]             = "http://www.w3.org/2001/04/xmldsig-more#rsa-sha224";
 
@@ -422,6 +428,9 @@ const xmlChar xmlSecHrefGostR3411_2012_512[]                  = "urn:ietf:params
  ************************************************************************/
 const xmlChar xmlSecNameSha1[]                  = "sha1";
 const xmlChar xmlSecHrefSha1[]                  = "http://www.w3.org/2000/09/xmldsig#sha1";
+
+const xmlChar xmlSecNameSM3[] = "sm3";
+const xmlChar xmlSecHrefSM3[] = "http://www.w3.org/2000/09/xmldsig#sm3";
 
 const xmlChar xmlSecNameSha224[]                = "sha224";
 const xmlChar xmlSecHrefSha224[]                = "http://www.w3.org/2001/04/xmldsig-more#sha224";

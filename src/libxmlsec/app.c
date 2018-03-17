@@ -900,6 +900,26 @@ xmlSecTransformRsaSha1GetKlass(void) {
     return(xmlSecCryptoDLGetFunctions()->transformRsaSha1GetKlass());
 }
 
+xmlSecTransformId
+xmlSecTransformRsaSM3GetKlass(void) {
+	if ((xmlSecCryptoDLGetFunctions() == NULL) || (xmlSecCryptoDLGetFunctions()->transformRsaSM3GetKlass == NULL)) {
+		xmlSecNotImplementedError("transformRsaSM3GetKlass");
+		return(xmlSecTransformIdUnknown);
+	}
+
+	return(xmlSecCryptoDLGetFunctions()->transformRsaSM3GetKlass());
+}
+
+xmlSecTransformId
+xmlSecTransformSM2SM3GetKlass(void) {
+	if ((xmlSecCryptoDLGetFunctions() == NULL) || (xmlSecCryptoDLGetFunctions()->transformSM2SM3GetKlass == NULL)) {
+		xmlSecNotImplementedError("transformSM2SM3GetKlass");
+		return(xmlSecTransformIdUnknown);
+	}
+
+	return(xmlSecCryptoDLGetFunctions()->transformSM2SM3GetKlass());
+}
+
 /**
  * xmlSecTransformRsaSha224GetKlass:
  *

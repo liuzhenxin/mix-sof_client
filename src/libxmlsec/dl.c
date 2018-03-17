@@ -776,6 +776,18 @@ xmlSecCryptoDLFunctionsRegisterKeyDataAndTransforms(struct _xmlSecCryptoDLFuncti
         return(-1);
     }
 
+	if ((functions->transformRsaSM3GetKlass != NULL) && xmlSecTransformIdsRegister(functions->transformRsaSM3GetKlass()) < 0) {
+		xmlSecInternalError("xmlSecTransformIdsRegister",
+			xmlSecTransformKlassGetName(functions->transformRsaSM3GetKlass()));
+		return(-1);
+	}
+
+	if ((functions->transformSM2SM3GetKlass != NULL) && xmlSecTransformIdsRegister(functions->transformSM2SM3GetKlass()) < 0) {
+		xmlSecInternalError("xmlSecTransformIdsRegister",
+			xmlSecTransformKlassGetName(functions->transformSM2SM3GetKlass()));
+		return(-1);
+	}
+
     if((functions->transformRsaSha224GetKlass != NULL) && xmlSecTransformIdsRegister(functions->transformRsaSha224GetKlass()) < 0) {
         xmlSecInternalError("xmlSecTransformIdsRegister",
                             xmlSecTransformKlassGetName(functions->transformRsaSha224GetKlass()));

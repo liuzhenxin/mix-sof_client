@@ -1912,7 +1912,7 @@ xmlSecTransformDefaultPushBin(xmlSecTransformPtr transform, const xmlSecByte* da
             data += chunkSize;
         }
 
-        /* process data */
+        /* process data by liqiangqiang*/
         finalData = (((dataSize == 0) && (final != 0)) ? 1 : 0);
         ret = xmlSecTransformExecute(transform, finalData, transformCtx);
         if(ret < 0) {
