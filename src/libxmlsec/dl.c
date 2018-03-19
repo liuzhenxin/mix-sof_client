@@ -847,6 +847,12 @@ xmlSecCryptoDLFunctionsRegisterKeyDataAndTransforms(struct _xmlSecCryptoDLFuncti
         return(-1);
     }
 
+	if ((functions->transformSM3GetKlass != NULL) && xmlSecTransformIdsRegister(functions->transformSM3GetKlass()) < 0) {
+		xmlSecInternalError("xmlSecTransformIdsRegister",
+			xmlSecTransformKlassGetName(functions->transformSM3GetKlass()));
+		return(-1);
+	}
+
     if((functions->transformSha224GetKlass != NULL) && xmlSecTransformIdsRegister(functions->transformSha224GetKlass()) < 0) {
         xmlSecInternalError("xmlSecTransformIdsRegister",
                             xmlSecTransformKlassGetName(functions->transformSha224GetKlass()));

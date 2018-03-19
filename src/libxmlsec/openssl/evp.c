@@ -1459,6 +1459,12 @@ xmlSecOpenSSLKeyDataRsaGetKlass(void) {
     return(&xmlSecOpenSSLKeyDataRsaKlass);
 }
 
+xmlSecKeyDataId
+xmlSecOpenSSLKeyDataSM2GetKlass(void) {
+	return(&xmlSecOpenSSLKeyDataRsaKlass);
+}
+
+
 /**
  * xmlSecOpenSSLKeyDataRsaAdoptRsa:
  * @data:               the pointer to RSA key data.

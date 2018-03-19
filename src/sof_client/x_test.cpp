@@ -42,34 +42,6 @@ int main(int argc, char * argv[])
 		goto end;
 	}
 
-	{
-
-		
-		const char * xmlData = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" \
-			"<!-- \n" \
-			"XML Security Library example: Original XML doc file for sign3 example. \n" \
-			"-->\n" \
-			"<Envelope xmlns=\"urn:envelope\">\n" \
-			"  <Data>\n" \
-			"	Hello, World!\n" \
-			"  </Data>\n" \
-			"</Envelope>\n";
-
-		ulResult = SOF_SignDataXML(ckpFunctions, "RT_SM_CON", (BYTE*)xmlData, strlen(xmlData), signature, &signature_len);
-		if (ulResult)
-		{
-			goto end;
-		}
-
-		//ulResult = SOF_VerifySignedData(ckpFunctions, sign_cert, sign_cert_len, plain, plain_len, signature, signature_len);
-		//if (ulResult)
-		//{
-		//	goto end;
-		//}
-
-
-	}
-
 	ulResult = SOF_GetUserList(ckpFunctions, szUserList, &ulUserListLen);
 	if (ulResult)
 	{
@@ -94,11 +66,52 @@ int main(int argc, char * argv[])
 		goto end;
 	}
 
-	//ulResult = SOF_SetSignMethod(ckpFunctions, SGD_SM3_SM2);
-	//if (ulResult)
-	//{
-	//	goto end;
-	//}
+	ulResult = SOF_SetSignMethod(ckpFunctions, SGD_SM3_SM2);
+	if (ulResult)
+	{
+		goto end;
+	}
+
+
+
+	{
+
+
+		const char * xmlData = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" \
+			"<!-- \n" \
+			"XML Security Library example: Original XML doc file for sign3 example. \n" \
+			"-->\n" \
+			"<Envelope xmlns=\"urn:envelope\">\n" \
+			"  <Data>\n" \
+			"	Hello,ABCDEFG World!\n" \
+			"  </Data>\n" \
+			"</Envelope>\n";
+
+		ulResult = SOF_SignDataXML(ckpFunctions, "RT_SM_CON", (BYTE*)xmlData, strlen(xmlData), signature, &signature_len);
+		if (ulResult)
+		{
+			goto end;
+		}
+
+		ulResult = SOF_VerifySignedDataXML(ckpFunctions, signature, signature_len);
+		if (ulResult)
+		{
+			goto end;
+		}
+
+
+		for (i = 1; i < 7; i++)
+		{
+			info_len = sizeof(info);
+			memset(info, 0, info_len);
+			ulResult = SOF_GetXMLSignatureInfo(ckpFunctions, i, signature, signature_len, info, &info_len);
+			if (ulResult)
+			{
+				goto end;
+			}
+			printf("%s\n", info);
+		}
+	}
 
 	//ulResult = SOF_SignData(ckpFunctions, "RT_SM_CON", plain, plain_len, signature, &signature_len);
 	//if (ulResult)

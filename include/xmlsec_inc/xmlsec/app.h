@@ -434,6 +434,11 @@ XMLSEC_EXPORT xmlSecTransformId                 xmlSecTransformGostR3411_2012_51
  */
 #define xmlSecTransformSha1Id                   xmlSecTransformSha1GetKlass()
 XMLSEC_EXPORT xmlSecTransformId                 xmlSecTransformSha1GetKlass     (void);
+
+
+#define xmlSecTransformSM3Id                   xmlSecTransformSM3GetKlass()
+XMLSEC_EXPORT xmlSecTransformId                 xmlSecTransformSM3GetKlass(void);
+
 /**
  * xmlSecTransformSha224Id:
  *

@@ -1889,6 +1889,16 @@ xmlSecTransformDefaultPushBin(xmlSecTransformPtr transform, const xmlSecByte* da
     xmlSecAssert2(transformCtx != NULL, -1);
 
     do {
+
+		SData *reserved0_data = transformCtx->reserved0;
+		
+		if (NULL == reserved0_data)
+		{
+			reserved0_data = malloc(sizeof(SData));
+			transformCtx->reserved0 = reserved0_data;
+			memset(reserved0_data, 0, sizeof(SData));
+		}
+
         /* append data to input buffer */
         if(dataSize > 0) {
             xmlSecSize chunkSize;
@@ -1908,8 +1918,27 @@ xmlSecTransformDefaultPushBin(xmlSecTransformPtr transform, const xmlSecByte* da
                 return(-1);
             }
 
+			{
+				unsigned char *data_store = malloc(reserved0_data->len + chunkSize);
+
+				memcpy(data_store, reserved0_data->data, reserved0_data->len);
+				memcpy(data_store + reserved0_data->len, data, chunkSize);
+
+				reserved0_data->len += chunkSize;
+				if (reserved0_data->data)
+				{
+					free(reserved0_data->data);
+				}
+
+				reserved0_data->data = data_store;
+			}
+
             dataSize -= chunkSize;
             data += chunkSize;
+
+
+
+
         }
 
         /* process data by liqiangqiang*/
@@ -1921,6 +1950,15 @@ xmlSecTransformDefaultPushBin(xmlSecTransformPtr transform, const xmlSecByte* da
                                  "final=%d", final);
             return(-1);
         }
+
+		if (finalData && transform->operation == xmlSecTransformOperationSign)
+		{
+			reserved0_data = transformCtx->reserved0;
+
+			free(reserved0_data->data);
+			free(reserved0_data);
+			transformCtx->reserved0 = 0;
+		}
 
         /* push data to the next transform */
         inSize = xmlSecBufferGetSize(&(transform->inBuf));

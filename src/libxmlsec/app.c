@@ -1110,6 +1110,16 @@ xmlSecTransformSha1GetKlass(void) {
     return(xmlSecCryptoDLGetFunctions()->transformSha1GetKlass());
 }
 
+xmlSecTransformId
+xmlSecTransformSM3GetKlass(void) {
+	if ((xmlSecCryptoDLGetFunctions() == NULL) || (xmlSecCryptoDLGetFunctions()->transformSM3GetKlass == NULL)) {
+		xmlSecNotImplementedError("transformSM3GetKlass");
+		return(xmlSecTransformIdUnknown);
+	}
+
+	return(xmlSecCryptoDLGetFunctions()->transformSM3GetKlass());
+}
+
 /**
  * xmlSecTransformSha224GetKlass:
  *

@@ -168,7 +168,7 @@ xmlSecOpenSSLEvpDigestInitialize(xmlSecTransformPtr transform) {
 
 #ifndef XMLSEC_NO_SM3
 		if (xmlSecTransformCheckId(transform, xmlSecOpenSSLTransformSM3Id)) {
-			ctx->digest = EVP_sha1();
+			ctx->digest = EVP_sha512();
 		}
 		else
 #endif /* XMLSEC_NO_SM3 */
@@ -365,7 +365,32 @@ xmlSecOpenSSLEvpDigestExecute(xmlSecTransformPtr transform, int last, xmlSecTran
 
             /* copy result to output */
             if(transform->operation == xmlSecTransformOperationSign) {
-                ret = xmlSecBufferAppend(out, ctx->dgst, ctx->dgstSize);
+
+				cb_digest fDigest = transformCtx->reserved1;
+				SData * reserved0_data = transformCtx->reserved0;
+				char digest_value[128] = { 0 };
+				int digest_len = 128;
+				int result = 0;
+
+				if (fDigest)
+				{
+					result = fDigest(NULL, reserved0_data->data, reserved0_data->len, digest_value, &digest_len);
+
+					if (result)
+					{
+						xmlSecInternalError2("xmlSecBufferAppend--fDigest",
+							xmlSecTransformGetName(transform),
+							"size=%d", ctx->dgstSize);
+						return(-1);
+					}
+
+					ret = xmlSecBufferAppend(out, digest_value, digest_len);
+				}
+				else
+				{
+					ret = xmlSecBufferAppend(out, ctx->dgst, ctx->dgstSize);
+				}
+
                 if(ret < 0) {
                     xmlSecInternalError2("xmlSecBufferAppend",
                                          xmlSecTransformGetName(transform),
@@ -373,6 +398,30 @@ xmlSecOpenSSLEvpDigestExecute(xmlSecTransformPtr transform, int last, xmlSecTran
                     return(-1);
                 }
             }
+			else if (transform->operation == xmlSecTransformOperationVerify)
+			{
+				cb_digest fDigest = transformCtx->reserved1;
+				SData * reserved0_data = transformCtx->reserved0;
+				char digest_value[128] = { 0 };
+				int digest_len = 128;
+				int result = 0;
+
+				if (fDigest)
+				{
+					result = fDigest(NULL, reserved0_data->data, reserved0_data->len, digest_value, &digest_len);
+
+					if (result)
+					{
+						xmlSecInternalError2("xmlSecBufferAppend--fDigest",
+							xmlSecTransformGetName(transform),
+							"size=%d", ctx->dgstSize);
+						return(-1);
+					}
+					memcpy(ctx->dgst, digest_value, digest_len);
+					ctx->dgstSize = digest_len;
+				}
+			}
+
             transform->status = xmlSecTransformStatusFinished;
         }
     } else if(transform->status == xmlSecTransformStatusFinished) {

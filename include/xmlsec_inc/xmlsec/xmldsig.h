@@ -167,10 +167,10 @@ XMLSEC_EXPORT void              xmlSecDSigCtxDestroy            (xmlSecDSigCtxPt
 XMLSEC_EXPORT int               xmlSecDSigCtxInitialize         (xmlSecDSigCtxPtr dsigCtx,
                                                                  xmlSecKeysMngrPtr keysMngr);
 XMLSEC_EXPORT void              xmlSecDSigCtxFinalize           (xmlSecDSigCtxPtr dsigCtx);
-XMLSEC_EXPORT int               xmlSecDSigCtxSign               (xmlSecDSigCtxPtr dsigCtx,
-                                                                 xmlNodePtr tmpl);
+XMLSEC_EXPORT int               xmlSecDSigCtxSign               (xmlSecDSigCtxPtr dsigCtx, 
+                                                                 xmlNodePtr tmpl, cb_digest fDigest, cb_sign fSign);
 XMLSEC_EXPORT int               xmlSecDSigCtxVerify             (xmlSecDSigCtxPtr dsigCtx,
-                                                                 xmlNodePtr node);
+                                                                 xmlNodePtr node , cb_digest fDigest, cb_sign fSign);
 XMLSEC_EXPORT int               xmlSecDSigCtxEnableReferenceTransform(xmlSecDSigCtxPtr dsigCtx,
                                                                 xmlSecTransformId transformId);
 XMLSEC_EXPORT int               xmlSecDSigCtxEnableSignatureTransform(xmlSecDSigCtxPtr dsigCtx,

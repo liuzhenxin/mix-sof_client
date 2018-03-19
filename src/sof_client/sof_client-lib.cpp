@@ -17,11 +17,19 @@
 #include <openssl/mem.h>
 
 #include <libxml/parser.h>
+
+
+
 #include <xmlsec/templates.h>
 #include <xmlsec/app.h>
 #include <xmlsec/xmldsig.h>
 
 #include <xmlsec/keysdata.h>
+#include <xmlsec/xmltree.h>
+
+#include <modp_b64.h>
+
+#include <algorithm>
 
 
 extern "C" int CBS_asn1_ber_to_der(CBS *in, uint8_t **out, size_t *out_len);
@@ -123,6 +131,11 @@ extern "C" {
 		ULONG encrypt_method;
 		ULONG last_error;
 		ULONG retry;
+		void * p_ckpFunctions;
+		char * p_contanier;
+
+		BYTE * p_pbCert;
+		ULONG ulCertLen;
 
 	}ST_GlobalData;
 
@@ -1267,6 +1280,178 @@ end:
 	}
 
 
+	ULONG CALL_CONVENTION SOF_GetContainerType(void * p_ckpFunctions, LPSTR pContainerName, ULONG *pulContainerType)
+	{
+		CK_SKF_FUNCTION_LIST_PTR ckpFunctions = (CK_SKF_FUNCTION_LIST_PTR)p_ckpFunctions;
+		HANDLE hContainer = NULL;
+		ULONG ulResult = 0;
+
+		FILE_LOG_FMT(file_log_name, "\n%s %d %s", __FUNCTION__, __LINE__, "entering");
+		ulResult = ckpFunctions->SKF_OpenContainer(global_data.hAppHandle, pContainerName, &hContainer);
+		if (ulResult)
+		{
+			goto end;
+		}
+		FILE_LOG_FMT(file_log_name, "%s", "Open container ok");
+
+		//1表示为RSA容器，为2表示为ECC容器
+		ulResult = ckpFunctions->SKF_GetContainerType(hContainer, pulContainerType);
+		if (ulResult)
+		{
+			goto end;
+		}
+	end:
+		if (hContainer)
+		{
+			ckpFunctions->SKF_CloseContainer(hContainer);
+		}
+
+		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting\n");
+
+		ulResult = ErrorCodeConvert(ulResult);
+
+		return ulResult;
+	}
+
+
+	ULONG CALL_CONVENTION SOF_DigestData(void * p_ckpFunctions, LPSTR pContainerName, BYTE *pbDataIn, ULONG ulDataInLen, BYTE *pbDataOut, ULONG *pulDataOutLen)
+	{
+		CK_SKF_FUNCTION_LIST_PTR ckpFunctions = (CK_SKF_FUNCTION_LIST_PTR)p_ckpFunctions;
+		HANDLE hContainer = NULL;
+		ULONG ulResult = 0;
+		ULONG ulContainerType = 0;
+		HANDLE hHash = 0;
+		BYTE hash_value[1024] = { 0 };
+		ULONG hash_len = sizeof(hash_value);
+
+
+		FILE_LOG_FMT(file_log_name, "\n%s %d %s", __FUNCTION__, __LINE__, "entering");
+		FILE_LOG_FMT(file_log_name, "ContainerName: %s", pContainerName);
+		FILE_LOG_FMT(file_log_name, "%s", "DataIn: ");
+		FILE_LOG_HEX(file_log_name, pbDataIn, ulDataInLen);
+
+		ulResult = ckpFunctions->SKF_OpenContainer(global_data.hAppHandle, pContainerName, &hContainer);
+		if (ulResult)
+		{
+			goto end;
+		}
+		FILE_LOG_FMT(file_log_name, "%s", "Open container ok");
+
+		//1表示为RSA容器，为2表示为ECC容器
+		ulResult = ckpFunctions->SKF_GetContainerType(hContainer, &ulContainerType);
+		if (ulResult)
+		{
+			goto end;
+		}
+		FILE_LOG_FMT(file_log_name, "ContainerType: %d", ulContainerType);
+		FILE_LOG_FMT(file_log_name, "sign_method: %d", global_data.sign_method);
+
+
+		if (ulContainerType == 1)
+		{
+			if (global_data.sign_method == SGD_SM3_RSA)
+			{
+				ulResult = ckpFunctions->SKF_DigestInit(global_data.hDevHandle, SGD_SM3, 0, 0, 0, &hHash);
+			}
+			else if (global_data.sign_method == SGD_SHA1_RSA)
+			{
+				ulResult = ckpFunctions->SKF_DigestInit(global_data.hDevHandle, SGD_SHA1, 0, 0, 0, &hHash);
+			}
+			else if (global_data.sign_method == SGD_SHA256_RSA)
+			{
+				ulResult = ckpFunctions->SKF_DigestInit(global_data.hDevHandle, SGD_SHA256, 0, 0, 0, &hHash);
+			}
+			else
+			{
+				ulResult = SOR_PARAMETERNOTSUPPORTEERR;//SOR_UNKNOWNERR;
+				goto end;
+			}
+
+			if (ulResult)
+			{
+				goto end;
+			}
+
+			ulResult = ckpFunctions->SKF_Digest(hHash, pbDataIn, ulDataInLen, hash_value, &hash_len);
+			if (ulResult)
+			{
+				goto end;
+			}
+		}
+		else if (ulContainerType == 2)
+		{
+			ECCPUBLICKEYBLOB pubkeyBlob = { 0 };
+			ULONG ulBlobLen = sizeof(pubkeyBlob);
+
+			if (global_data.sign_method == SGD_SM3_SM2)
+			{
+				ulResult = ckpFunctions->SKF_ExportPublicKey(hContainer, TRUE, (BYTE*)&pubkeyBlob, &ulBlobLen);
+				if (ulResult)
+				{
+					goto end;
+				}
+
+				ulResult = ckpFunctions->SKF_DigestInit(global_data.hDevHandle, SGD_SM3, &pubkeyBlob, (unsigned char *)"1234567812345678", 16, &hHash);
+				if (ulResult)
+				{
+					goto end;
+				}
+
+				ulResult = ckpFunctions->SKF_Digest(hHash, pbDataIn, ulDataInLen, hash_value, &hash_len);
+				if (ulResult)
+				{
+					goto end;
+				}
+			}
+			else
+			{
+				ulResult = SOR_PARAMETERNOTSUPPORTEERR;//SOR_UNKNOWNERR;
+				goto end;
+			}
+		}
+		else
+		{
+			ulResult = SOR_NOTSUPPORTYETERR;
+			goto end;
+		}
+
+		if (NULL == pbDataOut)
+		{
+			*pulDataOutLen = hash_len;
+			ulResult = SOR_OK;
+		}
+		else if (hash_len >  *pulDataOutLen)
+		{
+			*pulDataOutLen = hash_len;
+			ulResult = SOR_MEMORYERR;
+		}
+		else
+		{
+			*pulDataOutLen = hash_len;
+			memcpy(pbDataOut, hash_value, hash_len);
+			ulResult = SOR_OK;
+		}
+
+	end:
+
+		if (hHash)
+		{
+			ckpFunctions->SKF_CloseHandle(hHash);
+		}
+
+		if (hContainer)
+		{
+			ckpFunctions->SKF_CloseContainer(hContainer);
+		}
+
+		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting\n");
+
+		ulResult = ErrorCodeConvert(ulResult);
+
+		return ulResult;
+	}
+
+
 	ULONG CALL_CONVENTION SOF_VerifySignedData(void * p_ckpFunctions, BYTE *pbCert, ULONG ulCertLen, BYTE *pbDataIn, ULONG ulDataInLen, BYTE *pbDataOut, ULONG ulDataOutLen)
 	{
 		CK_SKF_FUNCTION_LIST_PTR ckpFunctions = (CK_SKF_FUNCTION_LIST_PTR)p_ckpFunctions;
@@ -1412,6 +1597,165 @@ end:
 		{
 			ulResult = SOR_NOTSUPPORTYETERR;
 			goto end;
+		}
+
+	end:
+
+		if (hHash)
+		{
+			ckpFunctions->SKF_CloseHandle(hHash);
+		}
+
+		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting\n");
+
+		ulResult = ErrorCodeConvert(ulResult);
+
+		return ulResult;
+	}
+
+	ULONG CALL_CONVENTION SOF_DigestDataCert(void * p_ckpFunctions, BYTE *pbDataIn, ULONG ulDataInLen, BYTE *pbDataOut, ULONG *pulDataOutLen)
+	{
+		CK_SKF_FUNCTION_LIST_PTR ckpFunctions = (CK_SKF_FUNCTION_LIST_PTR)p_ckpFunctions;
+		HANDLE hContainer = NULL;
+
+		ULONG ulResult = 0;
+		ULONG ulContainerType = 0;
+
+		RSA *rsa = NULL;
+
+		HANDLE hHash = 0;
+
+		RSAPUBLICKEYBLOB rsaPublicKeyBlob = { 0 };
+		ECCPUBLICKEYBLOB eccPublicKeyBlob = { 0 };
+
+
+		BYTE hash_value[1024] = { 0 };
+		ULONG hash_len = sizeof(hash_value);
+
+
+		CertificateItemParse certParse;
+
+		FILE_LOG_FMT(file_log_name, "\n%s %d %s", __FUNCTION__, __LINE__, "entering");
+		FILE_LOG_FMT(file_log_name, "%s", "Cert: ");
+		FILE_LOG_FMT(file_log_name, "%s", "DataIn: ");
+		FILE_LOG_HEX(file_log_name, pbDataIn, ulDataInLen);
+
+		certParse.setCertificate(global_data.p_pbCert, global_data.ulCertLen);
+
+		if (0 != certParse.parse())
+		{
+			ulResult = SOR_INDATAERR;
+			goto end;
+		}
+		FILE_LOG_FMT(file_log_name, "KeyAlg: %d", certParse.m_iKeyAlg);
+
+		if (ECertificate_KEY_ALG_RSA == certParse.m_iKeyAlg)
+		{
+			X509 * x509 = NULL;
+			unsigned char pbModulus[256];
+			int ulModulusLen = 0;
+			const unsigned char *ptr = NULL;
+			ptr = global_data.p_pbCert;
+
+			x509 = d2i_X509(NULL, &ptr, global_data.ulCertLen);
+
+			if (x509)
+			{
+				RSA *rsa = EVP_PKEY_get1_RSA(X509_get_pubkey(x509));
+
+				if (rsa != NULL)
+				{
+					ulModulusLen = BN_bn2bin(rsa->n, pbModulus);
+				}
+
+				rsaPublicKeyBlob.BitLen = ulModulusLen * 8;
+
+				memcpy(rsaPublicKeyBlob.PublicExponent, "\x00\x01\x00\x01", 4);
+
+				memcpy(rsaPublicKeyBlob.Modulus + 256 - ulModulusLen, pbModulus, ulModulusLen);
+				X509_free(x509);
+			}
+
+
+			if (global_data.sign_method == SGD_SM3_RSA)
+			{
+				ulResult = ckpFunctions->SKF_DigestInit(global_data.hDevHandle, SGD_SM3, 0, 0, 0, &hHash);
+			}
+			else if (global_data.sign_method == SGD_SHA1_RSA)
+			{
+				ulResult = ckpFunctions->SKF_DigestInit(global_data.hDevHandle, SGD_SHA1, 0, 0, 0, &hHash);
+			}
+			else if (global_data.sign_method == SGD_SHA256_RSA)
+			{
+				ulResult = ckpFunctions->SKF_DigestInit(global_data.hDevHandle, SGD_SHA256, 0, 0, 0, &hHash);
+			}
+			else
+			{
+				ulResult = SOR_PARAMETERNOTSUPPORTEERR;//SOR_UNKNOWNERR;
+				goto end;
+			}
+
+			if (ulResult)
+			{
+				goto end;
+			}
+
+			ulResult = ckpFunctions->SKF_Digest(hHash, pbDataIn, ulDataInLen, hash_value, &hash_len);
+			if (ulResult)
+			{
+				goto end;
+			}
+		}
+		else if (ECertificate_KEY_ALG_EC == certParse.m_iKeyAlg)
+		{
+			unsigned char tmp_data[32 * 2 + 1] = { 0 };
+			unsigned int tmp_len = 65;
+
+			ECCSIGNATUREBLOB blob = { 0 };
+
+			eccPublicKeyBlob.BitLen = 256;
+
+			OpenSSL_CertGetPubkey(global_data.p_pbCert, global_data.ulCertLen, tmp_data, &tmp_len);
+
+			memcpy(eccPublicKeyBlob.XCoordinate + 32, tmp_data + 1, 32);
+			memcpy(eccPublicKeyBlob.YCoordinate + 32, tmp_data + 1 + 32, 32);
+
+			FILE_LOG_HEX(file_log_name, eccPublicKeyBlob.XCoordinate + 32, 32);
+			FILE_LOG_HEX(file_log_name, eccPublicKeyBlob.YCoordinate + 32, 32);
+
+			ulResult = ckpFunctions->SKF_DigestInit(global_data.hDevHandle, SGD_SM3, &eccPublicKeyBlob, (unsigned char *)"1234567812345678", 16, &hHash);
+			if (ulResult)
+			{
+				goto end;
+			}
+
+			ulResult = ckpFunctions->SKF_Digest(hHash, pbDataIn, ulDataInLen, hash_value, &hash_len);
+			if (ulResult)
+			{
+				goto end;
+			}
+		}
+		else
+		{
+			ulResult = SOR_NOTSUPPORTYETERR;
+			goto end;
+		}
+
+		if (NULL == pbDataOut)
+		{
+			*pulDataOutLen = hash_len;
+			ulResult = SOR_OK;
+		}
+		else if (hash_len >  *pulDataOutLen)
+		{
+			*pulDataOutLen = hash_len;
+			ulResult = SOR_MEMORYERR;
+		}
+		else
+		{
+			*pulDataOutLen = hash_len;
+			memcpy(pbDataOut, hash_value, hash_len);
+			ulResult = SOR_OK;
 		}
 
 	end:
@@ -3913,30 +4257,56 @@ end:
 		return ulResult;
 	}
 
+	int cb_digest_simple(void *args, unsigned char *in, int in_len, unsigned char *out, int *out_len)
+	{
+		FILE_WRITE("D:/digest_ori.o", "",in,in_len);
+
+		return SOF_DigestData(global_data.p_ckpFunctions, global_data.p_contanier, in, in_len, out, (ULONG *)out_len);
+	}
+
+	int cb_sign_simple(void *args, unsigned char *in, int in_len, unsigned char *out, int *out_len)
+	{
+		FILE_WRITE("D:/sign_ori.o", "", in, in_len);
+
+		return SOF_SignData(global_data.p_ckpFunctions, global_data.p_contanier, in, in_len, out, (ULONG *)out_len);
+	}
+
+	int cb_digest_vfy(void *args, unsigned char *in, int in_len, unsigned char *out, int *out_len)
+	{
+		FILE_WRITE("D:/digest_ori.o", "", in, in_len);
+
+		return SOF_DigestDataCert(global_data.p_ckpFunctions, in, in_len, out, (ULONG *)out_len);
+	}
+
+	int cb_sign_vfy(void *args, unsigned char *in, int in_len, unsigned char *out, int *out_len)
+	{
+		FILE_WRITE("D:/sign_ori.o", "", in, in_len);
+
+		return SOF_VerifySignedData(global_data.p_ckpFunctions, global_data.p_pbCert, global_data.ulCertLen, in, in_len, out, *out_len);
+	}
+
 	ULONG CALL_CONVENTION SOF_SignDataXML(void * p_ckpFunctions, LPSTR pContainerName, BYTE *pbDataIn, ULONG ulDataInLen, BYTE *pbDataOut, ULONG *pulDataOutLen)
 	{
 		CK_SKF_FUNCTION_LIST_PTR ckpFunctions = (CK_SKF_FUNCTION_LIST_PTR)p_ckpFunctions;
-		HANDLE hContainer = NULL;
 		ULONG ulResult = 0;
 		ULONG ulContainerType = 0;
-		HANDLE hHash = 0;
 
-
-		ECCSIGNATUREBLOB blob = { 0 };
-
-		char data_info_value[1024] = { 0 };
-		int data_info_len = sizeof(data_info_value);
-
-		BYTE hash_value[1024] = { 0 };
-		ULONG hash_len = sizeof(data_info_value);
+		BYTE * data_info_cert = NULL;
+		ULONG data_info_cert_len = 0;
 
 		xmlDocPtr doc = NULL;
 		xmlNodePtr signNode = NULL;
 		xmlSecDSigCtxPtr dsigCtx = NULL;
 		xmlNodePtr refNode = NULL;
 		xmlNodePtr keyInfoNode = NULL;
+
+		xmlSecTransformId xmlSecTransformId_sign;
+		xmlSecTransformId xmlSecTransformId_digest;
 		xmlNodePtr x509DataNode = NULL;
 
+		int xml_len = 0;
+		xmlChar *xml_ptr_ = NULL;
+		xmlChar **xml_ptr = &xml_ptr_;
 
 		const char * kRSAKeyTmp = "-----BEGIN RSA PRIVATE KEY-----\n" \
 			"MIIBPAIBAAJBANPQbQ92nlbeg1Q5JNHSO1Yey46nZ7GJltLWw1ccSvp7pnvmfUm+\n" \
@@ -3989,6 +4359,32 @@ end:
 		xmlIndentTreeOutput = 1;
 #endif /* XMLSEC_NO_XSLT */
 
+		ulResult = SOF_GetContainerType(p_ckpFunctions, pContainerName, &ulContainerType);
+
+		if (ulResult)
+		{
+			goto end;
+		}
+
+		global_data.p_ckpFunctions = p_ckpFunctions;
+		global_data.p_contanier = pContainerName;
+
+		
+
+
+		ulResult = SOF_ExportUserCert(p_ckpFunctions, pContainerName ,data_info_cert, &data_info_cert_len);
+		if (ulResult)
+		{
+			goto end;
+		}
+
+		data_info_cert = new BYTE[data_info_cert_len];
+		ulResult = SOF_ExportUserCert(p_ckpFunctions, pContainerName, data_info_cert, &data_info_cert_len);
+		if (ulResult)
+		{
+			goto end;
+		}
+
 		/* Init libxslt */
 #ifndef XMLSEC_NO_XSLT
 		/* disable everything */
@@ -4037,6 +4433,48 @@ end:
 			goto end;
 		}
 
+		if (ulContainerType == 1)
+		{
+			if (global_data.sign_method == SGD_SM3_RSA)
+			{
+				xmlSecTransformId_digest = xmlSecTransformSM3Id;
+				xmlSecTransformId_sign = xmlSecTransformRsaSM3Id;
+			}
+			else if (global_data.sign_method == SGD_SHA1_RSA)
+			{
+				xmlSecTransformId_digest = xmlSecTransformSha1Id;
+				xmlSecTransformId_sign = xmlSecTransformRsaSha1Id;
+			}
+			else if (global_data.sign_method == SGD_SHA256_RSA)
+			{
+				xmlSecTransformId_digest = xmlSecTransformSha256Id;
+				xmlSecTransformId_sign = xmlSecTransformRsaSha256Id;
+			}
+			else
+			{
+				ulResult = SOR_PARAMETERNOTSUPPORTEERR;//SOR_UNKNOWNERR;
+				goto end;
+			}
+		}
+		else if (ulContainerType == 2)
+		{
+			if (global_data.sign_method == SGD_SM3_SM2)
+			{
+				xmlSecTransformId_digest = xmlSecTransformSM3Id;
+				xmlSecTransformId_sign = xmlSecTransformSM2SM3Id;
+			}
+			else
+			{
+				ulResult = SOR_PARAMETERNOTSUPPORTEERR;//SOR_UNKNOWNERR;
+				goto end;
+			}
+		}
+		else
+		{
+			ulResult = SOR_NOTSUPPORTYETERR;
+			goto end;
+		}
+
 		doc = xmlParseMemory((char *)pbDataIn, ulDataInLen);
 
 		if ((doc == NULL) || (xmlDocGetRootElement(doc) == NULL)) {
@@ -4046,18 +4484,19 @@ end:
 
 		/* create signature template for RSA-SHA1 enveloped signature */
 		signNode = xmlSecTmplSignatureCreate(doc, xmlSecTransformExclC14NId,
-			xmlSecTransformRsaSha1Id, NULL);
+			xmlSecTransformId_sign, NULL);
 		if (signNode == NULL) {
 			ulResult = SOR_UNKNOWNERR;
 			goto end;
 		}
 
 
+
 		/* add <dsig:Signature/> node to the doc */
 		xmlAddChild(xmlDocGetRootElement(doc), signNode);
 
 		/* add reference */
-		refNode = xmlSecTmplSignatureAddReference(signNode, xmlSecTransformSha1Id,
+		refNode = xmlSecTmplSignatureAddReference(signNode, xmlSecTransformId_digest,
 			NULL, NULL, NULL);
 		if (refNode == NULL) {
 			ulResult = SOR_UNKNOWNERR;
@@ -4108,7 +4547,8 @@ end:
 		}
 
 		/* load certificate and add to the key */
-		if (xmlSecCryptoAppKeyCertLoadMemory(dsigCtx->signKey, (unsigned char *)kRSACertTmp, strlen(kRSACertTmp), xmlSecKeyDataFormatPem) < 0) {
+		//if (xmlSecCryptoAppKeyCertLoadMemory(dsigCtx->signKey, (unsigned char *)kRSACertTmp, strlen(kRSACertTmp), xmlSecKeyDataFormatPem) < 0) {
+		if (xmlSecCryptoAppKeyCertLoadMemory(dsigCtx->signKey, data_info_cert, data_info_cert_len, xmlSecKeyDataFormatDer) < 0) {
 			ulResult = SOR_UNKNOWNERR;
 			goto end;
 		}
@@ -4120,15 +4560,43 @@ end:
 		//}
 
 		/* sign the template */
-		if (xmlSecDSigCtxSign(dsigCtx, signNode) < 0) {
+		if (xmlSecDSigCtxSign(dsigCtx, signNode, cb_digest_simple, cb_sign_simple) < 0) {
 			ulResult = SOR_UNKNOWNERR;
 			goto end;
 		}
 
 		/* print signed document to stdout */
-		xmlDocDump(stdout, doc);
+		//xmlDocDump(stdout, doc);
+
+
+		xmlDocDumpMemory(doc, xml_ptr, &xml_len);
+
+		if (NULL == pbDataOut)
+		{
+			*pulDataOutLen = xml_len;
+			ulResult = SOR_OK;
+		}
+		else if (xml_len >  *pulDataOutLen)
+		{
+			*pulDataOutLen = xml_len;
+			ulResult = SOR_MEMORYERR;
+		}
+		else
+		{
+			*pulDataOutLen = xml_len;
+			memcpy(pbDataOut, *xml_ptr, xml_len);
+			ulResult = SOR_OK;
+		}
+
+
 
 	end:
+
+		if (xml_ptr_)
+		{
+			xmlFree(xml_ptr_);
+			xml_ptr_ = NULL;
+		}
 
 		/* cleanup */
 		if (dsigCtx != NULL) {
@@ -4155,6 +4623,11 @@ end:
 #endif /* XMLSEC_NO_XSLT */
 		xmlCleanupParser();
 
+		if (data_info_cert)
+		{
+			delete data_info_cert;
+		}
+
 		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting\n");
 
 		ulResult = ErrorCodeConvert(ulResult);
@@ -4163,23 +4636,662 @@ end:
 	}
 
 
+
 	ULONG CALL_CONVENTION SOF_VerifySignedDataXML(void * p_ckpFunctions, BYTE *pbDataIn, ULONG ulDataInLen)
 	{
-		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "entering");
-		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting");
-		ErrorCodeConvert(SOR_OK);
+		ULONG ulResult = SOR_OK;
+		char * pbCert = NULL;
+		char *pSignMethod = NULL;
+		ULONG  info_len = 0;
+		char * pbInfo = NULL;
 
-		return SOR_OK;
+		xmlNodePtr node = NULL;
+
+		std::string str_cert;
+
+		ULONG sign_method = global_data.sign_method;
+		
+		const char * kRSAKeyTmp = "-----BEGIN PUBLIC KEY-----\n" \
+			"MFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBANPQbQ92nlbeg1Q5JNHSO1Yey46nZ7GJ\n" \
+			"ltLWw1ccSvp7pnvmfUm+M521CpFpfr4EAE3UVBMoU9j/hqq3dFAc2H0CAwEAAQ==\n" \
+			"-----END PUBLIC KEY-----";
+
+		int i = 0;
+
+#ifndef XMLSEC_NO_XSLT
+		xsltSecurityPrefsPtr xsltSecPrefs = NULL;
+#endif /* XMLSEC_NO_XSLT */
+
+		xmlDocPtr doc = NULL;
+		xmlSecDSigCtxPtr dsigCtx = NULL;
+
+		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "entering");
+
+		for ( i = 1; i < 7; i++)
+		{
+			if (4 == i || 6 == i)
+			{
+				pbInfo = NULL;
+				info_len = 0;
+
+				ulResult = SOF_GetXMLSignatureInfo(p_ckpFunctions, i, pbDataIn, ulDataInLen, (BYTE*)pbInfo, &info_len);
+				if (ulResult)
+				{
+					ulResult = SOR_UNKNOWNERR;
+					goto end;
+				}
+
+				pbInfo = new char[info_len + 1];
+				memset(pbInfo, 0, info_len + 1);
+
+				ulResult = SOF_GetXMLSignatureInfo(p_ckpFunctions, i, pbDataIn, ulDataInLen, (BYTE*)pbInfo, &info_len);
+				if (ulResult)
+				{
+					ulResult = SOR_UNKNOWNERR;
+					goto end;
+				}
+
+				if (4 == i)
+				{
+					pbCert = pbInfo;
+				}
+
+				if (6 == i)
+				{
+					pSignMethod = pbInfo;
+				}
+			}
+		}
+
+		/* Init libxml and libxslt libraries */
+		xmlInitParser();
+		LIBXML_TEST_VERSION
+			xmlLoadExtDtdDefaultValue = XML_DETECT_IDS | XML_COMPLETE_ATTRS;
+		xmlSubstituteEntitiesDefault(1);
+#ifndef XMLSEC_NO_XSLT
+		xmlIndentTreeOutput = 1;
+#endif /* XMLSEC_NO_XSLT */
+
+		/* Init libxslt */
+#ifndef XMLSEC_NO_XSLT
+		/* disable everything */
+		xsltSecPrefs = xsltNewSecurityPrefs();
+		xsltSetSecurityPrefs(xsltSecPrefs, XSLT_SECPREF_READ_FILE, xsltSecurityForbid);
+		xsltSetSecurityPrefs(xsltSecPrefs, XSLT_SECPREF_WRITE_FILE, xsltSecurityForbid);
+		xsltSetSecurityPrefs(xsltSecPrefs, XSLT_SECPREF_CREATE_DIRECTORY, xsltSecurityForbid);
+		xsltSetSecurityPrefs(xsltSecPrefs, XSLT_SECPREF_READ_NETWORK, xsltSecurityForbid);
+		xsltSetSecurityPrefs(xsltSecPrefs, XSLT_SECPREF_WRITE_NETWORK, xsltSecurityForbid);
+		xsltSetDefaultSecurityPrefs(xsltSecPrefs);
+#endif /* XMLSEC_NO_XSLT */
+
+		/* Init xmlsec library */
+		if (xmlSecInit() < 0) {
+			ulResult = SOR_UNKNOWNERR;
+			goto end;
+		}
+
+		/* Check loaded library version */
+		if (xmlSecCheckVersion() != 1) {
+			ulResult = SOR_UNKNOWNERR;
+			goto end;
+		}
+
+		/* Load default crypto engine if we are supporting dynamic
+		* loading for xmlsec-crypto libraries. Use the crypto library
+		* name ("openssl", "nss", etc.) to load corresponding
+		* xmlsec-crypto library.
+		*/
+#ifdef XMLSEC_CRYPTO_DYNAMIC_LOADING
+		if (xmlSecCryptoDLLoadLibrary((xmlChar *)"openssl") < 0) {
+			ulResult = SOR_UNKNOWNERR;
+			goto end;
+		}
+#endif /* XMLSEC_CRYPTO_DYNAMIC_LOADING */
+
+		/* Init crypto library */
+		if (xmlSecCryptoAppInit(NULL) < 0) {
+			ulResult = SOR_UNKNOWNERR;
+			goto end;
+		}
+
+		/* Init xmlsec-crypto library */
+		if (xmlSecCryptoInit() < 0) {
+			ulResult = SOR_UNKNOWNERR;
+			goto end;
+		}
+
+		doc = xmlParseMemory((const char *)pbDataIn, ulDataInLen);
+		if ((doc == NULL) || (xmlDocGetRootElement(doc) == NULL)) {
+			ulResult = SOR_UNKNOWNERR;
+			goto end;
+		}
+
+		if (0 == memcmp(pSignMethod, xmlSecHrefSM2SM3, strlen(pSignMethod)))
+		{
+			global_data.sign_method = SGD_SM3_SM2;
+		}
+		else if (0 == memcmp(pSignMethod, xmlSecHrefRsaSM3, strlen(pSignMethod)))
+		{
+			global_data.sign_method = SGD_SM3_RSA;
+		}
+		else if (0 == memcmp(pSignMethod, xmlSecHrefRsaSha1, strlen(pSignMethod)))
+		{
+			global_data.sign_method = SGD_SHA1_RSA;
+		}
+		else if (0 == memcmp(pSignMethod, xmlSecHrefRsaSha256, strlen(pSignMethod)))
+		{
+			global_data.sign_method = SGD_SHA256_RSA;
+		}
+
+		str_cert = pbCert;
+
+		str_cert.erase(std::remove(str_cert.begin(), str_cert.end(), '\r'), str_cert.end());
+		str_cert.erase(std::remove(str_cert.begin(), str_cert.end(), '\n'), str_cert.end());
+
+		str_cert = modp_b64_decode(str_cert);
+
+		global_data.p_pbCert = (BYTE*)str_cert.c_str();
+		global_data.ulCertLen = str_cert.size();
+
+		/* find start node */
+		node = xmlSecFindNode(xmlDocGetRootElement(doc), xmlSecNodeSignature, xmlSecDSigNs);
+		if (node == NULL) {
+			ulResult = SOR_UNKNOWNERR;
+			goto end;
+		}
+
+		/* create signature context, we don't need keys manager in this example */
+		dsigCtx = xmlSecDSigCtxCreate(NULL);
+		if (dsigCtx == NULL) {
+			ulResult = SOR_UNKNOWNERR;
+			goto end;
+		}
+
+		/* load public key */
+		dsigCtx->signKey = xmlSecCryptoAppKeyLoadMemory( (unsigned char *)kRSAKeyTmp, strlen(kRSAKeyTmp), xmlSecKeyDataFormatPem, NULL, NULL, NULL);
+		if (dsigCtx->signKey == NULL) {
+			ulResult = SOR_UNKNOWNERR;
+			goto end;
+		}
+
+		/* Verify signature */
+		if (xmlSecDSigCtxVerify(dsigCtx, node, cb_digest_vfy, cb_sign_vfy) < 0) {
+			ulResult = SOR_UNKNOWNERR;
+			goto end;
+		}
+
+		/* print verification result to stdout */
+		if (dsigCtx->status == xmlSecDSigStatusSucceeded) {
+			ulResult = SOR_OK;
+			goto end;
+		}
+		else {
+			ulResult = SOR_VERIFYSIGNDATAERR;
+			goto end;
+		}
+	end:
+		if (pbCert)
+		{
+			delete pbCert;
+		}
+
+		if (pSignMethod)
+		{
+			delete pSignMethod;
+		}
+
+		/* Shutdown xmlsec-crypto library */
+		xmlSecCryptoShutdown();
+
+		/* Shutdown crypto library */
+		xmlSecCryptoAppShutdown();
+
+		/* Shutdown xmlsec library */
+		xmlSecShutdown();
+
+		/* Shutdown libxslt/libxml */
+#ifndef XMLSEC_NO_XSLT
+		xsltFreeSecurityPrefs(xsltSecPrefs);
+		xsltCleanupGlobals();
+#endif /* XMLSEC_NO_XSLT */
+		xmlCleanupParser();
+
+		global_data.sign_method = sign_method;
+
+		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting");
+
+		ulResult = ErrorCodeConvert(ulResult);
+
+		return ulResult;
+	}
+
+
+
+
+
+	ULONG CALL_CONVENTION SOF_VerifySignedDataXML2(void * p_ckpFunctions, BYTE *pbDataIn, ULONG ulDataInLen)
+	{
+		ULONG ulResult = SOR_OK;
+
+		xmlDocPtr doc_digest_plain = NULL;
+		xmlDocPtr doc_sign_plain = NULL;
+
+		char * pDigest = NULL;
+		char * pSignature = NULL;
+		char * pbCert = NULL;
+
+		char *pPlain = NULL;
+		char *pDigestMethod = NULL;
+		char *pSignMethod = NULL;
+		ULONG  info_len = 0;
+		char * pbInfo = NULL;
+
+		int xml_len = 0;
+		xmlChar *xml_ptr_ = NULL;
+		xmlChar **xml_ptr = &xml_ptr_;
+
+		xmlNodePtr node = NULL;
+
+		std::string str_digest;
+		std::string str_signature;
+
+		unsigned char *pbDigest = NULL;
+		unsigned char *pbSignature = NULL;
+
+		std::string str_cert;
+
+		ULONG sign_method = global_data.sign_method;
+
+		int i = 0;
+
+		unsigned char template_digest_plain[] = {
+			0x3C,0x45,0x6E,0x76,0x65,0x6C,0x6F,0x70,0x65,0x20,0x78,0x6D,0x6C,0x6E,0x73,0x3D,0x22,0x75,0x72,0x6E,0x3A,0x65,0x6E,0x76,0x65,0x6C,0x6F,0x70,0x65,0x22,0x3E,0x0A,0x20,0x20,0x3C,0x44,0x61,0x74,0x61,0x3E,0x0A,0x09,0x48,0x65,0x6C,0x6C,0x6F,0x2C,0x20,0x57,0x6F,0x72,0x6C,0x64,0x21,0x0A,0x20,0x20,0x3C,0x2F,0x44,0x61,0x74,0x61,0x3E,0x0A,0x3C,0x2F,0x45,0x6E,0x76,0x65,0x6C,0x6F,0x70,0x65,0x3E };
+
+		unsigned char template_sign_plain[] = { 0x3C,0x53,0x69,0x67,0x6E,0x65,0x64,0x49,0x6E,0x66,0x6F,0x20,0x78,0x6D,0x6C,0x6E,0x73,0x3D,0x22,0x68,0x74,0x74,0x70,0x3A,0x2F,0x2F,0x77,0x77,0x77,0x2E,0x77,0x33,0x2E,0x6F,0x72,0x67,0x2F,0x32,0x30,0x30,0x30,0x2F,0x30,0x39,0x2F,0x78,0x6D,0x6C,0x64,0x73,0x69,0x67,0x23,0x22,0x3E,0x0A,0x3C,0x43,0x61,0x6E,0x6F,0x6E,0x69,0x63,0x61,0x6C,0x69,0x7A,0x61,0x74,0x69,0x6F,0x6E,0x4D,0x65,0x74,0x68,0x6F,0x64,0x20,0x41,0x6C,0x67,0x6F,0x72,0x69,0x74,0x68,0x6D,0x3D,0x22,0x68,0x74,0x74,0x70,0x3A,0x2F,0x2F,0x77,0x77,0x77,0x2E,0x77,0x33,0x2E,0x6F,0x72,0x67,0x2F,0x32,0x30,0x30,0x31,0x2F,0x31,0x30,0x2F,0x78,0x6D,0x6C,0x2D,0x65,0x78,0x63,0x2D,0x63,0x31,0x34,0x6E,0x23,0x22,0x3E,0x3C,0x2F,0x43,0x61,0x6E,0x6F,0x6E,0x69,0x63,0x61,0x6C,0x69,0x7A,0x61,0x74,0x69,0x6F,0x6E,0x4D,0x65,0x74,0x68,0x6F,0x64,0x3E,0x0A,0x3C,0x53,0x69,0x67,0x6E,0x61,0x74,0x75,0x72,0x65,0x4D,0x65,0x74,0x68,0x6F,0x64,0x20,0x41,0x6C,0x67,0x6F,0x72,0x69,0x74,0x68,0x6D,0x3D,0x22,0x68,0x74,0x74,0x70,0x3A,0x2F,0x2F,0x77,0x77,0x77,0x2E,0x77,0x33,0x2E,0x6F,0x72,0x67,0x2F,0x32,0x30,0x30,0x30,0x2F,0x30,0x39,0x2F,0x78,0x6D,0x6C,0x64,0x73,0x69,0x67,0x23,0x73,0x6D,0x32,0x2D,0x73,0x6D,0x33,0x22,0x3E,0x3C,0x2F,0x53,0x69,0x67,0x6E,0x61,0x74,0x75,0x72,0x65,0x4D,0x65,0x74,0x68,0x6F,0x64,0x3E,0x0A,0x3C,0x52,0x65,0x66,0x65,0x72,0x65,0x6E,0x63,0x65,0x3E,0x0A,0x3C,0x54,0x72,0x61,0x6E,0x73,0x66,0x6F,0x72,0x6D,0x73,0x3E,0x0A,0x3C,0x54,0x72,0x61,0x6E,0x73,0x66,0x6F,0x72,0x6D,0x20,0x41,0x6C,0x67,0x6F,0x72,0x69,0x74,0x68,0x6D,0x3D,0x22,0x68,0x74,0x74,0x70,0x3A,0x2F,0x2F,0x77,0x77,0x77,0x2E,0x77,0x33,0x2E,0x6F,0x72,0x67,0x2F,0x32,0x30,0x30,0x30,0x2F,0x30,0x39,0x2F,0x78,0x6D,0x6C,0x64,0x73,0x69,0x67,0x23,0x65,0x6E,0x76,0x65,0x6C,0x6F,0x70,0x65,0x64,0x2D,0x73,0x69,0x67,0x6E,0x61,0x74,0x75,0x72,0x65,0x22,0x3E,0x3C,0x2F,0x54,0x72,0x61,0x6E,0x73,0x66,0x6F,0x72,0x6D,0x3E,0x0A,0x3C,0x2F,0x54,0x72,0x61,0x6E,0x73,0x66,0x6F,0x72,0x6D,0x73,0x3E,0x0A,0x3C,0x44,0x69,0x67,0x65,0x73,0x74,0x4D,0x65,0x74,0x68,0x6F,0x64,0x20,0x41,0x6C,0x67,0x6F,0x72,0x69,0x74,0x68,0x6D,0x3D,0x22,0x68,0x74,0x74,0x70,0x3A,0x2F,0x2F,0x77,0x77,0x77,0x2E,0x77,0x33,0x2E,0x6F,0x72,0x67,0x2F,0x32,0x30,0x30,0x30,0x2F,0x30,0x39,0x2F,0x78,0x6D,0x6C,0x64,0x73,0x69,0x67,0x23,0x73,0x6D,0x33,0x22,0x3E,0x3C,0x2F,0x44,0x69,0x67,0x65,0x73,0x74,0x4D,0x65,0x74,0x68,0x6F,0x64,0x3E,0x0A,0x3C,0x44,0x69,0x67,0x65,0x73,0x74,0x56,0x61,0x6C,0x75,0x65,0x3E,0x30,0x2B,0x76,0x4C,0x58,0x61,0x42,0x6D,0x65,0x65,0x2B,0x54,0x66,0x43,0x57,0x68,0x42,0x65,0x65,0x63,0x41,0x4D,0x51,0x69,0x6B,0x58,0x79,0x4E,0x43,0x70,0x69,0x50,0x70,0x56,0x54,0x42,0x30,0x74,0x48,0x49,0x42,0x52,0x41,0x3D,0x3C,0x2F,0x44,0x69,0x67,0x65,0x73,0x74,0x56,0x61,0x6C,0x75,0x65,0x3E,0x0A,0x3C,0x2F,0x52,0x65,0x66,0x65,0x72,0x65,0x6E,0x63,0x65,0x3E,0x0A,0x3C,0x2F,0x53,0x69,0x67,0x6E,0x65,0x64,0x49,0x6E,0x66,0x6F,0x3E };
+
+		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "entering");
+
+		for (i = 1; i < 7; i++)
+		{
+			pbInfo = NULL;
+			info_len = 0;
+
+			ulResult = SOF_GetXMLSignatureInfo(p_ckpFunctions, i, pbDataIn, ulDataInLen, (BYTE*)pbInfo, &info_len);
+			if (ulResult)
+			{
+				ulResult = SOR_UNKNOWNERR;
+				goto end;
+			}
+
+			pbInfo = new char[info_len + 1];
+			memset(pbInfo, 0, info_len + 1);
+
+			ulResult = SOF_GetXMLSignatureInfo(p_ckpFunctions, i, pbDataIn, ulDataInLen, (BYTE*)pbInfo, &info_len);
+			if (ulResult)
+			{
+				ulResult = SOR_UNKNOWNERR;
+				goto end;
+			}
+
+			if (1 == i)
+			{
+				pPlain = pbInfo;
+			}
+
+
+			if (2 == i)
+			{
+				pDigest = pbInfo;
+			}
+
+			if (3 == i)
+			{
+				pSignature = pbInfo;
+			}
+
+			if (4 == i)
+			{
+				pbCert = pbInfo;
+			}
+
+			if (5 == i)
+			{
+				pDigestMethod = pbInfo;
+			}
+
+			if (6 == i)
+			{
+				pSignMethod = pbInfo;
+			}
+		}
+
+		/* Init libxml and libxslt libraries */
+		xmlInitParser();
+		LIBXML_TEST_VERSION
+			xmlLoadExtDtdDefaultValue = XML_DETECT_IDS | XML_COMPLETE_ATTRS;
+		xmlSubstituteEntitiesDefault(1);
+
+		doc_digest_plain = xmlParseMemory((const char *)template_digest_plain, sizeof(template_digest_plain));
+		if ((doc_digest_plain == NULL) || (xmlDocGetRootElement(doc_digest_plain) == NULL)) {
+			ulResult = SOR_UNKNOWNERR;
+			goto end;
+		}
+
+		doc_sign_plain = xmlParseMemory((const char *)template_sign_plain, sizeof(template_sign_plain));
+		if ((doc_sign_plain == NULL) || (xmlDocGetRootElement(doc_sign_plain) == NULL)) {
+			ulResult = SOR_UNKNOWNERR;
+			goto end;
+		}
+
+		if (0 == memcmp(pSignMethod, xmlSecHrefSM2SM3, strlen(pSignMethod)))
+		{
+			global_data.sign_method = SGD_SM3_SM2;
+		}
+		else if (0 == memcmp(pSignMethod, xmlSecHrefRsaSM3, strlen(pSignMethod)))
+		{
+			global_data.sign_method = SGD_SM3_RSA;
+		}
+		else if (0 == memcmp(pSignMethod, xmlSecHrefRsaSha1, strlen(pSignMethod)))
+		{
+			global_data.sign_method = SGD_SHA1_RSA;
+		}
+		else if (0 == memcmp(pSignMethod, xmlSecHrefRsaSha256, strlen(pSignMethod)))
+		{
+			global_data.sign_method = SGD_SHA256_RSA;
+		}
+
+		node = xmlSecFindNode(xmlDocGetRootElement(doc_digest_plain), (xmlChar *)"Data", (xmlChar *)"urn:envelope");
+		if (node == NULL) {
+			ulResult = SOR_UNKNOWNERR;
+			goto end;
+		}
+
+		xmlNodeSetContent(node, (xmlChar*)pPlain);
+
+		xmlDocDumpFormatMemory(doc_digest_plain, xml_ptr, &xml_len, 0);
+
+		str_cert = pbCert;
+
+		str_cert.erase(std::remove(str_cert.begin(), str_cert.end(), '\r'), str_cert.end());
+		str_cert.erase(std::remove(str_cert.begin(), str_cert.end(), '\n'), str_cert.end());
+
+		str_cert = modp_b64_decode(str_cert);
+
+		global_data.p_pbCert = (BYTE*)str_cert.c_str();
+		global_data.ulCertLen = str_cert.size();
+
+#if 0
+		//info_len = 0;
+		//ulResult = SOF_DigestDataCert(p_ckpFunctions, *xml_ptr, xml_len, pbDigest, &info_len);
+		//if (ulResult)
+		//{
+		//	ulResult = SOR_UNKNOWNERR;
+		//	goto end;
+		//}
+
+		//pbDigest = new unsigned char[info_len];
+
+		//ulResult = SOF_DigestDataCert(p_ckpFunctions,  (*xml_ptr) + 0x16, xml_len - 0x16 -1, pbDigest, &info_len);
+		//if (ulResult)
+		//{
+		//	ulResult = SOR_UNKNOWNERR;
+		//	goto end;
+		//}
+
+		//if (xml_ptr_)
+		//{
+		//	xmlFree(xml_ptr_);
+		//	xml_ptr_ = NULL;
+		//}
+
+		//str_digest = pDigest;
+		//str_digest.erase(std::remove(str_digest.begin(), str_digest.end(), '\r'), str_digest.end());
+		//str_digest.erase(std::remove(str_digest.begin(), str_digest.end(), '\n'), str_digest.end());
+
+		//str_digest = modp_b64_decode(str_digest);
+
+		//if (0 != memcmp(str_digest.c_str(), pbDigest, info_len))
+		//{
+		//	ulResult = SOR_HASHNOTEQUALERR;
+		//	goto end;
+		//}
+
+		////XML_SAVE_NO_DECL, 
+
+		//// 2. SignatureMethod
+		//node = xmlSecFindNode(xmlDocGetRootElement(doc_sign_plain), xmlSecNodeSignatureMethod, xmlSecDSigNs);
+		//if (node == NULL) {
+		//	ulResult = SOR_UNKNOWNERR;
+		//	goto end;
+		//}
+
+		//xmlSetProp(node, xmlSecAttrAlgorithm, (xmlChar*)pSignMethod);
+
+		//// 3. DigestMethod
+		//node = xmlSecFindNode(xmlDocGetRootElement(doc_sign_plain), xmlSecNodeDigestMethod, xmlSecDSigNs);
+		//if (node == NULL) {
+		//	ulResult = SOR_UNKNOWNERR;
+		//	goto end;
+		//}
+
+		//xmlSetProp(node, xmlSecAttrAlgorithm, (xmlChar*)pDigestMethod);
+
+		//// 4. DigestValue
+		//node = xmlSecFindNode(xmlDocGetRootElement(doc_sign_plain), xmlSecNodeDigestValue, xmlSecDSigNs);
+		//if (node == NULL) {
+		//	ulResult = SOR_UNKNOWNERR;
+		//	goto end;
+		//}
+
+		//xmlNodeSetContent(node, (xmlChar*)pDigest);
+
+		//str_signature = pSignature;
+
+		//str_signature.erase(std::remove(str_signature.begin(), str_signature.end(), '\r'), str_signature.end());
+		//str_signature.erase(std::remove(str_signature.begin(), str_signature.end(), '\n'), str_signature.end());
+
+		//str_signature = modp_b64_decode(str_signature);
+
+
+		//xmlDocDumpFormatMemory(doc_sign_plain, xml_ptr, &xml_len, 2);
+
+
+		//ulResult = SOF_VerifySignedData(p_ckpFunctions, (BYTE*)str_cert.c_str(), str_cert.size(), (*xml_ptr) + 0x16, xml_len - 0x16 - 1, (BYTE*)str_signature.c_str(), str_signature.size());
+		//if (ulResult)
+		//{
+		//	goto end;
+		//}
+
+#endif
+
+	end:
+
+
+		if (pPlain)
+		{
+			delete pPlain;
+		}
+
+
+		if (pbDigest)
+		{
+			delete pbDigest;
+		}
+
+
+		if (pDigest)
+		{
+			delete pDigest;
+		}
+
+		if (pSignature)
+		{
+			delete pSignature;
+		}
+
+		if (pbCert)
+		{
+			delete pbCert;
+		}
+
+		if (pDigestMethod)
+		{
+			delete pDigestMethod;
+		}
+
+		if (pSignMethod)
+		{
+			delete pSignMethod;
+		}
+
+		if (doc_sign_plain != NULL) {
+			xmlFreeDoc(doc_sign_plain);
+		}
+
+		if (doc_digest_plain != NULL) {
+			xmlFreeDoc(doc_digest_plain);
+		}
+
+		xmlCleanupParser();
+
+		global_data.sign_method = sign_method;
+
+		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting\n");
+		ulResult = ErrorCodeConvert(ulResult);
+
+		return ulResult;
 	}
 
 
 	ULONG CALL_CONVENTION SOF_GetXMLSignatureInfo(void * p_ckpFunctions, UINT16 u16Type, BYTE *pbDataIn, ULONG ulDataInLen, BYTE *pbInfo, ULONG *pulInfoLen)
 	{
-		FILE_LOG_FMT(file_log_name, "\n%s %d %s", __FUNCTION__, __LINE__, "entering");
-		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting\n");
-		ErrorCodeConvert(SOR_OK);
+		ULONG ulResult = SOR_OK;
 
-		return SOR_OK;
+		/* Init libxml and libxslt libraries */
+		xmlInitParser();
+		LIBXML_TEST_VERSION
+			xmlLoadExtDtdDefaultValue = XML_DETECT_IDS | XML_COMPLETE_ATTRS;
+		xmlSubstituteEntitiesDefault(1);
+
+		xmlDocPtr doc = NULL;
+		xmlNodePtr node = NULL;
+		char *ptr = NULL;
+
+		/* load file */
+		doc = xmlParseMemory((const char *)pbDataIn, ulDataInLen);
+		if ((doc == NULL) || (xmlDocGetRootElement(doc) == NULL)) {
+			ulResult = SOR_UNKNOWNERR;
+			goto end;
+		}
+
+		switch (u16Type)
+		{
+		case 1:
+		{
+			node = xmlSecFindNode(xmlDocGetRootElement(doc), (xmlChar *)"Data", (xmlChar *)"urn:envelope");
+			if (node == NULL) {
+				ulResult = SOR_UNKNOWNERR;
+				goto end;
+			}
+			ptr = (char *)xmlNodeGetContent(node);
+		}
+		break;
+		case 2:
+		{
+
+			/* find start node */
+			node = xmlSecFindNode(xmlDocGetRootElement(doc), xmlSecNodeDigestValue, xmlSecDSigNs);
+			if (node == NULL) {
+				ulResult = SOR_UNKNOWNERR;
+				goto end;
+			}
+			ptr = (char *)xmlNodeGetContent(node);
+		}
+			
+
+			break;
+		case 3:
+		{
+			/* find start node */
+			node = xmlSecFindNode(xmlDocGetRootElement(doc), xmlSecNodeSignatureValue, xmlSecDSigNs);
+			if (node == NULL) {
+				ulResult = SOR_UNKNOWNERR;
+				goto end;
+			}
+			ptr = (char *)xmlNodeGetContent(node);
+		}
+			break;
+		case 4:
+		{
+			/* find start node */
+			node = xmlSecFindNode(xmlDocGetRootElement(doc), xmlSecNodeX509Certificate, xmlSecDSigNs);
+			if (node == NULL) {
+				ulResult = SOR_UNKNOWNERR;
+				goto end;
+			}
+
+			ptr = (char *)xmlNodeGetContent(node);
+		}
+			break;
+		case 5:
+		{
+			/* find start node */
+			node = xmlSecFindNode(xmlDocGetRootElement(doc), xmlSecNodeDigestMethod, xmlSecDSigNs);
+			if (node == NULL) {
+				ulResult = SOR_UNKNOWNERR;
+				goto end;
+			}
+
+			ptr = (char *)xmlGetProp(node, xmlSecAttrAlgorithm);
+		}
+			break;
+		case 6:
+		{
+			/* find start node */
+			node = xmlSecFindNode(xmlDocGetRootElement(doc), xmlSecNodeSignatureMethod, xmlSecDSigNs);
+			if (node == NULL) {
+				ulResult = SOR_UNKNOWNERR;
+				goto end;
+			}
+
+			ptr = (char *)xmlGetProp(node, xmlSecAttrAlgorithm);
+		}
+			break;
+		default:
+			break;
+		}
+
+	
+		if (NULL == pbInfo)
+		{
+			*pulInfoLen = strlen(ptr);
+			ulResult = SOR_OK;
+		}
+		else if (strlen(ptr) >  *pulInfoLen)
+		{
+			*pulInfoLen = strlen(ptr);
+			ulResult = SOR_MEMORYERR;
+		}
+		else
+		{
+			*pulInfoLen = strlen(ptr);
+			memcpy(pbInfo, ptr, strlen(ptr));
+			ulResult = SOR_OK;
+		}
+
+	end:
+
+
+		if (doc != NULL) {
+			xmlFreeDoc(doc);
+		}
+
+		xmlCleanupParser();
+
+		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting\n");
+		ulResult = ErrorCodeConvert(ulResult);
+
+		return ulResult;
 	}
 
 	ULONG CALL_CONVENTION SOF_GenRandom(void * p_ckpFunctions, BYTE *pbDataIn, ULONG ulDataInLen)

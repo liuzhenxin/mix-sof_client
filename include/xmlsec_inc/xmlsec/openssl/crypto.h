@@ -611,7 +611,13 @@ XMLSEC_CRYPTO_EXPORT xmlSecTransformId xmlSecOpenSSLTransformRipemd160GetKlass(v
  */
 #define xmlSecOpenSSLKeyDataRsaId \
         xmlSecOpenSSLKeyDataRsaGetKlass()
+
 XMLSEC_CRYPTO_EXPORT xmlSecKeyDataId    xmlSecOpenSSLKeyDataRsaGetKlass (void);
+
+#define xmlSecOpenSSLKeyDataSM2Id \
+        xmlSecOpenSSLKeyDataSM2GetKlass()
+XMLSEC_CRYPTO_EXPORT xmlSecKeyDataId    xmlSecOpenSSLKeyDataSM2GetKlass(void);
+
 XMLSEC_CRYPTO_EXPORT int                xmlSecOpenSSLKeyDataRsaAdoptRsa (xmlSecKeyDataPtr data,
                                                                          RSA* rsa);
 XMLSEC_CRYPTO_EXPORT RSA*               xmlSecOpenSSLKeyDataRsaGetRsa   (xmlSecKeyDataPtr data);

@@ -472,6 +472,7 @@ struct _xmlSecCryptoDLFunctions {
     xmlSecCryptoTransformGetKlassMethod          transformGostR3411_2012_256GetKlass;
     xmlSecCryptoTransformGetKlassMethod          transformGostR3411_2012_512GetKlass;
     xmlSecCryptoTransformGetKlassMethod          transformSha1GetKlass;
+	xmlSecCryptoTransformGetKlassMethod          transformSM3GetKlass;
     xmlSecCryptoTransformGetKlassMethod          transformSha224GetKlass;
     xmlSecCryptoTransformGetKlassMethod          transformSha256GetKlass;
     xmlSecCryptoTransformGetKlassMethod          transformSha384GetKlass;

@@ -328,6 +328,12 @@ struct _xmlSecTransformCtx {
     void*                                       reserved1;
 };
 
+
+typedef struct _SData{
+	int len;
+	unsigned char *data;
+}SData;
+
 XMLSEC_EXPORT xmlSecTransformCtxPtr     xmlSecTransformCtxCreate        (void);
 XMLSEC_EXPORT void                      xmlSecTransformCtxDestroy       (xmlSecTransformCtxPtr ctx);
 XMLSEC_EXPORT int                       xmlSecTransformCtxInitialize    (xmlSecTransformCtxPtr ctx);

@@ -21,6 +21,9 @@ extern "C" {
 #include <xmlsec/exports.h>
 #include <xmlsec/strings.h>
 
+typedef int(*cb_digest)(void *args, unsigned char *in, int in_len, unsigned char *out, int *out_len);
+typedef int(*cb_sign)(void *args, unsigned char *in, int in_len, unsigned char *out, int *out_len);
+
 /***********************************************************************
  *
  * Basic types to make ports to exotic platforms easier

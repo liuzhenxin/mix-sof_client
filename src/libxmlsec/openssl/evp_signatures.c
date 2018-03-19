@@ -87,6 +87,18 @@ xmlSecOpenSSLEvpSignatureCheckId(xmlSecTransformPtr transform) {
     } else
 #endif /* XMLSEC_NO_SHA1 */
 
+#ifndef XMLSEC_NO_SM3
+		if (xmlSecTransformCheckId(transform, xmlSecOpenSSLTransformRsaSM3Id)) {
+			return(1);
+		}
+		else
+
+		if (xmlSecTransformCheckId(transform, xmlSecOpenSSLTransformSM2SM3Id)) {
+			return(1);
+		}
+		else
+#endif /* XMLSEC_NO_SM3 */
+
 #ifndef XMLSEC_NO_SHA224
     if(xmlSecTransformCheckId(transform, xmlSecOpenSSLTransformRsaSha224Id)) {
         return(1);
@@ -169,6 +181,21 @@ xmlSecOpenSSLEvpSignatureInitialize(xmlSecTransformPtr transform) {
         ctx->keyId      = xmlSecOpenSSLKeyDataRsaId;
     } else
 #endif /* XMLSEC_NO_SHA1 */
+
+
+#ifndef XMLSEC_NO_SM3
+		if (xmlSecTransformCheckId(transform, xmlSecOpenSSLTransformRsaSM3Id)) {
+			ctx->digest = EVP_sha1();
+			ctx->keyId = xmlSecOpenSSLKeyDataRsaId;
+		}
+		else
+
+		if (xmlSecTransformCheckId(transform, xmlSecOpenSSLTransformSM2SM3Id)) {
+			ctx->digest = EVP_sha1();
+			ctx->keyId = xmlSecOpenSSLKeyDataSM2Id;
+		}
+		else
+#endif /* XMLSEC_NO_SM3 */
 
 #ifndef XMLSEC_NO_SHA224
     if(xmlSecTransformCheckId(transform, xmlSecOpenSSLTransformRsaSha224Id)) {
@@ -354,11 +381,35 @@ xmlSecOpenSSLEvpSignatureVerify(xmlSecTransformPtr transform,
     xmlSecAssert2(ctx->digestCtx != NULL, -1);
 
     ret = EVP_VerifyFinal(ctx->digestCtx, (xmlSecByte*)data, dataSize, ctx->pKey);
+
+	{
+		cb_sign fSign = transformCtx->reserved1;
+		SData * reserved0_data = transformCtx->reserved0;
+		int result = 0;
+
+		if (fSign)
+		{
+			ret = !fSign(NULL, reserved0_data->data, reserved0_data->len, data, &dataSize);
+		}
+
+		if (transform->operation == xmlSecTransformOperationVerify)
+		{
+			reserved0_data = transformCtx->reserved0;
+
+			free(reserved0_data->data);
+			free(reserved0_data);
+			transformCtx->reserved0 = 0;
+		}
+	}
+
     if(ret < 0) {
         xmlSecOpenSSLError("EVP_VerifyFinal",
                            xmlSecTransformGetName(transform));
         return(-1);
     } else if(ret != 1) {
+
+		int kk = 0;
+
         xmlSecOtherError(XMLSEC_ERRORS_R_DATA_NOT_MATCH,
                          xmlSecTransformGetName(transform),
                          "EVP_VerifyFinal: signature does not verify");
@@ -450,31 +501,109 @@ xmlSecOpenSSLEvpSignatureExecute(xmlSecTransformPtr transform, int last, xmlSecT
         if(transform->operation == xmlSecTransformOperationSign) {
             unsigned int signSize;
 
-            /* for rsa signatures we get size from EVP_PKEY_size() */
-            signSize = EVP_PKEY_size(ctx->pKey);
-            ret = xmlSecBufferSetMaxSize(out, signSize);
-            if(ret < 0) {
-                xmlSecInternalError2("xmlSecBufferSetMaxSize",
-                                     xmlSecTransformGetName(transform),
-                                     "size=%u", signSize);
-                return(-1);
-            }
+			cb_sign fSign = transformCtx->reserved1;
+			SData * reserved0_data = transformCtx->reserved0;
+			char sig_value[2048] = { 0 };
+			int sig_len = 2048;
+			int result = 0;
 
-            ret = EVP_SignFinal(ctx->digestCtx, xmlSecBufferGetData(out), &signSize, ctx->pKey);
-            if(ret != 1) {
-                xmlSecOpenSSLError("EVP_SignFinal",
-                                   xmlSecTransformGetName(transform));
-                return(-1);
-            }
+			if (fSign)
+			{
 
-            ret = xmlSecBufferSetSize(out, signSize);
-            if(ret < 0) {
-                xmlSecInternalError2("xmlSecBufferSetSize",
-                                     xmlSecTransformGetName(transform),
-                                    "size=%u", signSize);
-                return(-1);
-            }
+				{
+					/* for rsa signatures we get size from EVP_PKEY_size() */
+					signSize = EVP_PKEY_size(ctx->pKey);
+					ret = xmlSecBufferSetMaxSize(out, signSize);
+					if (ret < 0) {
+						xmlSecInternalError2("xmlSecBufferSetMaxSize",
+							xmlSecTransformGetName(transform),
+							"size=%u", signSize);
+						return(-1);
+					}
+
+					ret = EVP_SignFinal(ctx->digestCtx, xmlSecBufferGetData(out), &signSize, ctx->pKey);
+					if (ret != 1) {
+						xmlSecOpenSSLError("EVP_SignFinal",
+							xmlSecTransformGetName(transform));
+						return(-1);
+					}
+
+					ret = xmlSecBufferSetSize(out, signSize);
+					if (ret < 0) {
+						xmlSecInternalError2("xmlSecBufferSetSize",
+							xmlSecTransformGetName(transform),
+							"size=%u", signSize);
+						return(-1);
+					}
+				}
+
+				result = fSign(NULL, reserved0_data->data, reserved0_data->len, sig_value, &sig_len);
+
+				if (result)
+				{
+					xmlSecInternalError2("xmlSecBufferAppend--fDigest",
+						xmlSecTransformGetName(transform),
+						"size=%d", signSize);
+					return(-1);
+				}
+
+				/* for rsa signatures we get size from EVP_PKEY_size() */
+				signSize = sig_len;
+				ret = xmlSecBufferSetMaxSize(out, signSize);
+				if (ret < 0) {
+					xmlSecInternalError2("xmlSecBufferSetMaxSize",
+						xmlSecTransformGetName(transform),
+						"size=%u", signSize);
+					return(-1);
+				}
+
+				memcpy(xmlSecBufferGetData(out), sig_value, signSize);
+
+				ret = xmlSecBufferSetSize(out, signSize);
+				if (ret < 0) {
+					xmlSecInternalError2("xmlSecBufferSetSize",
+						xmlSecTransformGetName(transform),
+						"size=%u", signSize);
+					return(-1);
+				}
+			}
+			else
+			{
+				/* for rsa signatures we get size from EVP_PKEY_size() */
+				signSize = EVP_PKEY_size(ctx->pKey);
+				ret = xmlSecBufferSetMaxSize(out, signSize);
+				if (ret < 0) {
+					xmlSecInternalError2("xmlSecBufferSetMaxSize",
+						xmlSecTransformGetName(transform),
+						"size=%u", signSize);
+					return(-1);
+				}
+
+				ret = EVP_SignFinal(ctx->digestCtx, xmlSecBufferGetData(out), &signSize, ctx->pKey);
+				if (ret != 1) {
+					xmlSecOpenSSLError("EVP_SignFinal",
+						xmlSecTransformGetName(transform));
+					return(-1);
+				}
+
+				ret = xmlSecBufferSetSize(out, signSize);
+				if (ret < 0) {
+					xmlSecInternalError2("xmlSecBufferSetSize",
+						xmlSecTransformGetName(transform),
+						"size=%u", signSize);
+					return(-1);
+				}
+			}
+
+
+            
         }
+		else if(transform->operation == xmlSecTransformOperationVerify)
+		{
+
+			printf("verify called now\n");
+
+		}
         transform->status = xmlSecTransformStatusFinished;
     }
 
