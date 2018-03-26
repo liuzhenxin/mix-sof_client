@@ -721,7 +721,7 @@ unsigned int OpenSSL_GetX509Content(
 		*puiX509ContentLen = i2d_X509_CRL_INFO(crl->crl, &ptr_out);
 	}
 	break;
-defauit:
+default:
 	goto err;
 	break;
 	}
@@ -997,7 +997,7 @@ unsigned int OpenSSL_SM2SetX509SignValue(
 		*puiX509SignedLen = i2d_X509_CRL(crl, &ptr_out);
 	}
 	break;
-defauit:
+default:
 	goto err;
 	break;
 	}
@@ -3151,7 +3151,7 @@ unsigned int OpenSSL_SM2Write(const unsigned char * pbIN, unsigned int uiINLen,
 		uiRet = 0;
 	}
 	break;
-defauit:
+default:
 	break;
 	}
 
