@@ -9,6 +9,8 @@
 
 #include "FILE_LOG.h"
 
+#define DEFAULT_CON_RSA "11-rsa"
+#define DEFAULT_CON_SM2 "RT_SM_CON"
 
 int main(int argc, char * argv[])
 {
@@ -21,16 +23,21 @@ int main(int argc, char * argv[])
 	unsigned char * signature = new unsigned char[1024 * 8];
 	unsigned char * sign_cert = new unsigned char[1024 * 8];
 	unsigned char * crypt_cert = new unsigned char[1024 * 8];
+	unsigned char * crypt_data = new unsigned char[1024 * 8];
+	unsigned char * plain_data = new unsigned char[1024 * 8];
 
 	ULONG plain_len = sizeof(plain);
 	ULONG sign_cert_len = 1024 * 8;
 	ULONG crypt_cert_len = 1024 * 8;
+	ULONG crypt_data_len = 1024 * 8;
+	ULONG plain_data_len = 1024 * 8;
 	ULONG signature_len = 1024 * 8;
 	int i = 0;
 
 	unsigned char info[2048] = { 0 };
 	ULONG info_len  = sizeof(info);
 	
+	char * container_used = DEFAULT_CON_SM2;
 
 	CK_SKF_FUNCTION_LIST *ckpFunctions = NULL;
 
@@ -59,23 +66,38 @@ int main(int argc, char * argv[])
 		goto end;
 	}
 
-	ulResult = SOF_Login(ckpFunctions, "11-rsa", "88888888");
+	ulResult = SOF_Login(ckpFunctions, container_used, "88888888");
 	if (ulResult)
 	{
 		goto end;
 	}
 
-	ulResult = SOF_ExportUserCert(ckpFunctions, "11-rsa", sign_cert, &sign_cert_len);
+	ulResult = SOF_ExportUserCert(ckpFunctions, container_used, sign_cert, &sign_cert_len);
 	if (ulResult)
 	{
 		goto end;
 	}
 
-	ulResult = SOF_ExportExChangeUserCert(ckpFunctions, "11-rsa", crypt_cert, &crypt_cert_len);
+	ulResult = SOF_ExportExChangeUserCert(ckpFunctions, container_used, crypt_cert, &crypt_cert_len);
 	if (ulResult)
 	{
 		goto end;
 	}
+
+
+	ulResult = SOF_PubKeyEncrypt(ckpFunctions, crypt_cert, crypt_cert_len, (BYTE*)"D:/test.txt", 5, crypt_data, & crypt_data_len);
+	if (ulResult)
+	{
+		goto end;
+	}
+
+
+	ulResult = SOF_PriKeyDecrypt(ckpFunctions, container_used, crypt_data, crypt_data_len, plain_data, & plain_len);
+	if (ulResult)
+	{
+		goto end;
+	}
+
 
 	ulResult = SOF_SetSignMethod(ckpFunctions, SGD_SM3_RSA);
 	if (ulResult)
@@ -83,7 +105,7 @@ int main(int argc, char * argv[])
 		goto end;
 	}
 
-	ulResult = SOF_SignDataXML(ckpFunctions, "11-rsa", (BYTE*)xmlData, strlen(xmlData), signature, &signature_len);
+	ulResult = SOF_SignDataXML(ckpFunctions, container_used, (BYTE*)xmlData, strlen(xmlData), signature, &signature_len);
 	if (ulResult)
 	{
 		goto end;
@@ -109,7 +131,7 @@ int main(int argc, char * argv[])
 	
 
 	signature_len = 1024 * 8;
-	ulResult = SOF_SignMessage(ckpFunctions, "11-rsa", 0, plain, plain_len, signature, &signature_len);
+	ulResult = SOF_SignMessage(ckpFunctions, container_used, 0, plain, plain_len, signature, &signature_len);
 	if (ulResult)
 	{
 		goto end;
@@ -134,7 +156,7 @@ int main(int argc, char * argv[])
 
 
 	signature_len = 1024 * 8;
-	ulResult = SOF_SignMessage(ckpFunctions, "11-rsa", 1, plain, plain_len, signature, &signature_len);
+	ulResult = SOF_SignMessage(ckpFunctions, container_used, 1, plain, plain_len, signature, &signature_len);
 	if (ulResult)
 	{
 		goto end;
@@ -146,7 +168,7 @@ int main(int argc, char * argv[])
 		goto end;
 	}
 
-	//ulResult = SOF_SignData(ckpFunctions, "11-rsa", plain, plain_len, signature, &signature_len);
+	//ulResult = SOF_SignData(ckpFunctions, container_used, plain, plain_len, signature, &signature_len);
 	//if (ulResult)
 	//{
 	//	goto end;
@@ -161,7 +183,7 @@ int main(int argc, char * argv[])
 	
 
 	//signature_len = 1024 * 8;
-	//ulResult = SOF_SignFile(ckpFunctions, "11-rsa", "D:/test.txt", signature, &signature_len);
+	//ulResult = SOF_SignFile(ckpFunctions, container_used, "D:/test.txt", signature, &signature_len);
 	//if (ulResult)
 	//{
 	//	goto end;
@@ -187,7 +209,7 @@ int main(int argc, char * argv[])
 	}
 
 
-	ulResult = SOF_DecryptFile(ckpFunctions, "11-rsa", "D:/cipher.txt", "D:/plain.txt" );
+	ulResult = SOF_DecryptFile(ckpFunctions, container_used, "D:/cipher.txt", "D:/plain.txt" );
 	if (ulResult)
 	{
 		goto end;

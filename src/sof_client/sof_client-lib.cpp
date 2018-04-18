@@ -5574,9 +5574,199 @@ end:
 	end:
 
 		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting\n");
+		ulResult = ErrorCodeConvert(ulResult);
 
 		return ulResult;
 	}
+
+#if 1
+
+	ULONG CALL_CONVENTION SOF_PubKeyEncrypt(void * p_ckpFunctions, BYTE *pbCert, ULONG ulCertLen, BYTE *pbDataIn, ULONG ulDataInLen, BYTE *pbDataOut, ULONG *pulDataOutLen)
+	{
+		CK_SKF_FUNCTION_LIST_PTR ckpFunctions = (CK_SKF_FUNCTION_LIST_PTR)p_ckpFunctions;
+		HANDLE hContainer = NULL;
+
+		ULONG ulResult = SOR_OK;
+		ULONG ulContainerType = 0;
+
+		BYTE *pbTmp = NULL;
+		ULONG ulTmpLen;
+
+		RSA *rsa = NULL;
+
+		FILE_LOG_FMT(file_log_name, "\n%s %d %s", __FUNCTION__, __LINE__, "entering");
+
+		FILE_LOG_FMT(file_log_name, "%s", "Cert:");
+		FILE_LOG_HEX(file_log_name, pbCert, ulCertLen);
+		FILE_LOG_FMT(file_log_name, "%s", "DataIn:");
+		FILE_LOG_HEX(file_log_name, pbDataIn, ulDataInLen);
+
+		RSAPUBLICKEYBLOB rsaPublicKeyBlob = { 0 };
+		ECCPUBLICKEYBLOB eccPublicKeyBlob = { 0 };
+
+		CertificateItemParse certParse;
+
+		certParse.setCertificate(pbCert, ulCertLen);
+
+		if (0 != certParse.parse())
+		{
+			ulResult = SOR_INDATAERR;
+			goto end;
+		}
+
+		if (ECertificate_KEY_ALG_RSA == certParse.m_iKeyAlg)
+		{
+			X509 * x509 = NULL;
+			unsigned char pbModulus[256];
+			int ulModulusLen = 0;
+			const unsigned char *ptr = NULL;
+			ptr = pbCert;
+
+			x509 = d2i_X509(NULL, &ptr, ulCertLen);
+
+			if (x509)
+			{
+				RSA *rsa = EVP_PKEY_get1_RSA(X509_get_pubkey(x509));
+
+				if (rsa != NULL)
+				{
+					ulModulusLen = BN_bn2bin(rsa->n, pbModulus);
+				}
+
+				rsaPublicKeyBlob.BitLen = ulModulusLen * 8;
+
+				memcpy(rsaPublicKeyBlob.PublicExponent, "\x00\x01\x00\x01", 4);
+
+				memcpy(rsaPublicKeyBlob.Modulus + 256 - ulModulusLen, pbModulus, ulModulusLen);
+				X509_free(x509);
+			}
+
+			ulResult = ckpFunctions->SKF_ExtRSAPubKeyOperation(global_data.hDevHandle, &rsaPublicKeyBlob, pbDataIn, ulDataInLen, pbDataOut, pulDataOutLen);
+		}
+		else if (ECertificate_KEY_ALG_EC == certParse.m_iKeyAlg)
+		{
+			unsigned char pk_data[32 * 2 + 1] = { 0 };
+			unsigned int pk_len = 65;
+
+			eccPublicKeyBlob.BitLen = 256;
+
+			OpenSSL_CertGetPubkey(pbCert, ulCertLen, pk_data, &pk_len);
+
+			memcpy(eccPublicKeyBlob.XCoordinate + 32, pk_data + 1, 32);
+			memcpy(eccPublicKeyBlob.YCoordinate + 32, pk_data + 1 + 32, 32);
+
+			ulTmpLen = ulDataInLen + sizeof(ECCCIPHERBLOB);
+			pbTmp = (BYTE*)malloc(ulTmpLen);
+			if (pbTmp == NULL)
+			{
+				ulResult = SOR_MEMORYERR;
+				goto end;
+			}
+			memset(pbTmp, 0x00, ulDataInLen + sizeof(ECCCIPHERBLOB));
+			ulResult = ckpFunctions->SKF_ExtECCEncrypt(global_data.hDevHandle, &eccPublicKeyBlob, pbDataIn, ulDataInLen, (PECCCIPHERBLOB)pbTmp);
+
+			if (NULL == pbDataOut)
+			{
+				*pulDataOutLen = ulTmpLen;
+				ulResult = SOR_OK;
+				goto end;
+			}
+			else if (ulTmpLen >  *pulDataOutLen)
+			{
+				*pulDataOutLen = ulTmpLen;
+				ulResult = SOR_MEMORYERR;
+				goto end;
+			}
+			else
+			{
+				*pulDataOutLen = ulTmpLen;
+				memcpy(pbDataOut, pbTmp, ulTmpLen);
+			}
+			FILE_LOG_FMT(file_log_name, "%s", "DataOut:");
+			FILE_LOG_HEX(file_log_name, pbDataOut, ulTmpLen);
+		}
+		else
+		{
+			ulResult = SOR_NOTSUPPORTYETERR;
+			goto end;
+		}
+
+	end:
+
+		if (pbTmp != NULL)
+			free(pbTmp);
+		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting\n");
+
+		ulResult = ErrorCodeConvert(ulResult);
+
+		return ulResult;
+	}
+
+	ULONG CALL_CONVENTION SOF_PriKeyDecrypt(void * p_ckpFunctions, LPSTR pContainerName, BYTE *pbDataIn, ULONG ulDataInLen, BYTE *pbDataOut, ULONG *pulDataOutLen)
+	{
+		CK_SKF_FUNCTION_LIST_PTR ckpFunctions = (CK_SKF_FUNCTION_LIST_PTR)p_ckpFunctions;
+		HANDLE hContainer = NULL;
+
+		ULONG ulResult = 0;
+		ULONG ulContainerType = 0;
+
+		FILE_LOG_FMT(file_log_name, "\n%s %d %s", __FUNCTION__, __LINE__, "entering");
+		FILE_LOG_FMT(file_log_name, "ContainerName: %s", pContainerName);
+
+		FILE_LOG_FMT(file_log_name, "%s", "DataIn:");
+		FILE_LOG_HEX(file_log_name, pbDataIn, ulDataInLen);
+
+		ulResult = ckpFunctions->SKF_OpenContainer(global_data.hAppHandle, pContainerName, &hContainer);
+		if (ulResult)
+		{
+			goto end;
+		}
+		//1表示为RSA容器，为2表示为ECC容器
+		ulResult = ckpFunctions->SKF_GetContainerType(hContainer, &ulContainerType);
+		if (ulResult)
+		{
+			goto end;
+		}
+
+		if (ulContainerType == 1)
+		{
+			ulResult = ckpFunctions->SKF_RSAPriKeyOperation(hContainer, pbDataIn, ulDataInLen, pbDataOut, pulDataOutLen, FALSE);
+
+		}
+		else if (ulContainerType == 2)
+		{
+			ulResult = ckpFunctions->SKF_ECCDecrypt(hContainer, pbDataIn, ulDataInLen, pbDataOut, pulDataOutLen);
+			FILE_LOG_FMT(file_log_name, "ulResult: %d", ulResult);
+		}
+		else
+		{
+			ulResult = SOR_NOTSUPPORTYETERR;
+			goto end;
+		}
+		if (pbDataOut == NULL)
+			FILE_LOG_FMT(file_log_name, "ulDataOutLen: %d", *pulDataOutLen);
+		else
+		{
+			FILE_LOG_FMT(file_log_name, "%s", "DataOut:");
+			FILE_LOG_HEX(file_log_name, pbDataOut, *pulDataOutLen);
+		}
+	end:
+
+		if (hContainer)
+		{
+			ckpFunctions->SKF_CloseContainer(hContainer);
+		}
+
+		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting\n");
+
+		ulResult = ErrorCodeConvert(ulResult);
+
+		return ulResult;
+	}
+
+#endif
+
+	
 
 #ifdef __cplusplus
 }

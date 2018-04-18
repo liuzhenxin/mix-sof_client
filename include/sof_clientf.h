@@ -232,3 +232,28 @@ CK_SOF_CLIENT_FUNCTION_INFO(SOF_InitializeLibraryNative)
 	CK_SKF_FUNCTION_LIST **pp_ckpFunctions
 	);
 #endif 
+
+
+
+CK_SOF_CLIENT_FUNCTION_INFO(SOF_PriKeyDecrypt)
+#ifdef CK_NEED_ARG_LIST
+(
+	void * p_ckpFunctions,
+	LPSTR pContainerName, 
+	BYTE *pbDataIn, 
+	ULONG ulDataInLen, 
+	BYTE *pbDataOut, 
+	ULONG *pulDataOutLen);
+#endif 
+
+CK_SOF_CLIENT_FUNCTION_INFO(SOF_PubKeyEncrypt)
+#ifdef CK_NEED_ARG_LIST
+(
+	void * p_ckpFunctions,
+	BYTE *pbCert,
+	ULONG ulCertLen,
+	BYTE *pbDataIn,
+	ULONG ulDataInLen,
+	BYTE *pbDataOut,
+	ULONG *pulDataOutLen);
+#endif 
