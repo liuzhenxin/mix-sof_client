@@ -291,6 +291,8 @@ extern "C" {
 		}
 		global_data.last_error = errCode;
 
+		FILE_LOG_FMT(file_log_name, "%s %d errCode = %d", __FUNCTION__, __LINE__, errCode);
+
 		return errCode;
 	}
 

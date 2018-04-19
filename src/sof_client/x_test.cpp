@@ -9,6 +9,8 @@
 
 #include "FILE_LOG.h"
 
+#include "modp_b64.h"
+
 #define DEFAULT_CON_RSA "11-rsa"
 #define DEFAULT_CON_SM2 "RT_SM_CON"
 
@@ -42,6 +44,20 @@ int main(int argc, char * argv[])
 	CK_SKF_FUNCTION_LIST *ckpFunctions = NULL;
 
 	ULONG ulResult = 0;
+
+	std::string strcert = "MEYCIQCgJSKu8nRnMXSVgdZYoBRF6S1sM8SA7d8VFuKR8Vz2fgIhANL1t74+6FsN0mWw6ZijogxK9JAC3vZeFoOhGwgC135J";
+
+	std::string strcert2 = strcert;
+
+	strcert2 = modp_b64_decode(strcert2);
+
+	strcert2 = modp_b64_encode(strcert2);
+
+	if (0 == strcmp(strcert2.c_str(), strcert.c_str()))
+	{
+		printf("success!");
+	}
+
 
 	const char * xmlData = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" \
 		"<!-- \n" \
