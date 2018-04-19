@@ -787,6 +787,30 @@ end:
 			WT_ClearCert();
 		}
 		break;
+		case  160://证书算法标识
+		{
+			memcpy(data_info_value, certParse.m_strOID.c_str(), certParse.m_strOID.size());
+			data_info_len = certParse.m_strOID.size();
+		}
+		break;
+		case  54://证书有效期截止日期(是否有格式)
+		{
+			memcpy(data_info_value, certParse.m_strNotAfter.c_str(), certParse.m_strNotAfter.size());
+			data_info_len = certParse.m_strNotAfter.size();
+		}
+		break;
+		case  53: //证书有效期起始日期(是否有格式):
+		{
+			memcpy(data_info_value, certParse.m_strNotBefore.c_str(), certParse.m_strNotBefore.size());
+			data_info_len = certParse.m_strNotBefore.size();
+		}
+		break;
+
+		
+			
+
+			
+
 
 
 		case  SGD_CERT_EXTENSIONS:
