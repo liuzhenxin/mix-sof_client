@@ -50,25 +50,29 @@ typedef unsigned char       UINT8, *PUINT8;
 typedef unsigned short      UINT16, *PUINT16;
 typedef unsigned int        UINT32, *PUINT32;
 
+#if defined(WINDOWS) || defined(WIN32)
+#include <Windows.h>
+#else
 typedef INT32 BOOL;
-
-typedef UINT8 BYTE;
 //CHAR	字符类型，无符号8位整数
 typedef UINT8 CHAR;
-//SHORT	短整数，有符号16位
-typedef INT16 SHORT;
-//USHORT	无符号16位整数
-typedef UINT16 USHORT;
 //LONG 	长整数，有符号32位整数
 typedef INT32 LONG;
 //ULONG	长整数，无符号32位整数
 typedef UINT32 ULONG;
+//DWORD	双字类型，无符号32位整数
+typedef UINT32 DWORD;
+#endif
+
+typedef UINT8 BYTE;
+//SHORT	短整数，有符号16位
+typedef INT16 SHORT;
+//USHORT	无符号16位整数
+typedef UINT16 USHORT;
 //UINT	无符号32位整数
 typedef UINT32 UINT;
 //WORD	字类型，无符号16位整数
 typedef UINT16 WORD;
-//DWORD	双字类型，无符号32位整数
-typedef UINT32 DWORD;
 //FLAGS	标志类型，无符号32位整数
 typedef UINT32 FLAGS;
 //LPSTR	8位字符串指针，按照UTF8格式存储及交换
