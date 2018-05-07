@@ -103,6 +103,16 @@ add_executable(
 target_link_libraries(x_test_encrypt crypt32)
 target_link_libraries(x_test_encrypt cryptui)
 
+add_executable(
+  sof_server
+
+  sof_server.cpp
+  json_reader.cpp
+  json_writer.cpp
+  json_value.cpp
+)
+
+
 
 
 
