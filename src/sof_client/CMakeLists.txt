@@ -112,6 +112,12 @@ add_executable(
   json_value.cpp
 )
 
+add_executable(
+  HTTPServer
+
+  HTTPServer.cpp
+)
+
 
 
 
