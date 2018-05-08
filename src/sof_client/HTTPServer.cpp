@@ -275,19 +275,16 @@ DWORD DoReceiveRequests(
 				wprintf(L"Got a POST request for %ws \n",
 					pRequest->CookedUrl.pFullUrl);
 
-				result = HttpReceiveRequestEntityBody(
-					hReqQueue,
-					pRequest->RequestId,
-					HTTP_RECEIVE_REQUEST_ENTITY_BODY_FLAG_FILL_BUFFER,                  // Flags
-					pRequestBufferEntityBody,           // HTTP request buffer
-					RequestBufferLengthEntityBody,// req buffer length
-					&bytesRead,         // bytes received
-					NULL                // LPOVERLAPPED
-				);
+				//result = HttpReceiveRequestEntityBody(
+				//	hReqQueue,
+				//	pRequest->RequestId,
+				//	HTTP_RECEIVE_REQUEST_ENTITY_BODY_FLAG_FILL_BUFFER,                  // Flags
+				//	pRequestBufferEntityBody,           // HTTP request buffer
+				//	RequestBufferLengthEntityBody,// req buffer length
+				//	&bytesRead,         // bytes received
+				//	NULL                // LPOVERLAPPED
+				//);
 
-				printf("Client requested %d %s\n", bytesRead, pRequestBufferEntityBody);
-
-				FILE_WRITE_HEX("d:/log.txt",(unsigned char *)pRequestBufferEntityBody, bytesRead);
 
 				result = SendHttpPostResponse(hReqQueue, pRequest);
 				break;
@@ -574,6 +571,8 @@ DWORD SendHttpPostResponse(
 				NULL
 			);
 
+			printf("Client result=%d  BytesRead=%d pEntityBuffer=%s\n", result, BytesRead, pEntityBuffer);
+
 			switch (result)
 			{
 			case NO_ERROR:
@@ -639,6 +638,21 @@ DWORD SendHttpPostResponse(
 					HttpHeaderContentLength,
 					szContentLength
 				);
+
+				//ADD_KNOWN_HEADER(
+				//	response,
+				//	HttpHeaderAllow,
+				//	"Access-Control-Allow-Origin: *"
+				//);
+
+				response.Headers.pUnknownHeaders = new HTTP_UNKNOWN_HEADER[1];
+				response.Headers.UnknownHeaderCount = 1;
+
+				response.Headers.pUnknownHeaders[0].pName = "Access-Control-Allow-Origin";
+				response.Headers.pUnknownHeaders[0].NameLength = strlen("Access-Control-Allow-Origin");
+				response.Headers.pUnknownHeaders[0].pRawValue = "*";
+				response.Headers.pUnknownHeaders[0].RawValueLength = strlen("*");
+
 
 				result =
 					HttpSendHttpResponse(
