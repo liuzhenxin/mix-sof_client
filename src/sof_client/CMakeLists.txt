@@ -104,17 +104,12 @@ target_link_libraries(x_test_encrypt crypt32)
 target_link_libraries(x_test_encrypt cryptui)
 
 add_executable(
-  sof_server
+  HTTPServer
 
-  sof_server.cpp
+  mix_server.cpp
   json_reader.cpp
   json_writer.cpp
   json_value.cpp
-)
-
-add_executable(
-  HTTPServer
-
   HTTPServer.cpp
   FBWTSofPluginAPI.cpp
 )

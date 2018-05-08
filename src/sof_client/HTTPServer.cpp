@@ -17,7 +17,7 @@
 
 #pragma comment(lib, "httpapi.lib")
 
-
+#include <string>
 //
 // Macros.
 //
@@ -487,6 +487,8 @@ DWORD SendHttpPostResponse(
 
 	BytesRead = 0;
 	hTempFile = INVALID_HANDLE_VALUE;
+	std::string strFmtCommandIn;
+	std::string strFmtCommandOut;
 
 	//
 	// Allocate space for an entity buffer. Buffer can be increased 
@@ -571,8 +573,7 @@ DWORD SendHttpPostResponse(
 				NULL
 			);
 
-			printf("Client result=%d  BytesRead=%d pEntityBuffer=%s\n", result, BytesRead, pEntityBuffer);
-
+			
 			switch (result)
 			{
 			case NO_ERROR:
@@ -587,6 +588,8 @@ DWORD SendHttpPostResponse(
 						&TempFileBytesWritten,
 						NULL
 					);
+
+					strFmtCommandIn.append(std::string(pEntityBuffer, pEntityBuffer + TempFileBytesWritten));
 				}
 				break;
 
@@ -612,6 +615,7 @@ DWORD SendHttpPostResponse(
 						&TempFileBytesWritten,
 						NULL
 					);
+					strFmtCommandIn.append(std::string(BytesRead, BytesRead + TempFileBytesWritten));
 				}
 
 				//
@@ -631,19 +635,19 @@ DWORD SendHttpPostResponse(
 				// 
 
 
-				sprintf_s(szContentLength, MAX_ULONG_STR, "%lu", TotalBytesRead);
+				//sprintf_s(szContentLength, MAX_ULONG_STR, "%lu", TotalBytesRead);
+
+				strFmtCommandOut = strFmtCommandIn;
+
+				printf("Client result=%d  BytesRead=%d pEntityBuffer=%s\n", result, strFmtCommandOut.size(), strFmtCommandOut.c_str());
+
+				sprintf_s(szContentLength, MAX_ULONG_STR, "%lu", strFmtCommandOut.size());
 
 				ADD_KNOWN_HEADER(
 					response,
 					HttpHeaderContentLength,
 					szContentLength
 				);
-
-				//ADD_KNOWN_HEADER(
-				//	response,
-				//	HttpHeaderAllow,
-				//	"Access-Control-Allow-Origin: *"
-				//);
 
 				response.Headers.pUnknownHeaders = new HTTP_UNKNOWN_HEADER[1];
 				response.Headers.UnknownHeaderCount = 1;
@@ -691,6 +695,14 @@ DWORD SendHttpPostResponse(
 					HTTP_BYTE_RANGE_TO_EOF;
 
 				dataChunk.FromFileHandle.FileHandle = hTempFile;
+
+
+				////////////////////////
+				dataChunk.DataChunkType = HttpDataChunkFromMemory;
+				dataChunk.FromMemory.BufferLength = strFmtCommandOut.size();
+				dataChunk.FromMemory.pBuffer = (PVOID)strFmtCommandOut.c_str();
+				////////////////////////
+
 
 				result = HttpSendResponseEntityBody(
 					hReqQueue,
@@ -756,6 +768,11 @@ Done:
 	if (pEntityBuffer)
 	{
 		FREE_MEM(pEntityBuffer);
+	}
+
+	if (response.Headers.pUnknownHeaders)
+	{
+		delete[] response.Headers.pUnknownHeaders;
 	}
 
 	if (INVALID_HANDLE_VALUE != hTempFile)
