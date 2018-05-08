@@ -116,6 +116,7 @@ add_executable(
   HTTPServer
 
   HTTPServer.cpp
+  FBWTSofPluginAPI.cpp
 )
 
 target_link_libraries(HTTPServer sof_client)
