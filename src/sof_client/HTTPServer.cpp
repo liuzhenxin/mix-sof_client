@@ -205,8 +205,10 @@ DWORD DoReceiveRequests(
 	HTTP_REQUEST_ID    requestId;
 	DWORD              bytesRead;
 	PHTTP_REQUEST      pRequest;
+	PCHAR              pRequestBufferEntityBody;
 	PCHAR              pRequestBuffer;
 	ULONG              RequestBufferLength;
+	ULONG              RequestBufferLengthEntityBody;
 
 	//
 	// Allocate a 2 KB buffer. This size should work for most 
@@ -215,6 +217,9 @@ DWORD DoReceiveRequests(
 	//
 	RequestBufferLength = sizeof(HTTP_REQUEST) + 2048;
 	pRequestBuffer = (PCHAR)ALLOC_MEM(RequestBufferLength);
+
+	RequestBufferLengthEntityBody = sizeof(HTTP_REQUEST) + 2048;
+	pRequestBufferEntityBody = (PCHAR)ALLOC_MEM(RequestBufferLengthEntityBody);
 
 	if (pRequestBuffer == NULL)
 	{
@@ -270,10 +275,19 @@ DWORD DoReceiveRequests(
 				wprintf(L"Got a POST request for %ws \n",
 					pRequest->CookedUrl.pFullUrl);
 
+				result = HttpReceiveRequestEntityBody(
+					hReqQueue,
+					pRequest->RequestId,
+					HTTP_RECEIVE_REQUEST_ENTITY_BODY_FLAG_FILL_BUFFER,                  // Flags
+					pRequestBufferEntityBody,           // HTTP request buffer
+					RequestBufferLengthEntityBody,// req buffer length
+					&bytesRead,         // bytes received
+					NULL                // LPOVERLAPPED
+				);
 
-				printf("Client requested %d %s\n", bytesRead, pRequestBuffer);
+				printf("Client requested %d %s\n", bytesRead, pRequestBufferEntityBody);
 
-				FILE_WRITE_HEX("d:/log.txt",(unsigned char *) pRequestBuffer, bytesRead);
+				FILE_WRITE_HEX("d:/log.txt",(unsigned char *)pRequestBufferEntityBody, bytesRead);
 
 				result = SendHttpPostResponse(hReqQueue, pRequest);
 				break;
@@ -351,6 +365,11 @@ DWORD DoReceiveRequests(
 	if (pRequestBuffer)
 	{
 		FREE_MEM(pRequestBuffer);
+	}
+
+	if (pRequestBufferEntityBody)
+	{
+		FREE_MEM(pRequestBufferEntityBody);
 	}
 
 	return result;
