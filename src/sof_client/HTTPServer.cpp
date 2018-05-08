@@ -13,6 +13,7 @@
 #include <windows.h>
 #include <http.h>
 #include <stdio.h>
+#include <FILE_LOG.h>
 
 #pragma comment(lib, "httpapi.lib")
 
@@ -268,6 +269,11 @@ DWORD DoReceiveRequests(
 
 				wprintf(L"Got a POST request for %ws \n",
 					pRequest->CookedUrl.pFullUrl);
+
+
+				printf("Client requested %d %s\n", bytesRead, pRequestBuffer);
+
+				FILE_WRITE_HEX("d:/log.txt",(unsigned char *) pRequestBuffer, bytesRead);
 
 				result = SendHttpPostResponse(hReqQueue, pRequest);
 				break;

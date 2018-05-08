@@ -118,7 +118,16 @@ add_executable(
   HTTPServer.cpp
 )
 
+target_link_libraries(HTTPServer sof_client)
 
+add_executable(
+  server_
 
+  error.c
+  request.c
+  response.c
+  header.c
+  server_.cpp
+)
 
 
