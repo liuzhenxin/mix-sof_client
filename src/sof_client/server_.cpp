@@ -71,4 +71,6 @@ listen_goto:
     }
 
     WSACleanup();
+
+	return 0;
 }
