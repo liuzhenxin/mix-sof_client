@@ -44,6 +44,11 @@ function YDXToken(obj){
 	this.SGD_MD5									= 	0x00000081;
 	this.SGD_SHA384									= 	0x00000082;
 	this.SGD_SHA512									= 	0x00000083;
+	
+	this.SGD_SM3_RSA                                = 	0x00010001; 
+	this.SGD_SHA1_RSA                               = 	0x00010002;
+	this.SGD_SHA256_RSA                             = 	0x00010004;
+	this.SGD_SM3_SM2                                = 	0x00020201; 
 
 	
 	this.SGD_CERT_VERSION							=	0x00000001;
@@ -138,49 +143,6 @@ function YDXToken(obj){
 			return false;
 		}
 	}
-	
-	this.SOF_InitializeLibraryNative = function(type)
-	{
-		var ret;
-		if(g_YDXTokenPlugin == null)
-		{
-			if(isIe() )
-			{	//IE
-				if(!-[1,])
-				{	//IE678
-					g_YDXTokenPlugin = document.getElementById(obj);
-					g_YDXTokenPlugin.setAttribute("type", "application/x-fbwtsofplugin");
-					
-				}
-				else
-				{	//IE9+
-					if(!!window.ActiveXObject)
-					{
-						g_YDXTokenPlugin = document.getElementById(obj);
-						g_YDXTokenPlugin.setAttribute("type", "application/x-fbwtsofplugin");
-					}
-					else
-					{
-						g_YDXTokenPlugin = new YDXTokenPlugin();
-					}
-					
-				}
-
-			}else {
-				g_YDXTokenPlugin = new YDXTokenPlugin();
-			}
-			
-		}
-		
-		ret = g_YDXTokenPlugin.SOF_InitializeLibraryNative(type);
-		
-		if(ret != 0)
-		{
-//			g_YDXTokenPlugin = null;
-			return -2;
-		}
-		return this.SAR_OK;
-	};
 	
 	this.SOF_EnumDevice = function()
 	{
@@ -525,6 +487,37 @@ function YDXToken(obj){
 
 	this.SOF_InitializeLibraryNative = function(strLibrary)
 	{
+		var ret;
+		if(g_YDXTokenPlugin == null)
+		{
+			if(isIe() )
+			{	//IE
+				if(!-[1,])
+				{	//IE678
+					g_YDXTokenPlugin = document.getElementById(obj);
+					g_YDXTokenPlugin.setAttribute("type", "application/x-fbwtsofplugin");
+					
+				}
+				else
+				{	//IE9+
+					if(!!window.ActiveXObject)
+					{
+						g_YDXTokenPlugin = document.getElementById(obj);
+						g_YDXTokenPlugin.setAttribute("type", "application/x-fbwtsofplugin");
+					}
+					else
+					{
+						g_YDXTokenPlugin = new YDXTokenPlugin();
+					}
+					
+				}
+
+			}else {
+				g_YDXTokenPlugin = new YDXTokenPlugin();
+			}
+			
+		}
+		
 		if(g_YDXTokenPlugin == null)
 		{
 			return null;
@@ -881,7 +874,7 @@ function YDXTokenPlugin(){
 	{
 		var json = {
 			exec_name:"SOF_GetDeviceInfo",
-			exec_arg_real_list:[strContainerName, strOidString]
+			exec_arg_real_list:[strContainerName, ulType]
 		};
 		
 		try

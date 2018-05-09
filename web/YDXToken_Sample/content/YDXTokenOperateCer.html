@@ -43,19 +43,19 @@
 						<select id="sele_contentList" style="width:450px">	
 						</select>
 					</td>	
-					<td align="center"><input type="button" value="列举容器" style="width:120px" onClick="return getUserList()"/>
+					<td align="center"><input type="button" value="列举容器" style="width:120px" onClick="return GetUserList()"/>
 					</td>
 				</tr>
 				<tr>
 					<td>用户密码：</td>
-					<td><input type="text" value="12345678" id="txt_pwd" name="pwd" style=" width:450px"/></td>					
-					<td align="center"><input type="button" value="登陆" style="width:120px" onClick="return verifyUserPin()"/></td>
+					<td><input type="text" value="88888888" id="txt_pwd" name="pwd" style=" width:450px"/></td>					
+					<td align="center"><input type="button" value="登陆" style="width:120px" onClick="return Login()"/></td>
 					<td ><label id="tryCount"></></td>
 				</tr>
 				<tr>
 					<td>修改用户密码：</td>
 					<td><input type="text" value="" id="txt_Changepwd" name="pwd" style=" width:450px"/></td>					
-					<td align="center"><input type="button" value="修改" style="width:120px" onClick="return changeUserPin()"/></td>				
+					<td align="center"><input type="button" value="修改" style="width:120px" onClick="return ChangePassWd()"/></td>				
 				</tr>
                
 				<tr>
@@ -70,7 +70,7 @@
 						</select>
 					</td>
 					<td >
-						<input type="button" value="导出" style="width:120px" onClick="return exportUserCert()"/>
+						<input type="button" value="导出" style="width:120px" onClick="return ExportUserCert()"/>
 					</td>
 					
 				</tr>
@@ -80,7 +80,7 @@
 					<td>
 						<textarea id="showcerInfo" row="30" cols="23"  style="height:80px;width:450px"></textarea>
 					</td>
-					<td align="center"><input type="button" value="获取" style="width:120px" onClick="return getCertInfo()"/></td>
+					<td align="center"><input type="button" value="获取" style="width:120px" onClick="return GetCertInfo()"/></td>
 					<td></td>
 				</tr>
 				
@@ -89,7 +89,7 @@
 					<td>
 						<textarea id="deviceInfo" wrap="hard" row="30" cols="60" style=" height:80px;width:450px" name="infoCer"></textarea>
 					</td>
-					<td align="center"><input type="button" value="获取" style="width:120px" onClick="return getDeviceInfo()"/></td>
+					<td align="center"><input type="button" value="获取" style="width:120px" onClick="return GetDeviceInfo()"/></td>
 					<td></td>
 				</tr>
 				
@@ -99,7 +99,7 @@
 					<td>
 						<input type="text" id="contorlInfo" name="infoCer" style="width: 450px"></textarea>
 					</td>
-					<td align="center"><input type="button" value="获取" style="width:120px" onClick="return getVersion()"/></td>
+					<td align="center"><input type="button" value="获取" style="width:120px" onClick="return GetVersion()"/></td>
 					<td></td>
 				</tr>
 				<!--
@@ -125,25 +125,52 @@
 		<hr>
 		<table align="center">
 			<tr>
+			<td> 签名算法：</td>
+			
+			<td><select id="signMech">
+						<option value="0x00010001">SGD_SM3_RSA</option>
+						<option value="0x00010002">SGD_SHA1_RSA</option>
+						<option value="0x00010004">SGD_SHA256_RSA</option>	
+						<option value="0x00020201">SGD_SM3_SM2</option>							
+					</select></td>
+			<td><input type="button" value="设置签名算法" style="width:120px" onClick="return SetSignMethod()"/></td>
+			<td><input type="button" value="获取签名算法" style="width:120px" onClick="return GetSignMethod()"/></td>
+			</tr>
+			
+			<tr>
+			<td> 加密算法：</td>
+			<td><select id="encMech">
+						<option value="1">SGD_SM3_RSA</option>
+						<option value="2">SGD_SHA1_RSA</option>
+						<option value="3">SGD_SHA256_RSA</option>	
+						<option value="4">SGD_SM3_SM2</option>							
+					</select></td>
+			<td><input type="button" value="设置加密算法" style="width:120px" onClick="return SetEncryptMethod()"/></td>
+			<td><input type="button" value="获取加密算法" style="width:120px" onClick="return GetEncryptMethod()"/></td>
+			</tr>
+			
+			<tr>
+			<td>签名格式：</td>
+			<td>
+				<select id="signType">
+					<option value="1">SGD_SM3_RSA</option>
+					<option value="2">SGD_SHA1_RSA</option>
+					<option value="3">SGD_SHA256_RSA</option>	
+					<option value="4">SGD_SM3_SM2</option>							
+				</select>
+			</td>
+			</tr>
+			<tr>
 				<td>
 					待签名数据：<br>
-					用户ID：<br>
 					待签名文件：
 				</td>
 				<td>					
 					<input type="text" value="12345678123456781234567812345678" id="originalData" name="data" style=" width:450px"/>
-					<input type="text" value="1234567812345678" id="userID" name="userdata" style=" width:450px"/>
 					<input type="text" value="d:\test.txt" id="signFile" name="signFile" style=" width:450px"/>
 				</td>
-				<td align="center">
-					<select id="mech" style="width:110px">
-						<option value="1">SGD_SM3</option>
-						<option value="2">SGD_SHA1</option>
-						<option value="4">SGD_SHA256</option>					
-					</select>
-				</td>
-				<td><input type="button" value="签名数据" style="width:120px" onClick="return signData()"/></td>
-				<td><input type="button" value="签名数据(P7)" style="width:120px" onClick="return signData_P7()"/></td>
+				<td><input type="button" value="签名数据" style="width:120px" onClick="return SignData()"/></td>
+				<td><input type="button" value="签名XML" style="width:120px" onClick="return signData_P7()"/></td>
 				<td><input type="button" value="签名文件" style="width:120px" onClick="return signFile()"/></td>
 			</tr>
 			<tr>
@@ -151,9 +178,8 @@
 				<td>
 					<textarea id="signedData" row="3" cols="23" style="height:80px;width:450px"></textarea>
 				</td>
-				<td></td>
 				<td><input type="button" value="数据验签"style="width:120px" onClick="return verifySign()"/></td>
-				<td><input type="button" value="数据验签(P7)"style="width:120px" onClick="return verifySign_P7()"/></td>
+				<td><input type="button" value="XML验签"style="width:120px" onClick="return verifySign_P7()"/></td>
 				<td><input type="button" value="文件验签"style="width:120px" onClick="return verifySignFile()"/></td>
 			</tr>
 			<br>
@@ -242,33 +268,6 @@
 				<td>解密后数据:</td>
 				<td>
 					<input type="text" value="" id="deData" name="deData" style=" width:450px"/>
-				</td>
-				<td></td>
-				<td></td>
-			</tr>
-			<tr>
-				<td>待摘要数据：</td>
-				
-				<td>
-					<input type="text" value="12345678" id="digestData" name="digestData" style=" width:450px"/>
-				</td>
-				<td align="center">
-					<select id="digestmech" style="width:120px">
-						<option value="129">SGD_MD5</option>
-						<option value="1">SGD_SM3</option>
-						<option value="2">SGD_SHA1</option>
-						<option value="4">SGD_SHA256</option>
-						<option value="130">SGD_SHA384</option>
-						<option value="131">SGD_SHA512</option>
-					</select>
-					</select>
-				</td>
-				<td><input type="button" value="摘要"style="width:120px" onClick="return digestData()"/></td>
-			</tr>
-			<tr>
-				<td>摘要后结果：</td>
-				<td>
-					<textarea id="digestedData" row="3" cols="23" style=" height:80px;width:450px" name="verification"></textarea>
 				</td>
 				<td></td>
 				<td></td>
