@@ -105,7 +105,7 @@ public:
 
 	std::string SOF_SignMessage( UINT16 u16Flag,  std::string strContainerName, std::string strDataIn);
 
-	BOOL SOF_VerifySignedMessage(  std::string strDataIn, std::string strDataOut);
+	BOOL SOF_VerifySignedMessage(  std::string strDataOut, std::string strDataIn);
 
 	std::string SOF_GetInfoFromSignedMessage(std::string strMessageData, UINT16 u16Type);
 
