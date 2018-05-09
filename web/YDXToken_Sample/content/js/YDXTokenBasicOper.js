@@ -317,6 +317,134 @@
 		}
 	}
 	
+	/*
+				<td><input type="button" value="签名XML" style="width:120px" onClick="return SignDataXML()"/></td>
+				<td><input type="button" value="签名文件" style="width:120px" onClick="return SignFile()"/></td>
+				<td><input type="button" value="签名消息" style="width:120px" onClick="return SignMessage()"/></td>
+			</tr>
+			<tr>
+				<td>签名后结果：</td>
+				<td>
+					<textarea id="signedData" row="3" cols="23" style="height:80px;width:450px"></textarea>
+				</td>
+				<td><input type="button" value="XML验签"style="width:120px" onClick="return ()"/></td>
+				<td><input type="button" value="文件验签"style="width:120px" onClick="return VerifySignedFile()"/></td>
+				<td><input type="button" value="消息验签"style="width:120px" onClick="return VerifySignedMessage()"/></td>
+				
+				*/
+				
+				
+	function VerifySignedDataXML()
+	{
+		var inData = document.getElementById("originalData").value;
+		var signed = document.getElementById("signedData").value;
+		if(signed == null || signed.length <= 0)
+		{
+			alert("请先签名后操作");
+			return;
+		}
+		
+		var container = document.getElementById("sele_contentList");
+		if(container.selectedIndex < 0)
+		{
+			alert("请选择容器操作");
+			return;
+		}
+		
+		var selectType = document.getElementById("sele_cerType");
+		var containerName = container.options[container.selectedIndex].text;
+		if(containerName == null || containerName == "")
+		{
+			alert("请选择容器操作");
+			return;
+		}
+		
+		var ret = token.SOF_VerifySignedDataXML(signed);
+		if(token.TRUE != ret)
+			alert("验签失败,错误码:" + token.SOF_GetLastError());
+		else
+			alert("验签成功");
+	}
+				
+	//数据验签
+	function VerifySignedData()
+	{
+		var inData = document.getElementById("originalData").value;
+		var signed = document.getElementById("signedData").value;
+		if(signed == null || signed.length <= 0)
+		{
+			alert("请先签名后操作");
+			return;
+		}
+		
+		var container = document.getElementById("sele_contentList");
+		if(container.selectedIndex < 0)
+		{
+			alert("请选择容器操作");
+			return;
+		}
+		
+		var selectType = document.getElementById("sele_cerType");
+		var containerName = container.options[container.selectedIndex].text;
+		if(containerName == null || containerName == "")
+		{
+			alert("请选择容器操作");
+			return;
+		}
+		
+		var cerType = selectType.options[selectType.selectedIndex].value;
+		var cert  = token.SOF_ExportUserCert(containerName);
+		
+		var ret = token.SOF_VerifySignedData(cert, inData, signed);
+		if(token.TRUE != ret)
+			alert("验签失败,错误码:" + token.SOF_GetLastError());
+		else
+			alert("验签成功");
+	}
+	
+	
+	function SignDataXML()
+	{
+		var selectType = document.getElementById("sele_cerType");
+		var cerType = selectType.options[selectType.selectedIndex].value;
+		if(cerType == 0)
+		{
+			alert("请选择签名密钥进行签名");
+			return ;
+		}
+		
+		var inData = document.getElementById("originalDataXML").value;
+		
+		if(signed != null && signed != "")
+		{
+
+		}
+		else
+		{
+			indata = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<!-- \nXML Security Library example: Original XML doc file for sign3 example. \n-->\n<Envelope xmlns=\"urn:envelope\">\n  <Data>\n	Hello,ABCDEFG World!\n  </Data>\n</Envelope>\n";
+				
+			document.getElementById("originalDataXML").value = indata;
+		}
+			
+		var container = document.getElementById("sele_contentList");
+		var containerName = "";
+		
+		if(container.selectedIndex < 0)
+		{
+
+		}
+		else{
+			containerName = container.options[container.selectedIndex].text;
+		}
+		
+		var signed = token.SOF_SignDataXML(containerName, inData);
+		if(signed != null && signed != "")
+			document.getElementById("signedData").value = signed;
+		else
+			alert("签名失败,错误码:" + token.SOF_GetLastError());
+	}
+	
+	
 	//数据签名
 	function SignData()
 	{
@@ -341,15 +469,13 @@
 			containerName = container.options[container.selectedIndex].text;
 		}
 		
-		var signed = token.SOF_SignData(containerName, cerType, inData, inData.length);
+		var signed = token.SOF_SignData(containerName, inData);
 		if(signed != null && signed != "")
 			document.getElementById("signedData").value = signed;
 		else
 			alert("签名失败,错误码:" + token.SOF_GetLastError());
 	}
 	
-	
-	var signed;
 	//数据签名
 	function signData_P7()
 	{
@@ -473,45 +599,7 @@
 			alert("验签成功");
 	}
 	
-	//数据验签
-	function verifySign()
-	{
-		var DigestMethod = document.getElementById("mech").value;
-		var userID = document.getElementById("userID").value;
-		var inData = document.getElementById("originalData").value;
-		var signed = document.getElementById("signedData").value;
-		if(signed == null || signed.length <= 0)
-		{
-			alert("请先签名后操作");
-			return;
-		}
-		
-		var container = document.getElementById("sele_contentList");
-		if(container.selectedIndex < 0)
-		{
-			alert("请选择容器操作");
-			return;
-		}
-		
-		var selectType = document.getElementById("sele_cerType");
-		var containerName = container.options[container.selectedIndex].text;
-		if(containerName == null || containerName == "")
-		{
-			alert("请选择容器操作");
-			return;
-		}
-		
-		var cerType = selectType.options[selectType.selectedIndex].value;
-		var cert  = token.SOF_ExportUserCert(containerName, cerType);
-		
-		var ret = token.SOF_SetDigestMethod(Number(DigestMethod));
-			ret = token.SOF_SetUserID(userID);
-			ret = token.SOF_VerifySignedDataEx(cert, inData, signed);
-		if(ret != 0)
-			alert("验签失败,错误码:" + token.SOF_GetLastError());
-		else
-			alert("验签成功");
-	}
+	
 	
 	//数据验签
 	function verifySign_P7()

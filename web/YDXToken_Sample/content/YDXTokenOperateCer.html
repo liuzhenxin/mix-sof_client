@@ -146,19 +146,27 @@
 				</select>
 			</td>
 			</tr>
+			
 			<tr>
 				<td>
-					待签名数据：<br>
-					待签名文件：
+					待签名数据：
 				</td>
-				<td>					
-					<input type="text" value="123456781234567812345678123456781234567812345678123456781234567812345678123456781234567812345678" id="originalData" name="data" style=" width:450px"/>
-					<input type="text" value="d:\test.txt" id="signFile" name="signFile" style=" width:450px"/>
+				<td>
+					<textarea value="123456781234567812345678123456781234567812345678123456781234567812345678123456781234567812345678" id="originalData" row="3" cols="23" style="height:80px;width:450px"></textarea>
 				</td>
 				<td><input type="button" value="签名数据" style="width:120px" onClick="return SignData()"/></td>
-				<td><input type="button" value="签名XML" style="width:120px" onClick="return SignDataXML()"/></td>
 				<td><input type="button" value="签名文件" style="width:120px" onClick="return SignFile()"/></td>
 				<td><input type="button" value="签名消息" style="width:120px" onClick="return SignMessage()"/></td>
+			</tr>
+			
+			<tr>
+				<td>
+					待签名XML：
+				</td>
+				<td>
+					<textarea value="" id="originalDataXML" row="3" cols="23" style="height:80px;width:450px"></textarea>
+				</td>
+				<td><input type="button" value="签名XML" style="width:120px" onClick="return SignDataXML()"/></td>
 			</tr>
 			<tr>
 				<td>签名后结果：</td>
