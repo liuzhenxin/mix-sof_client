@@ -15,6 +15,10 @@
 #include <stdio.h>
 #include <FILE_LOG.h>
 
+#include "FBWTSofPluginAPI.h"
+
+#include "mix_server.h"
+
 #pragma comment(lib, "httpapi.lib")
 
 #include <string>
@@ -63,6 +67,7 @@ SendHttpPostResponse(
 	IN PHTTP_REQUEST pRequest
 );
 
+FBWTSofPluginAPI * pFBWTSofPluginAPI = NULL;
 
 /*******************************************************************++
 
@@ -92,6 +97,9 @@ int __cdecl wmain(
 		wprintf(L"%ws: <Url1> [Url2] ... \n", argv[0]);
 		return -1;
 	}
+
+
+	pFBWTSofPluginAPI = new FBWTSofPluginAPI();
 
 	//
 	// Initialize HTTP Server APIs
@@ -180,6 +188,8 @@ CleanUp:
 	// Call HttpTerminate.
 	//
 	HttpTerminate(HTTP_INITIALIZE_SERVER, NULL);
+
+	delete pFBWTSofPluginAPI;
 
 	return retCode;
 }
@@ -637,9 +647,13 @@ DWORD SendHttpPostResponse(
 
 				//sprintf_s(szContentLength, MAX_ULONG_STR, "%lu", TotalBytesRead);
 
-				strFmtCommandOut = strFmtCommandIn;
+				//strFmtCommandOut = strFmtCommandIn;
 
-				printf("Client result=%d  BytesRead=%d pEntityBuffer=%s\n", result, strFmtCommandOut.size(), strFmtCommandOut.c_str());
+				printf("Server Recv BytesRead=%d pEntityBuffer=%s\n", strFmtCommandIn.size(), strFmtCommandIn.c_str());
+
+				http_server_command_exec(strFmtCommandIn, strFmtCommandOut, pFBWTSofPluginAPI);
+
+				printf("Server Send BytesSend=%d pEntityBuffer=%s\n", strFmtCommandOut.size(), strFmtCommandOut.c_str());
 
 				sprintf_s(szContentLength, MAX_ULONG_STR, "%lu", strFmtCommandOut.size());
 

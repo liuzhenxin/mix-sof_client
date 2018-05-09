@@ -1,139 +1,13 @@
 
 
 #include "mix_server.h"
-#include <sys/types.h>
-
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <errno.h>
-#include <signal.h>
 #include <Json/Json.h>
+#include "FBWTSofPluginAPI.h"
 
-#include "modp_b64.h"
-
-static std::string mix_b64_encode(std::string s)
-{
-	std::string x(modp_b64_encode_len(s.size()), '\0');
-	size_t d = modp_b64_encode(const_cast<char*>(x.data()), s.data(), (int)s.size());
-	x.erase(d, std::string::npos);
-	s.swap(x);
-	return s;
-}
-
-/**
-* base 64 decode a string (self-modifing)
-* On failure, the string is empty.
-*
-* This function is for C++ only (duh)
-*
-* \param[in,out] s the string to be decoded
-* \return a reference to the input string
-*/
-static std::string mix_b64_decode(std::string s)
-{
-	std::string x(modp_b64_decode_len(s.size()), '\0');
-	size_t d = modp_b64_decode(const_cast<char*>(x.data()), s.data(), (int)s.size());
-	if (d == MODP_B64_ERROR) {
-		x.clear();
-	}
-	else {
-		x.erase(d, std::string::npos);
-	}
-	s.swap(x);
-	return s;
-}
-
-int mix_server_command_valid(unsigned char * pfmtCommandIn)
-{
-	if (pfmtCommandIn[SERVICE_COMMAND_HEAD_SIZE] != SERVICE_COMMAND_TAG_DATA)
-	{
-		return -1;
-	}
-
-	return 0;
-}
-
-
-Json::Value SFTKSign(Json::Value &parameters, Json::Value &exec_result)
-{
-	int uiRet = 0;
-	/*
-	std::string usr_pwd;
-	int i_cert_id;
-	std::string str_msg;
-	int i_hash_alg;
-	int i_sign_type;
-	unsigned char * pbDataOut = NULL;
-	int uiDataOutLen = 0;
-	int certIDs[20];
-	int certCnt = 20;
-
-	Json::Value paramItem;
-	char filepathDB[255] = { 0 };
-
-	memset(filepathDB, 0, 255);
-	memcpy(filepathDB, [NSHomeDirectory() UTF8String], [NSHomeDirectory() length]);
-	strcat(filepathDB, "/Documents");
-
-
-	paramItem = parameters[0];
-	i_cert_id = paramItem.asInt();
-
-	paramItem = parameters[1];
-	str_msg = mix_b64_decode(paramItem.asString());
-
-	paramItem = parameters[2];
-	i_hash_alg = paramItem.asInt();
-
-	paramItem = parameters[3];
-	i_sign_type = paramItem.asInt();
-
-	paramItem = parameters[4];
-	usr_pwd = paramItem.asString();
-
-	// uiRet = SFTK_SetSystemDBDir(filepathDB);
-	if (uiRet) {
-		goto err;
-	}
-
-	uiRet = SFTK_EnumCertIDs(certIDs, &certCnt);
-	if (uiRet) {
-		goto err;
-	}
-
-	uiRet = SFTK_VerifyPIN(usr_pwd.c_str());
-	if (uiRet) {
-		goto err;
-	}
-
-	uiRet = SFTK_Sign(i_cert_id, (unsigned char *)str_msg.c_str(), (int)str_msg.size(), (EHashAlgEnum)i_hash_alg, (ESignTypeEnum)i_sign_type, pbDataOut, &uiDataOutLen);
-	if (uiRet) {
-		goto err;
-	}
-
-	pbDataOut = (unsigned char *)malloc(uiDataOutLen);
-
-	uiRet = SFTK_Sign(i_cert_id, (unsigned char *)str_msg.c_str(), (int)str_msg.size(), (EHashAlgEnum)i_hash_alg, (ESignTypeEnum)i_sign_type, pbDataOut, &uiDataOutLen);
-	if (uiRet) {
-		goto err;
-	}
-
-	exec_result = std::string(mix_b64_encode(std::string((char *)pbDataOut, (char *)pbDataOut + uiDataOutLen)));
-
-err:
-
-	if (pbDataOut)
-	{
-		free(pbDataOut);
-		pbDataOut = NULL;
-	}
-	*/
-
-	return uiRet;
-}
-
-int mix_server_command_exec(unsigned char * pfmtCommandIn, int ifmtCommandInLen, unsigned char *pfmtCommandOut, int *pifmtCommandOutLen)
+int http_server_command_exec(std::string pfmtCommandIn, std::string &pfmtCommandOut, FBWTSofPluginAPI *pFBWTSofPluginAPI)
 {
 	unsigned int json_request_len = 0;
 	unsigned int json_response_len = 0;
@@ -144,9 +18,7 @@ int mix_server_command_exec(unsigned char * pfmtCommandIn, int ifmtCommandInLen,
 	Json::Value items;
 	bool bFlag = false;
 
-	GET_ULONG_BE(json_request_len, pfmtCommandIn, SERVICE_COMMAND_HEAD_SIZE + SERVICE_COMMAND_TAG_SIZE);
-
-	bFlag = json_reader.parse((const char*)pfmtCommandIn + SERVICE_COMMAND_HEAD_SIZE + SERVICE_COMMAND_TAG_SIZE + SERVICE_COMMAND_LEN_SIZE, json_value_common_call);
+	bFlag = json_reader.parse((const char*)pfmtCommandIn.c_str(), json_value_common_call);
 
 	// exec_type exec_name exec_result exec_error
 	if (bFlag)
@@ -164,77 +36,202 @@ int mix_server_command_exec(unsigned char * pfmtCommandIn, int ifmtCommandInLen,
 			//printf("exec_arg_real_list=%s\n",exec_arg_real_list.toStyledString().c_str());
 		}
 
-		/*
-		if (0 == strcmp(json_value_common_call["exec_name"].asCString(), "SFTKVerifyPIN"))
+		if (0 == strcmp(json_value_common_call["exec_name"].asCString(), "SOF_FinalizeLibraryNative"))
 		{
-			values["exec_status"] = SFTKVerifyPIN(exec_arg_real_list, exec_result);
+			exec_result = pFBWTSofPluginAPI->SOF_FinalizeLibraryNative();
+			values["exec_status"] = (int)pFBWTSofPluginAPI->SOF_GetLastError();
 		}
-		else if (0 == strcmp(json_value_common_call["exec_name"].asCString(), "SFTKChangePIN"))
+		else if (0 == strcmp(json_value_common_call["exec_name"].asCString(), "SOF_InitializeLibraryNative"))
 		{
-			values["exec_status"] = SFTKChangePIN(exec_arg_real_list, exec_result);
+			exec_result = pFBWTSofPluginAPI->SOF_InitializeLibraryNative(exec_arg_real_list[0].asCString());
+			values["exec_status"] = (int)pFBWTSofPluginAPI->SOF_GetLastError();
 		}
-		else if (0 == strcmp(json_value_common_call["exec_name"].asCString(), "SFTKUnlockUserPIN"))
+		else if (0 == strcmp(json_value_common_call["exec_name"].asCString(), "SOF_GetLastError"))
 		{
-			values["exec_status"] = SFTKUnlockUserPIN(exec_arg_real_list, exec_result);
+			exec_result = (int)pFBWTSofPluginAPI->SOF_GetLastError();
+			values["exec_status"] = (int)pFBWTSofPluginAPI->SOF_GetLastError();
 		}
-		else if (0 == strcmp(json_value_common_call["exec_name"].asCString(), "SFTKImportPfx"))
+		else if (0 == strcmp(json_value_common_call["exec_name"].asCString(), "SOF_Logout"))
 		{
-			values["exec_status"] = SFTKImportPfx(exec_arg_real_list, exec_result);
+			exec_result = pFBWTSofPluginAPI->SOF_Logout();
+			values["exec_status"] = (int)pFBWTSofPluginAPI->SOF_GetLastError();
 		}
-		else if (0 == strcmp(json_value_common_call["exec_name"].asCString(), "SFTKEnumCertIDs"))
+		else if (0 == strcmp(json_value_common_call["exec_name"].asCString(), "SOF_PriKeyDecryptLongData"))
 		{
-			values["exec_status"] = SFTKEnumCertIDs(exec_arg_real_list, exec_result);
+			exec_result = pFBWTSofPluginAPI->SOF_PriKeyDecryptLongData(exec_arg_real_list[0].asCString(), exec_arg_real_list[1].asCString());
+			values["exec_status"] = (int)pFBWTSofPluginAPI->SOF_GetLastError();
 		}
-		else if (0 == strcmp(json_value_common_call["exec_name"].asCString(), "SFTKGetCertAttribute"))
+		else if (0 == strcmp(json_value_common_call["exec_name"].asCString(), "SOF_PubKeyEncryptLongData"))
 		{
-			values["exec_status"] = SFTKGetCertAttribute(exec_arg_real_list, exec_result);
+			exec_result = pFBWTSofPluginAPI->SOF_PubKeyEncryptLongData(exec_arg_real_list[0].asCString(), exec_arg_real_list[1].asCString());
+			values["exec_status"] = (int)pFBWTSofPluginAPI->SOF_GetLastError();
 		}
-		else if (0 == strcmp(json_value_common_call["exec_name"].asCString(), "SFTKGetCertBuf"))
+		else if (0 == strcmp(json_value_common_call["exec_name"].asCString(), "SOF_PriKeyDecrypt"))
 		{
-			values["exec_status"] = SFTKGetCert(exec_arg_real_list, exec_result);
+			exec_result = pFBWTSofPluginAPI->SOF_PriKeyDecrypt(exec_arg_real_list[0].asCString(), exec_arg_real_list[1].asCString());
+			values["exec_status"] = (int)pFBWTSofPluginAPI->SOF_GetLastError();
 		}
-		else if (0 == strcmp(json_value_common_call["exec_name"].asCString(), "SFTKSign"))
+		else if (0 == strcmp(json_value_common_call["exec_name"].asCString(), "SOF_PubKeyEncrypt"))
 		{
-			values["exec_status"] = SFTKSign(exec_arg_real_list, exec_result);
+			exec_result = pFBWTSofPluginAPI->SOF_PubKeyEncrypt(exec_arg_real_list[0].asCString(), exec_arg_real_list[1].asCString());
+			values["exec_status"] = (int)pFBWTSofPluginAPI->SOF_GetLastError();
 		}
-		else if (0 == strcmp(json_value_common_call["exec_name"].asCString(), "SFTKVerify"))
+		else if (0 == strcmp(json_value_common_call["exec_name"].asCString(), "SOF_GenRandom"))
 		{
-			values["exec_status"] = SFTKVerify(exec_arg_real_list, exec_result);
+			exec_result = pFBWTSofPluginAPI->SOF_GenRandom(exec_arg_real_list[0].asInt());
+			values["exec_status"] = (int)pFBWTSofPluginAPI->SOF_GetLastError();
 		}
-		else if (0 == strcmp(json_value_common_call["exec_name"].asCString(), "SFTKEncryptMsg"))
+		else if (0 == strcmp(json_value_common_call["exec_name"].asCString(), "SOF_GetXMLSignatureInfo"))
 		{
-			values["exec_status"] = SFTKEncryptMsg(exec_arg_real_list, exec_result);
+			exec_result = pFBWTSofPluginAPI->SOF_GetXMLSignatureInfo(exec_arg_real_list[0].asCString(), exec_arg_real_list[1].asInt());
+			values["exec_status"] = (int)pFBWTSofPluginAPI->SOF_GetLastError();
 		}
-		else if (0 == strcmp(json_value_common_call["exec_name"].asCString(), "SFTKDecryptMsg"))
+		else if (0 == strcmp(json_value_common_call["exec_name"].asCString(), "SOF_VerifySignedDataXML"))
 		{
-			values["exec_status"] = SFTKDecryptMsg(exec_arg_real_list, exec_result);
+			exec_result = pFBWTSofPluginAPI->SOF_VerifySignedDataXML(exec_arg_real_list[0].asCString());
+			values["exec_status"] = (int)pFBWTSofPluginAPI->SOF_GetLastError();
 		}
-		else if (0 == strcmp(json_value_common_call["exec_name"].asCString(), "SFTKPubkeyEncrypt"))
+		else if (0 == strcmp(json_value_common_call["exec_name"].asCString(), "SOF_SignDataXML"))
 		{
-			values["exec_status"] = SFTKPubkeyEncrypt(exec_arg_real_list, exec_result);
+			exec_result = pFBWTSofPluginAPI->SOF_SignDataXML(exec_arg_real_list[0].asCString(), exec_arg_real_list[1].asCString());
+			values["exec_status"] = (int)pFBWTSofPluginAPI->SOF_GetLastError();
 		}
-		else if (0 == strcmp(json_value_common_call["exec_name"].asCString(), "SFTKPrikeyDecrypt"))
+		else if (0 == strcmp(json_value_common_call["exec_name"].asCString(), "SOF_GetInfoFromSignedMessage"))
 		{
-			values["exec_status"] = SFTKPrikeyDecrypt(exec_arg_real_list, exec_result);
+			exec_result = pFBWTSofPluginAPI->SOF_GetInfoFromSignedMessage(exec_arg_real_list[0].asCString(), exec_arg_real_list[1].asInt());
+			values["exec_status"] = (int)pFBWTSofPluginAPI->SOF_GetLastError();
 		}
-		else if (0 == strcmp(json_value_common_call["exec_name"].asCString(), "SFTKDeleteCert"))
+		else if (0 == strcmp(json_value_common_call["exec_name"].asCString(), "SOF_VerifySignedMessage"))
 		{
-			values["exec_status"] = SFTKDeleteCert(exec_arg_real_list, exec_result);
+			exec_result = pFBWTSofPluginAPI->SOF_VerifySignedMessage(exec_arg_real_list[0].asCString(), exec_arg_real_list[1].asCString());
+			values["exec_status"] = (int)pFBWTSofPluginAPI->SOF_GetLastError();
 		}
-		else if (0 == strcmp(json_value_common_call["exec_name"].asCString(), "SFTKEncryptMsgInner"))
+		else if (0 == strcmp(json_value_common_call["exec_name"].asCString(), "SOF_SignMessage"))
 		{
-			values["exec_status"] = SFTKEncryptMsgInner(exec_arg_real_list, exec_result);
+			exec_result = pFBWTSofPluginAPI->SOF_SignMessage(exec_arg_real_list[0].asInt(), exec_arg_real_list[1].asCString(), exec_arg_real_list[2].asCString());
+			values["exec_status"] = (int)pFBWTSofPluginAPI->SOF_GetLastError();
 		}
-		else if (0 == strcmp(json_value_common_call["exec_name"].asCString(), "SFTKPubkeyEncryptInner"))
+		else if (0 == strcmp(json_value_common_call["exec_name"].asCString(), "SOF_DecryptFile"))
 		{
-			values["exec_status"] = SFTKPubkeyEncryptInner(exec_arg_real_list, exec_result);
+			exec_result = pFBWTSofPluginAPI->SOF_DecryptFile(exec_arg_real_list[0].asCString(), exec_arg_real_list[1].asCString(), exec_arg_real_list[2].asCString());
+			values["exec_status"] = (int)pFBWTSofPluginAPI->SOF_GetLastError();
+		}
+		else if (0 == strcmp(json_value_common_call["exec_name"].asCString(), "SOF_EncryptFile"))
+		{
+			exec_result = pFBWTSofPluginAPI->SOF_EncryptFile(exec_arg_real_list[0].asCString(), exec_arg_real_list[1].asCString(), exec_arg_real_list[2].asCString());
+			values["exec_status"] = (int)pFBWTSofPluginAPI->SOF_GetLastError();
+		}
+		else if (0 == strcmp(json_value_common_call["exec_name"].asCString(), "SOF_DecryptData"))
+		{
+			exec_result = pFBWTSofPluginAPI->SOF_DecryptData(exec_arg_real_list[0].asCString(), exec_arg_real_list[1].asCString());
+			values["exec_status"] = (int)pFBWTSofPluginAPI->SOF_GetLastError();
+		}
+		else if (0 == strcmp(json_value_common_call["exec_name"].asCString(), "SOF_EncryptData"))
+		{
+			exec_result = pFBWTSofPluginAPI->SOF_EncryptData(exec_arg_real_list[0].asCString(), exec_arg_real_list[1].asCString());
+			values["exec_status"] = (int)pFBWTSofPluginAPI->SOF_GetLastError();
+		}
+		else if (0 == strcmp(json_value_common_call["exec_name"].asCString(), "SOF_VerifySignedFile"))
+		{
+			exec_result = pFBWTSofPluginAPI->SOF_VerifySignedFile(exec_arg_real_list[0].asCString(), exec_arg_real_list[1].asCString(), exec_arg_real_list[2].asCString());
+			values["exec_status"] = (int)pFBWTSofPluginAPI->SOF_GetLastError();
+		}
+		else if (0 == strcmp(json_value_common_call["exec_name"].asCString(), "SOF_SignFile"))
+		{
+			exec_result = pFBWTSofPluginAPI->SOF_SignFile(exec_arg_real_list[0].asCString(), exec_arg_real_list[1].asCString());
+			values["exec_status"] = (int)pFBWTSofPluginAPI->SOF_GetLastError();
+		}
+		else if (0 == strcmp(json_value_common_call["exec_name"].asCString(), "SOF_VerifySignedData"))
+		{
+			exec_result = pFBWTSofPluginAPI->SOF_VerifySignedData(exec_arg_real_list[0].asCString(), exec_arg_real_list[1].asCString(), exec_arg_real_list[2].asCString());
+			values["exec_status"] = (int)pFBWTSofPluginAPI->SOF_GetLastError();
+		}
+		else if (0 == strcmp(json_value_common_call["exec_name"].asCString(), "SOF_SignData"))
+		{
+			exec_result = pFBWTSofPluginAPI->SOF_SignData(exec_arg_real_list[0].asCString(), exec_arg_real_list[1].asCString());
+			values["exec_status"] = (int)pFBWTSofPluginAPI->SOF_GetLastError();
+		}
+		else if (0 == strcmp(json_value_common_call["exec_name"].asCString(), "SOF_ValidateCert"))
+		{
+			exec_result = (int)pFBWTSofPluginAPI->SOF_ValidateCert(exec_arg_real_list[0].asCString());
+			values["exec_status"] = (int)pFBWTSofPluginAPI->SOF_GetLastError();
+		}
+		else if (0 == strcmp(json_value_common_call["exec_name"].asCString(), "SOF_GetDeviceInfo"))
+		{
+			exec_result = pFBWTSofPluginAPI->SOF_GetDeviceInfo(exec_arg_real_list[0].asCString(), exec_arg_real_list[1].asInt());
+			values["exec_status"] = (int)pFBWTSofPluginAPI->SOF_GetLastError();
+		}
+		else if (0 == strcmp(json_value_common_call["exec_name"].asCString(), "SOF_GetCertInfoByOid"))
+		{
+			exec_result = pFBWTSofPluginAPI->SOF_GetCertInfoByOid(exec_arg_real_list[0].asCString(), exec_arg_real_list[1].asCString());
+			values["exec_status"] = (int)pFBWTSofPluginAPI->SOF_GetLastError();
+		}
+		else if (0 == strcmp(json_value_common_call["exec_name"].asCString(), "SOF_GetCertInfo"))
+		{
+			exec_result = pFBWTSofPluginAPI->SOF_GetCertInfo(exec_arg_real_list[0].asCString(), exec_arg_real_list[1].asInt());
+			values["exec_status"] = (int)pFBWTSofPluginAPI->SOF_GetLastError();
+		}
+		else if (0 == strcmp(json_value_common_call["exec_name"].asCString(), "SOF_ExportExChangeUserCert"))
+		{
+			exec_result = pFBWTSofPluginAPI->SOF_ExportExChangeUserCert(exec_arg_real_list[0].asCString());
+			values["exec_status"] = (int)pFBWTSofPluginAPI->SOF_GetLastError();
+		}
+		else if (0 == strcmp(json_value_common_call["exec_name"].asCString(), "SOF_ChangePassWd"))
+		{
+			exec_result = pFBWTSofPluginAPI->SOF_ChangePassWd(exec_arg_real_list[0].asCString(), exec_arg_real_list[1].asCString(), exec_arg_real_list[2].asCString());
+			values["exec_status"] = (int)pFBWTSofPluginAPI->SOF_GetLastError();
+		}
+		else if (0 == strcmp(json_value_common_call["exec_name"].asCString(), "SOF_GetPinRetryCount"))
+		{
+			exec_result = (int)pFBWTSofPluginAPI->SOF_GetPinRetryCount(exec_arg_real_list[0].asCString());
+			values["exec_status"] = (int)pFBWTSofPluginAPI->SOF_GetLastError();
+		}
+		else if (0 == strcmp(json_value_common_call["exec_name"].asCString(), "SOF_Login"))
+		{
+			exec_result = pFBWTSofPluginAPI->SOF_Login(exec_arg_real_list[0].asCString(), exec_arg_real_list[1].asCString());
+			values["exec_status"] = (int)pFBWTSofPluginAPI->SOF_GetLastError();
+		}
+		else if (0 == strcmp(json_value_common_call["exec_name"].asCString(), "SOF_ExportUserCert"))
+		{
+			exec_result = pFBWTSofPluginAPI->SOF_ExportUserCert(exec_arg_real_list[0].asCString());
+			values["exec_status"] = (int)pFBWTSofPluginAPI->SOF_GetLastError();
+		}
+		else if (0 == strcmp(json_value_common_call["exec_name"].asCString(), "SOF_GetUserList"))
+		{
+			exec_result = pFBWTSofPluginAPI->SOF_GetUserList();
+			values["exec_status"] = (int)pFBWTSofPluginAPI->SOF_GetLastError();
+		}
+		else if (0 == strcmp(json_value_common_call["exec_name"].asCString(), "SOF_GetEncryptMethod"))
+		{
+			exec_result = (int)pFBWTSofPluginAPI->SOF_GetEncryptMethod();
+			values["exec_status"] = (int)pFBWTSofPluginAPI->SOF_GetLastError();
+		}
+		else if (0 == strcmp(json_value_common_call["exec_name"].asCString(), "SOF_SetEncryptMethod"))
+		{
+			exec_result = (int)pFBWTSofPluginAPI->SOF_SetEncryptMethod(exec_arg_real_list[0].asInt());
+			values["exec_status"] = (int)pFBWTSofPluginAPI->SOF_GetLastError();
+		}
+		else if (0 == strcmp(json_value_common_call["exec_name"].asCString(), "SOF_GetSignMethod"))
+		{
+			exec_result = (int)pFBWTSofPluginAPI->SOF_GetSignMethod();
+			values["exec_status"] = (int)pFBWTSofPluginAPI->SOF_GetLastError();
+		}
+		else if (0 == strcmp(json_value_common_call["exec_name"].asCString(), "SOF_SetSignMethod"))
+		{
+			exec_result = (int)pFBWTSofPluginAPI->SOF_SetSignMethod(exec_arg_real_list[0].asInt());
+			values["exec_status"] = (int)pFBWTSofPluginAPI->SOF_GetLastError();
+		}
+		else if (0 == strcmp(json_value_common_call["exec_name"].asCString(), "SOF_GetVersion"))
+		{
+			exec_result = pFBWTSofPluginAPI->SOF_GetVersion();
+			values["exec_status"] = (int)pFBWTSofPluginAPI->SOF_GetLastError();
 		}
 		else
 		{
-			values["exec_status"] = EStateFailure;
+			values["exec_status"] = SOR_UNKNOWNERR;
 			values["exec_error"] = "Invalid command";
 		}
-		*/
+		
 
 		values["exec_result"] = exec_result;
 		values["exec_name"] = json_value_common_call["exec_name"];
@@ -246,22 +243,10 @@ int mix_server_command_exec(unsigned char * pfmtCommandIn, int ifmtCommandInLen,
 	}
 
 	// return values
-	json_response_len = values.toStyledString().length();
-
-	printf("values=%s", values.toStyledString().c_str());
-
-	if (*pifmtCommandOutLen < SERVICE_COMMAND_HEAD_SIZE + SERVICE_COMMAND_TAG_SIZE + SERVICE_COMMAND_LEN_SIZE + json_response_len)
-	{
-		*pifmtCommandOutLen = SERVICE_COMMAND_HEAD_SIZE + SERVICE_COMMAND_TAG_SIZE + SERVICE_COMMAND_LEN_SIZE + json_response_len;
-	}
-	else
-	{
-		*pifmtCommandOutLen = SERVICE_COMMAND_HEAD_SIZE + SERVICE_COMMAND_TAG_SIZE + SERVICE_COMMAND_LEN_SIZE + json_response_len;
-		memset(pfmtCommandOut, 'H', SERVICE_COMMAND_HEAD_SIZE);
-		pfmtCommandOut[SERVICE_COMMAND_HEAD_SIZE] = SERVICE_COMMAND_TAG_DATA;
-		PUT_ULONG_BE(json_response_len, pfmtCommandOut, SERVICE_COMMAND_HEAD_SIZE + SERVICE_COMMAND_TAG_SIZE);
-		memcpy(pfmtCommandOut + SERVICE_COMMAND_HEAD_SIZE + SERVICE_COMMAND_TAG_SIZE + SERVICE_COMMAND_LEN_SIZE, values.toStyledString().c_str(), json_response_len);
-	}
+	pfmtCommandOut = values.toStyledString();
 
 	return 0;
 }
+
+
+
