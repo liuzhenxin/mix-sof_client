@@ -373,13 +373,13 @@ function YDXToken(obj){
 		return g_YDXTokenPlugin.SOF_SignMessage(u16Flag,strContainerName, strDataIn);
 	}
 
-	this.SOF_VerifySignedMessage = function(strDataIn, strDataOut)
+	this.SOF_VerifySignedMessage = function(strDataOut, strDataIn)
 	{
 		if(g_YDXTokenPlugin == null)
 		{
 			return null;
 		}
-		return g_YDXTokenPlugin.SOF_VerifySignedMessage(strDataIn, strDataOut);
+		return g_YDXTokenPlugin.SOF_VerifySignedMessage(strDataOut, strDataIn);
 	}
 
 	this.SOF_GetInfoFromSignedMessage = function(strMessageData, u16Type)
@@ -1130,11 +1130,11 @@ function YDXTokenPlugin(){
 		}
 	}
 	
-	this.SOF_VerifySignedMessage = function( strDataIn, strDataOut)
+	this.SOF_VerifySignedMessage = function(strDataOut, strDataIn)
 	{
 		var json = {
 			exec_name:"SOF_VerifySignedMessage",
-			exec_arg_real_list:[ strDataIn, strDataOut]
+			exec_arg_real_list:[ strDataOut, strDataIn]
 		};
 		
 		try
