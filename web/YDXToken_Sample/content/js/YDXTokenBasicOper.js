@@ -238,7 +238,6 @@
 	
 	function GetSignMethod()
 	{
-		var mech = document.getElementById("signMech").value;
 		var ret = token.SOF_GetSignMethod();
 		
 		if(token.SGD_SM3_RSA == ret){
@@ -257,6 +256,67 @@
 			alert("操作失败,错误码:" + token.SOF_GetLastError());
 		}
 	}
+	
+	function SetEncryptMethod()
+	{
+		var mech = document.getElementById("encMech").value;
+		var ret = token.SOF_SetEncryptMethod(Number(mech));
+		if(token.SAR_OK != ret)
+		{
+			alert("操作失败,错误码:" + token.SOF_GetLastError());
+		}
+		else
+		{
+			alert("操作成功");
+		}	
+	}
+	
+	function GetEncryptMethod()
+	{
+		var ret = token.SOF_GetEncryptMethod();
+		
+		if(token.SGD_SM1_ECB == ret){
+			alert("SGD_SM1_ECB");
+		}
+		else if(token.SGD_SM1_CBC == ret){
+			alert("SGD_SM1_CBC");
+		}
+		else if(token.SGD_SM1_CFB == ret){
+			alert("SGD_SM1_CFB");
+		}
+		else if(token.SGD_SM1_OFB == ret){
+			alert("SGD_SM1_OFB");
+		}
+		
+		else if(token.SGD_SSF33_ECB == ret){
+			alert("SGD_SSF33_ECB");
+		}
+		else if(token.SGD_SSF33_CBC == ret){
+			alert("SGD_SSF33_CBC");
+		}
+		else if(token.SGD_SSF33_CFB == ret){
+			alert("SGD_SSF33_CFB");
+		}
+		else if(token.SGD_SSF33_OFB == ret){
+			alert("SGD_SSF33_OFB");
+		}
+		else if(token.SGD_SM4_ECB == ret){
+			alert("SGD_SM4_ECB");
+		}
+		else if(token.SGD_SM4_CBC == ret){
+			alert("SGD_SM4_CBC");
+		}
+		else if(token.SGD_SM4_CFB == ret){
+			alert("SGD_SM4_CFB");
+		}
+		else if(token.SGD_SM4_OFB == ret){
+			alert("SGD_SM4_OFB");
+		}
+		else{
+			alert("操作失败,错误码:" + token.SOF_GetLastError());
+		}
+	}
+	
 	
 	
 

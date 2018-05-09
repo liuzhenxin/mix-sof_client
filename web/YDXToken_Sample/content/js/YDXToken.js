@@ -40,10 +40,6 @@ function YDXToken(obj){
 	this.SGD_SM3									=	0x00000001;
 	this.SGD_SHA1									=	0x00000002;
 	this.SGD_SHA256									=	0x00000004;
-	this.SGD_RAW									= 	0x00000080;
-	this.SGD_MD5									= 	0x00000081;
-	this.SGD_SHA384									= 	0x00000082;
-	this.SGD_SHA512									= 	0x00000083;
 	
 	this.SGD_SM3_RSA                                = 	0x00010001; 
 	this.SGD_SHA1_RSA                               = 	0x00010002;

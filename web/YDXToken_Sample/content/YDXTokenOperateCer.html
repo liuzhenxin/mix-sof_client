@@ -140,10 +140,22 @@
 			<tr>
 			<td> 加密算法：</td>
 			<td><select id="encMech">
-						<option value="1">SGD_SM3_RSA</option>
-						<option value="2">SGD_SHA1_RSA</option>
-						<option value="3">SGD_SHA256_RSA</option>	
-						<option value="4">SGD_SM3_SM2</option>							
+						<option value="0x00000101">SGD_SM1_ECB</option>
+						<option value="0x00000102">SGD_SM1_CBC</option>
+						<option value="0x00000104">SGD_SM1_CFB</option>	
+						<option value="0x00000108">SGD_SM1_OFB</option>	
+						
+						<option value="0x00000201">SGD_SSF33_ECB</option>
+						<option value="0x00000202">SGD_SSF33_CBC</option>
+						<option value="0x00000204">SGD_SSF33_CFB</option>	
+						<option value="0x00000208">SGD_SSF33_OFB</option>	
+						
+						<option value="0x00000401">SGD_SM4_ECB</option>
+						<option value="0x00000402">SGD_SM4_CBC</option>
+						<option value="0x00000404">SGD_SM4_CFB</option>	
+						<option value="0x00000408">SGD_SM4_OFB</option>	
+
+						
 					</select></td>
 			<td><input type="button" value="设置加密算法" style="width:120px" onClick="return SetEncryptMethod()"/></td>
 			<td><input type="button" value="获取加密算法" style="width:120px" onClick="return GetEncryptMethod()"/></td>
