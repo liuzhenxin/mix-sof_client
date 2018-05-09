@@ -317,11 +317,8 @@
 		}
 	}
 	
-	
-	
-
 	//数据签名
-	function signData()
+	function SignData()
 	{
 		var selectType = document.getElementById("sele_cerType");
 		var cerType = selectType.options[selectType.selectedIndex].value;
@@ -330,25 +327,21 @@
 			alert("请选择签名密钥进行签名");
 			return ;
 		}
-		var DigestMethod = document.getElementById("mech").value;
+		
 		var inData = document.getElementById("originalData").value;
-		var ret = token.SOF_SetDigestMethod(Number(DigestMethod));
 			
 		var container = document.getElementById("sele_contentList");
+		var containerName = "";
+		
 		if(container.selectedIndex < 0)
 		{
-			alert("请先枚举容器后操作");
-			return;
+
+		}
+		else{
+			containerName = container.options[container.selectedIndex].text;
 		}
 		
-		var containerName = container.options[container.selectedIndex].text;
-		if(containerName == null || containerName == "")
-		{
-			alert("请选择容器操作");
-			return;
-		}
-		
-		var signed = token.SOF_SignDataEx(containerName, cerType, inData, inData.length);
+		var signed = token.SOF_SignData(containerName, cerType, inData, inData.length);
 		if(signed != null && signed != "")
 			document.getElementById("signedData").value = signed;
 		else

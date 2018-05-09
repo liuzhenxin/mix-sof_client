@@ -138,6 +138,41 @@
 			</tr>
 			
 			<tr>
+			<td>消息签名格式：</td>
+			<td>
+				<select id="signType">
+					<option value="0">带原文</option>
+					<option value="1">不带原文</option>					
+				</select>
+			</td>
+			</tr>
+			<tr>
+				<td>
+					待签名数据：<br>
+					待签名文件：
+				</td>
+				<td>					
+					<input type="text" value="123456781234567812345678123456781234567812345678123456781234567812345678123456781234567812345678" id="originalData" name="data" style=" width:450px"/>
+					<input type="text" value="d:\test.txt" id="signFile" name="signFile" style=" width:450px"/>
+				</td>
+				<td><input type="button" value="签名数据" style="width:120px" onClick="return SignData()"/></td>
+				<td><input type="button" value="签名XML" style="width:120px" onClick="return SignDataXML()"/></td>
+				<td><input type="button" value="签名文件" style="width:120px" onClick="return SignFile()"/></td>
+				<td><input type="button" value="签名消息" style="width:120px" onClick="return SignMessage()"/></td>
+			</tr>
+			<tr>
+				<td>签名后结果：</td>
+				<td>
+					<textarea id="signedData" row="3" cols="23" style="height:80px;width:450px"></textarea>
+				</td>
+				<td><input type="button" value="数据验签"style="width:120px" onClick="return VerifySignedData()"/></td>
+				<td><input type="button" value="XML验签"style="width:120px" onClick="return VerifySignedDataXML()"/></td>
+				<td><input type="button" value="文件验签"style="width:120px" onClick="return VerifySignedFile()"/></td>
+				<td><input type="button" value="消息验签"style="width:120px" onClick="return VerifySignedMessage()"/></td>
+			</tr>
+			<br>
+			
+			<tr>
 			<td> 加密算法：</td>
 			<td><select id="encMech">
 						<option value="0x00000101">SGD_SM1_ECB</option>
@@ -160,59 +195,13 @@
 			<td><input type="button" value="设置加密算法" style="width:120px" onClick="return SetEncryptMethod()"/></td>
 			<td><input type="button" value="获取加密算法" style="width:120px" onClick="return GetEncryptMethod()"/></td>
 			</tr>
-			
-			<tr>
-			<td>签名格式：</td>
-			<td>
-				<select id="signType">
-					<option value="1">SGD_SM3_RSA</option>
-					<option value="2">SGD_SHA1_RSA</option>
-					<option value="3">SGD_SHA256_RSA</option>	
-					<option value="4">SGD_SM3_SM2</option>							
-				</select>
-			</td>
-			</tr>
-			<tr>
-				<td>
-					待签名数据：<br>
-					待签名文件：
-				</td>
-				<td>					
-					<input type="text" value="12345678123456781234567812345678" id="originalData" name="data" style=" width:450px"/>
-					<input type="text" value="d:\test.txt" id="signFile" name="signFile" style=" width:450px"/>
-				</td>
-				<td><input type="button" value="签名数据" style="width:120px" onClick="return SignData()"/></td>
-				<td><input type="button" value="签名XML" style="width:120px" onClick="return signData_P7()"/></td>
-				<td><input type="button" value="签名文件" style="width:120px" onClick="return signFile()"/></td>
-			</tr>
-			<tr>
-				<td>签名后结果：</td>
-				<td>
-					<textarea id="signedData" row="3" cols="23" style="height:80px;width:450px"></textarea>
-				</td>
-				<td><input type="button" value="数据验签"style="width:120px" onClick="return verifySign()"/></td>
-				<td><input type="button" value="XML验签"style="width:120px" onClick="return verifySign_P7()"/></td>
-				<td><input type="button" value="文件验签"style="width:120px" onClick="return verifySignFile()"/></td>
-			</tr>
-			<br>
-			
-			<tr>
-			<td>公钥数据：</td>
-				<td>
-					<textarea id="PubKey" row="3" cols="23" style="height:80px;width:450px"></textarea>
-				</td>
-				<td></td>
-			</tr>
 			<tr>
 				<td>非对称运算明文：</td>
 				<td>
 					<textarea id="AsymPlain" row="3" cols="23" style="height:80px;width:450px"></textarea>
 				</td>
-				<td></td>
-				<td><input type="button" value="导出公钥"style="width:120px" onClick="return exportPubKey()"/></td>
 				<td><input type="button" value="公钥加密"style="width:120px" onClick="return encryptbyPubKey()"/></td>
 				<td><input type="button" value="私钥解密"style="width:120px" onClick="return decryptbyPrvKey()"/></td>
-				
 			</tr>
 			<tr>
 				<td>非对称运算密文：</td>
@@ -225,44 +214,13 @@
 			
 			<tr>
 				<td>
-					待加密数据：<br>
-					IV:
-					<br><br>
+					待加密数据：
 				</td>
 				<td>
-					<input type="text" value="12345678" id="enData" name="pwd" style=" width:450px"/>
-					<input type="text" value="12345678" id="iv" name="iv" style=" width:450px"/>
 					<input type="text" value="d:\test.txt" id="enFile" name="srcFile" style=" width:450px"/>
 					<input type="text" value="d:\test.txt.cip" id="enDstFile" name="enDstFile" style=" width:450px"/>
 				</td>
-				<td align="center">
-					<select id="encrymech" style="width:120px">
-						<option value="257">SGD_SM1_ECB</option>
-						<option value="258">SGD_SM1_CBC</option>
-						<option value="260">SGD_SM1_CFB </option>
-						<option value="264">SGD_SM1_OFB</option>
-						<option value="1025">SGD_SM4_ECB </option>
-						<option value="1026">SGD_SM4_CBC</option>
-						<option value="1028">SGD_SM4_CFB</option>
-						<option value="1032">SGD_SM4_OFB</option>
-						<option value="513">SGD_SSF33_ECB</option>
-						<option value="514">SGD_SSF33_CBC</option>
-						<option value="516">SGD_SSF33_CFB</option>
-						<option value="520">SGD_SSF33_OFB</option>
-						<option value="2147484177">SGD_DES_ECB</option>
-						<option value="2147484178">SGD_DES_CBC</option>
-						<option value="2147484225">SGD_3DES168_ECB</option>
-						<option value="2147484226">SGD_3DES168_CBC</option>
-						<option value="2147484193">SGD_3DES112_ECB</option>
-						<option value="2147484194">SGD_3DES112_CBC</option>
-						<option value="2147483921">SGD_AES128_ECB</option>
-						<option value="2147483922">SGD_AES128_CBC</option>
-						<option value="2147483937">SGD_AES192_ECB</option>
-						<option value="2147483938">SGD_AES192_CBC</option>
-						<option value="2147483969">SGD_AES256_ECB</option>
-						<option value="2147483970">SGD_AES256_CBC</option>
-					</select>
-				</td>
+				
 				<td><input type="button" value="数据加密" style="width:120px" onClick="return encryptData()"/></td>
 				<td><input type="button" value="文件加密" style="width:120px" onClick="return encryptFile()"/></td>
 			</tr>
@@ -271,7 +229,6 @@
 				<td>
 					<textarea id="enedData" row="3" cols="23" style="height:80px;width:450px"></textarea>
 				</td>
-				<td></td>
 				<td><input type="button" value="数据解密"style="width:120px" onClick="return decryptData()"/></td>
 				<td><input type="button" value="文件解密"style="width:120px" onClick="return decryptFile()"/></td>
 				
