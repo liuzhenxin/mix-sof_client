@@ -1,227 +1,184 @@
 ﻿<html>
 	<head>
 		<title>YDXToken Plugin Examples</title>
-		<style type="text/css">
-		
-			<!--  
- 				body{text-align:center}
- 				td {width:200px}
-			-->	
-		
-		</style>
-		
 		<script src="js/YDXToken.js" type="text/javascript"></script>
 		<script src="js/YDXTokenBasicOper.js" type="text/javascript"></script>
-		
-		
 	</head>
 	<body>
 		<object id="YDXTokenPlugin" width="0" height="0">
-    		<!-- <param value="pluginLoaded" /> -->
 		</object>
-		<h2>
-			YDXToken基本信息
-		</h2>
 		<hr>	
 		<p>
 			<table align="center">
+				<th>
+				<h2>
+					YDXToken基本信息
+				</h2>
+				</th>
 				<tr>
 					<td>SKF列表：</td>
-					<td >
-						<select id="SKFInterface" style="width:450px">
+					<td colspan="2">
+						<select id="SKFInterface" style="width:100%;height:100%">
 							<option value="WTSKFInterface.dll">WTSKFInterface.dll</option>											
 						</select>
 					</td>	
 					
-					<td align="center"><input type="button" value="加载" style="width:120px" onClick="return InitializeLibraryNative()"/>
+					<td align="center"><input type="button" value="加载" style="width:100%;height:100%" onClick="return InitializeLibraryNative()"/>
 					</td>
-					
 				</tr>
 				<tr>
 					<td>容器列表：</td>
-					<td>
-						<select id="select_contentList" style="width:450px">	
+					<td colspan="2">
+						<select id="select_contentList" style="width:100%;height:100%">	
 						</select>
 					</td>	
-					<td align="center"><input type="button" value="列举容器" style="width:120px" onClick="return GetUserList()"/>
+					<td align="center"><input type="button" value="列举容器" style="width:100%;height:100%" onClick="return GetUserList()"/>
 					</td>
 				</tr>
 				<tr>
 					<td>用户密码：</td>
-					<td><input type="text" value="88888888" id="txt_pwd" name="pwd" style=" width:450px"/></td>					
-					<td align="center"><input type="button" value="登陆" style="width:120px" onClick="return Login()"/></td>
+					<td colspan="2"> <input type="text" value="88888888" id="txt_pwd" name="pwd" style="width:100%;height:100%"/></td>					
+					<td align="center"><input type="button" value="登陆" style="width:100%;height:100%" onClick="return Login()"/></td>
 					<td ><label id="tryCount"></></td>
 				</tr>
 				<tr>
 					<td>修改用户密码：</td>
-					<td><input type="text" value="" id="txt_Changepwd" name="pwd" style=" width:450px"/></td>					
-					<td align="center"><input type="button" value="修改" style="width:120px" onClick="return ChangePassWd()"/></td>				
+					<td colspan="2"><input type="text" value="" id="txt_Changepwd" name="pwd" style="width:100%;height:100%"/></td>					
+					<td align="center"><input type="button" value="修改" style="width:100%;height:100%" onClick="return ChangePassWd()"/></td>				
 				</tr>
                
 				<tr>
-					<td>导出指定数字证书：</td>
-					<td>
-						<textarea id="certData" row="3" cols="23" style="height:80px;width:450px"></textarea>
+					<td>导出数字证书：</td>
+					<td colspan="2">
+						<textarea id="certData" row="3" cols="23"style="width:100%;height:100%"></textarea>
 					</td>
 					<td align="center">
-						<input type="button" value="导出签名证书" style="width:120px" onClick="return ExportUserCert()"/>
-						<input type="button" value="导出加密证书" style="width:120px" onClick="return ExportExChangeUserCert()"/>
+						<input type="button" value="导出签名证书" style="width:100%;height:100%" onClick="return ExportUserCert()"/>
+						<input type="button" value="导出加密证书" style="width:100%;height:100%" onClick="return ExportExChangeUserCert()"/>
 					</td>
 					
 				</tr>
 				
 				<tr>
 					<td>获取证书信息：</td>
-					<td>
-						<textarea id="showcerInfo" row="30" cols="23"  style="height:80px;width:450px"></textarea>
+					<td colspan="2">
+						<textarea id="showcerInfo" row="30" cols="23" style="width:100%;height:100%"></textarea>
 					</td>
-					<td align="center"><input type="button" value="获取" style="width:120px" onClick="return GetCertInfo()"/></td>
+					<td align="center"><input type="button" value="获取" style="width:100%;height:100%" onClick="return GetCertInfo()"/></td>
 					<td></td>
 				</tr>
 				
 				<tr>
 					<td>获取设备信息：</td>
-					<td>
-						<textarea id="deviceInfo" wrap="hard" row="30" cols="60" style=" height:80px;width:450px" name="infoCer"></textarea>
+					<td colspan="2">
+						<textarea id="deviceInfo" wrap="hard" row="30" cols="60" style="width:100%;height:100%" name="infoCer"></textarea>
 					</td>
-					<td align="center"><input type="button" value="获取" style="width:120px" onClick="return GetDeviceInfo()"/></td>
+					<td align="center"><input type="button" value="获取" style="width:100%;height:100%" onClick="return GetDeviceInfo()"/></td>
 					<td></td>
 				</tr>
 				
 				
 				<tr>
 					<td>控件版本信息：</td>
-					<td>
-						<input type="text" id="contorlInfo" name="infoCer" style="width: 450px"></textarea>
+					<td colspan="2">
+						<input type="text" id="contorlInfo" name="infoCer" style="width:100%;height:100%"></textarea>
 					</td>
-					<td align="center"><input type="button" value="获取" style="width:120px" onClick="return GetVersion()"/></td>
+					<td align="center"><input type="button" value="获取" style="width:100%;height:100%" onClick="return GetVersion()"/></td>
 					<td></td>
 				</tr>
-				<!--
+				<th>
+				<h2>
+				证书使用举例
+				</h2>
+				</th>
 				<tr>
-					<td>设备监控(注册之后需等待)：</td>
+				<td> 签名算法：</td>
+				
+				<td  colspan="2"><select id="signMech" style="width:100%;height:100%">
+							<option value="0x00010001">SGD_SM3_RSA</option>
+							<option value="0x00010002">SGD_SHA1_RSA</option>
+							<option value="0x00010004">SGD_SHA256_RSA</option>	
+							<option value="0x00020201">SGD_SM3_SM2</option>							
+						</select></td>
+				<td><input type="button" value="设置签名算法" style="width:100%;height:100%" onClick="return SetSignMethod()"/></td>
+				<td><input type="button" value="获取签名算法" style="width:100%;height:100%" onClick="return GetSignMethod()"/></td>
+				</tr>
+				
+				<tr>
+				<td> 加密算法：</td>
+				<td  colspan="2"><select id="encMech" style="width:100%;height:100%">
+							<option value="0x00000101">SGD_SM1_ECB</option>
+							<option value="0x00000102">SGD_SM1_CBC</option>
+							<option value="0x00000104">SGD_SM1_CFB</option>	
+							<option value="0x00000108">SGD_SM1_OFB</option>	
+							
+							<option value="0x00000201">SGD_SSF33_ECB</option>
+							<option value="0x00000202">SGD_SSF33_CBC</option>
+							<option value="0x00000204">SGD_SSF33_CFB</option>	
+							<option value="0x00000208">SGD_SSF33_OFB</option>	
+							
+							<option value="0x00000401">SGD_SM4_ECB</option>
+							<option value="0x00000402">SGD_SM4_CBC</option>
+							<option value="0x00000404">SGD_SM4_CFB</option>	
+							<option value="0x00000408">SGD_SM4_OFB</option>	
+						</select></td>
+				<td><input type="button" value="设置加密算法" style="width:100%;height:100%" onClick="return SetEncryptMethod()"/></td>
+				<td><input type="button" value="获取加密算法" style="width:100%;height:100%" onClick="return GetEncryptMethod()"/></td>
+				</tr>
+				
+				<tr>
+				<td>消息签名格式：</td>
+				<td  colspan="2">
+					<select id="select_signType" style="width:100%;height:100%">
+						<option value="0">带原文</option>
+						<option value="1">不带原文</option>					
+					</select>
+				</td>
+				</tr>
+				
+				<tr>
 					<td>
-						<input type="button" value="注册插拔事件" style="width:120px" onClick="return addDeviceEvent()"/>
+						输入数据：
 					</td>
-					<td align="center">
-						<input type="button" value="等待设备事件" style="width:120px" onClick="return beginDeviceEvent()"/>
-					</td>
-					<td>
-						<input type="button" value="取消设备监测" style="width:120px" onClick="return cancelDeviceEvent()"/>
+					<td colspan="2">
+						<textarea value="123456781234567812345678123456781234567812345678123456781234567812345678123456781234567812345678" id="inputData" row="3" cols="23"style="width:100%;height:100%"></textarea>
 					</td>
 				</tr>
-				-->
+				<tr>
+					<td>输出数据：</td>
+					<td  colspan="2">
+						<textarea id="outputData" row="3" cols="23"style="width:100%;height:100%"></textarea>
+					</td>
+				</tr>
+				
+				<tr>
+					<td><input type="button" value="签名数据" style="width:100%;height:100%" onClick="return SignData()"/></td>
+					<td><input type="button" value="签名XML" style="width:100%;height:100%" onClick="return SignDataXML()"/></td>
+					<td><input type="button" value="签名文件" style="width:100%;height:100%" onClick="return SignFile()"/></td>
+					<td><input type="button" value="签名消息" style="width:100%;height:100%" onClick="return SignMessage()"/></td>
+				</tr>
+				
+				<tr>
+					<td><input type="button" value="数据验签"style="width:100%;height:100%" onClick="return VerifySignedData()"/></td>
+					<td><input type="button" value="XML验签"style="width:100%;height:100%" onClick="return VerifySignedDataXML()"/></td>
+					<td><input type="button" value="文件验签"style="width:100%;height:100%" onClick="return VerifySignedFile()"/></td>
+					<td><input type="button" value="消息验签"style="width:100%;height:100%" onClick="return VerifySignedMessage()"/></td>
+				</tr>
+			
+				<tr>
+					<td><input type="button" value="公钥加密"style="width:100%;height:100%" onClick="return PubKeyEncrypt()"/></td>
+					<td><input type="button" value="公钥加密(大数据)"style="width:100%;height:100%" onClick="return PubKeyEncryptLongData()"/></td>
+					<td><input type="button" value="数据加密" style="width:100%;height:100%" onClick="return EncryptData()"/></td>
+					<td><input type="button" value="文件加密" style="width:100%;height:100%" onClick="return EncryptFile()"/></td>
+				</tr>
+				<tr>
+					<td><input type="button" value="私钥解密" style="width:100%;height:100%" onClick="return PriKeyDecrypt()"/></td>
+					<td><input type="button" value="私钥解密(大数据)" style="width:100%;height:100%" onClick="return PriKeyDecryptLongData()"/></td>
+					<td><input type="button" value="数据解密"style="width:100%;height:100%" onClick="return DecryptData()"/></td>
+					<td><input type="button" value="文件解密"style="width:100%;height:100%" onClick="return DecryptFile()"/></td>
+				</tr>
+				<br>
 			</table>
-		</p>	
-		<hr>
-		<h2>
-			证书使用举例
-		</h2>
-		<hr>
-		<table align="center">
-			<tr>
-			<td> 签名算法：</td>
-			
-			<td><select id="signMech">
-						<option value="0x00010001">SGD_SM3_RSA</option>
-						<option value="0x00010002">SGD_SHA1_RSA</option>
-						<option value="0x00010004">SGD_SHA256_RSA</option>	
-						<option value="0x00020201">SGD_SM3_SM2</option>							
-					</select></td>
-			<td><input type="button" value="设置签名算法" style="width:120px" onClick="return SetSignMethod()"/></td>
-			<td><input type="button" value="获取签名算法" style="width:120px" onClick="return GetSignMethod()"/></td>
-			</tr>
-			
-			<tr>
-			<td>消息签名格式：</td>
-			<td>
-				<select id="select_signType">
-					<option value="0">带原文</option>
-					<option value="1">不带原文</option>					
-				</select>
-			</td>
-			</tr>
-			
-			<tr>
-				<td>
-					待签名数据：
-				</td>
-				<td>
-					<textarea value="123456781234567812345678123456781234567812345678123456781234567812345678123456781234567812345678" id="originalData" row="3" cols="23" style="height:80px;width:450px"></textarea>
-				</td>
-				<td><input type="button" value="签名数据" style="width:120px" onClick="return SignData()"/></td>
-				<td><input type="button" value="签名XML" style="width:120px" onClick="return SignDataXML()"/></td>
-				<td><input type="button" value="签名文件" style="width:120px" onClick="return SignFile()"/></td>
-				<td><input type="button" value="签名消息" style="width:120px" onClick="return SignMessage()"/></td>
-			</tr>
-			
-			<tr>
-				<td>
-					待签名XML：
-				</td>
-				<td>
-					<textarea value="" id="originalDataXML" row="3" cols="23" style="height:80px;width:450px"></textarea>
-				</td>
-			</tr>
-			<tr>
-				<td>签名后结果：</td>
-				<td>
-					<textarea id="signedData" row="3" cols="23" style="height:80px;width:450px"></textarea>
-				</td>
-				<td><input type="button" value="数据验签"style="width:120px" onClick="return VerifySignedData()"/></td>
-				<td><input type="button" value="XML验签"style="width:120px" onClick="return VerifySignedDataXML()"/></td>
-				<td><input type="button" value="文件验签"style="width:120px" onClick="return VerifySignedFile()"/></td>
-				<td><input type="button" value="消息验签"style="width:120px" onClick="return VerifySignedMessage()"/></td>
-			</tr>
-			<br>
-			
-			<tr>
-			<td> 加密算法：</td>
-			<td><select id="encMech">
-						<option value="0x00000101">SGD_SM1_ECB</option>
-						<option value="0x00000102">SGD_SM1_CBC</option>
-						<option value="0x00000104">SGD_SM1_CFB</option>	
-						<option value="0x00000108">SGD_SM1_OFB</option>	
-						
-						<option value="0x00000201">SGD_SSF33_ECB</option>
-						<option value="0x00000202">SGD_SSF33_CBC</option>
-						<option value="0x00000204">SGD_SSF33_CFB</option>	
-						<option value="0x00000208">SGD_SSF33_OFB</option>	
-						
-						<option value="0x00000401">SGD_SM4_ECB</option>
-						<option value="0x00000402">SGD_SM4_CBC</option>
-						<option value="0x00000404">SGD_SM4_CFB</option>	
-						<option value="0x00000408">SGD_SM4_OFB</option>	
-
-						
-					</select></td>
-			<td><input type="button" value="设置加密算法" style="width:120px" onClick="return SetEncryptMethod()"/></td>
-			<td><input type="button" value="获取加密算法" style="width:120px" onClick="return GetEncryptMethod()"/></td>
-			</tr>
-			<tr>
-				<td>明文：</td>
-				<td>
-					<textarea id="inputData" row="3" cols="23" style="height:80px;width:450px"></textarea>
-				</td>
-				<td><input type="button" value="公钥加密"style="width:120px" onClick="return PubKeyEncrypt()"/></td>
-				<td><input type="button" value="公钥加密(大数据)"style="width:120px" onClick="return PubKeyEncryptLongData()"/></td>
-				<td><input type="button" value="数据加密" style="width:120px" onClick="return EncryptData()"/></td>
-				<td><input type="button" value="文件加密" style="width:120px" onClick="return EncryptFile()"/></td>
-			</tr>
-			<tr>
-				<td>密文：</td>
-				<td>
-					<textarea id="outputData" row="3" cols="23" style="height:80px;width:450px"></textarea>
-				</td>
-				<td><input type="button" value="私钥解密" style="width:120px" onClick="return PriKeyDecrypt()"/></td>
-				<td><input type="button" value="私钥解密(大数据)" style="width:120px" onClick="return PriKeyDecryptLongData()"/></td>
-				<td><input type="button" value="数据解密"style="width:120px" onClick="return DecryptData()"/></td>
-				<td><input type="button" value="文件解密"style="width:120px" onClick="return DecryptFile()"/></td>
-			</tr>
-			<br>
-		</table>
-		</br>
-		</br>
-		</br></br>
+		</p>
 	</body>
 </html>
