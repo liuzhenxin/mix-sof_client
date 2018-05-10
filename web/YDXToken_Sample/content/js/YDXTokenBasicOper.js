@@ -42,7 +42,7 @@
 	//获取证书列表
 	function GetUserList()
 	{
-		var cerlistID = document.getElementById("sele_contentList");
+		var cerlistID = document.getElementById("select_contentList");
 		cerlistID.options.length = 0;
 		
 		var userList = token.SOF_GetUserList();
@@ -55,25 +55,29 @@
 			{
 				addOption(arrList[i].split("||")[1], cerlistID);
 			}
-		}
-						
+		}		
 		else if(userList == null)
+		{
 			alert("设备中无证书");
+		}
 		else
+		{
 			alert("获取证书列表失败,错误码:" + token.SOF_GetLastError());
+		}
+			
 	}
 	
 	//验证用户密码
 	function Login()
 	{
 		var pin = document.getElementById("txt_pwd").value;	
-		var ret = token.SOF_Login(document.getElementById("sele_contentList").value, pin);			
+		var ret = token.SOF_Login(document.getElementById("select_contentList").value, pin);			
 		if(token.TRUE != ret)
 		{	
 	
 			alert("验证用户密码失败,错误码:" + token.SOF_GetLastError());
 			
-			var retryCount = token.SOF_GetPinRetryCount(document.getElementById("sele_contentList").value);	
+			var retryCount = token.SOF_GetPinRetryCount(document.getElementById("select_contentList").value);	
 			
 			document.getElementById("tryCount").innerText = "剩余次数：" + retryCount;
 			
@@ -115,7 +119,7 @@
 	{
 		document.getElementById("certData").value = "";	
 		
-		var container = document.getElementById("sele_contentList");
+		var container = document.getElementById("select_contentList");
 		var containerName = "";
 		
 		if(container.selectedIndex < 0)
@@ -142,7 +146,7 @@
 	{
 		document.getElementById("certData").value = "";	
 		
-		var container = document.getElementById("sele_contentList");
+		var container = document.getElementById("select_contentList");
 		var containerName = "";
 		
 		if(container.selectedIndex < 0)
@@ -199,7 +203,7 @@
 	//获取设备信息
 	function GetDeviceInfo()
 	{
-		var container = document.getElementById("sele_contentList");
+		var container = document.getElementById("select_contentList");
 		var containerName = "";
 		
 		if(container.selectedIndex < 0)
@@ -341,12 +345,13 @@
 			return;
 		}
 		
-		var container = document.getElementById("sele_contentList");
+		var container = document.getElementById("select_contentList");
 		if(container.selectedIndex < 0)
 		{
 			alert("请选择容器操作");
 			return;
-		}var containerName = container.options[container.selectedIndex].text;
+		}
+		var containerName = container.options[container.selectedIndex].text;
 		if(containerName == null || containerName == "")
 		{
 			alert("请选择容器操作");
@@ -357,9 +362,13 @@
 		
 		var ret = token.SOF_VerifySignedFile(cert, inData, signed);
 		if(token.TRUE != ret)
+		{
 			alert("验签失败,错误码:" + token.SOF_GetLastError());
+		}
 		else
+		{
 			alert("验签成功");
+		}
 	}
 
 	function VerifySignedMessage()
@@ -372,17 +381,19 @@
 			return;
 		}
 		
-		var container = document.getElementById("sele_contentList");
+		var container = document.getElementById("select_contentList");
 		if(container.selectedIndex < 0)
 		{
 			alert("请选择容器操作");
 			return;
-		}var containerName = container.options[container.selectedIndex].text;
+		}
+		var containerName = container.options[container.selectedIndex].text;
 		if(containerName == null || containerName == "")
 		{
 			alert("请选择容器操作");
 			return;
-		}var cert  = token.SOF_ExportUserCert(containerName);
+		}
+		var cert  = token.SOF_ExportUserCert(containerName);
 		
 		var ret = token.SOF_VerifySignedMessage(signed, inData);
 		if(token.TRUE != ret)
@@ -401,12 +412,13 @@
 			return;
 		}
 		
-		var container = document.getElementById("sele_contentList");
+		var container = document.getElementById("select_contentList");
 		if(container.selectedIndex < 0)
 		{
 			alert("请选择容器操作");
 			return;
-		}var containerName = container.options[container.selectedIndex].text;
+		}
+		var containerName = container.options[container.selectedIndex].text;
 		if(containerName == null || containerName == "")
 		{
 			alert("请选择容器操作");
@@ -431,17 +443,19 @@
 			return;
 		}
 		
-		var container = document.getElementById("sele_contentList");
+		var container = document.getElementById("select_contentList");
 		if(container.selectedIndex < 0)
 		{
 			alert("请选择容器操作");
 			return;
-		}var containerName = container.options[container.selectedIndex].text;
+		}
+		var containerName = container.options[container.selectedIndex].text;
 		if(containerName == null || containerName == "")
 		{
 			alert("请选择容器操作");
 			return;
-		}var cert  = token.SOF_ExportUserCert(containerName);
+		}
+		var cert  = token.SOF_ExportUserCert(containerName);
 		
 		var ret = token.SOF_VerifySignedData(cert, inData, signed);
 		if(token.TRUE != ret)
@@ -454,7 +468,7 @@
 	{
 		var inData = document.getElementById("originalData").value;
 			
-		var container = document.getElementById("sele_contentList");
+		var container = document.getElementById("select_contentList");
 		var containerName = "";
 		
 		if(container.selectedIndex < 0)
@@ -473,17 +487,12 @@
 	}
 	
 	function SignMessage()
-	{var selectSignType = document.getElementById("sele_signType");
-		
-		var signType = selectSignType.options[selectSignType.selectedIndex].value;if(cerType == 0)
-		{
-			alert("请选择签名密钥进行签名");
-			return ;
-		}
-		
+	{
+		var selectSignType = document.getElementById("select_signType");
+		var signType = selectSignType.options[selectSignType.selectedIndex].value;
 		var inData = document.getElementById("originalData").value;
 			
-		var container = document.getElementById("sele_contentList");
+		var container = document.getElementById("select_contentList");
 		var containerName = "";
 		
 		if(container.selectedIndex < 0)
@@ -502,12 +511,7 @@
 	}
 	
 	function SignDataXML()
-	{if(cerType == 0)
-		{
-			alert("请选择签名密钥进行签名");
-			return ;
-		}
-		
+	{
 		var inData = document.getElementById("originalDataXML").value;
 		
 		if(signed != null && signed != "")
@@ -521,7 +525,7 @@
 			document.getElementById("originalDataXML").value = indata;
 		}
 			
-		var container = document.getElementById("sele_contentList");
+		var container = document.getElementById("select_contentList");
 		var containerName = "";
 		
 		if(container.selectedIndex < 0)
@@ -542,15 +546,10 @@
 	
 	//数据签名
 	function SignData()
-	{if(cerType == 0)
-		{
-			alert("请选择签名密钥进行签名");
-			return ;
-		}
-		
+	{
 		var inData = document.getElementById("originalData").value;
 			
-		var container = document.getElementById("sele_contentList");
+		var container = document.getElementById("select_contentList");
 		var containerName = "";
 		
 		if(container.selectedIndex < 0)
@@ -573,7 +572,7 @@
 	{
 		var inData = document.getElementById("enData").value;
 		
-		var container = document.getElementById("sele_contentList");
+		var container = document.getElementById("select_contentList");
 		if(container.selectedIndex < 0)
 		{
 			alert("请选择容器操作");
@@ -611,7 +610,7 @@
 		var inData = document.getElementById("enData").value;
 		var OutData = document.getElementById("enedData").value;
 		
-		var container = document.getElementById("sele_contentList");
+		var container = document.getElementById("select_contentList");
 		if(container.selectedIndex < 0)
 		{
 			alert("请选择容器操作");
@@ -639,7 +638,7 @@
 		var outFile = document.getElementById("enData").value;
 		var inData = document.getElementById("enedData").value;
 		
-		var container = document.getElementById("sele_contentList");
+		var container = document.getElementById("select_contentList");
 		if(container.selectedIndex < 0)
 		{
 			alert("请选择容器操作");
@@ -673,7 +672,7 @@
 			return;
 		}
 		
-		var container = document.getElementById("sele_contentList");
+		var container = document.getElementById("select_contentList");
 		if(container.selectedIndex < 0)
 		{
 			alert("请选择容器操作");
@@ -710,7 +709,7 @@
 	
 	function decryptbyPrvKey()
 	{
-		var container = document.getElementById("sele_contentList");
+		var container = document.getElementById("select_contentList");
 		if(container.selectedIndex < 0)
 		{
 			alert("请选择容器操作");
