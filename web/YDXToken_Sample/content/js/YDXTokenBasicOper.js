@@ -1,14 +1,4 @@
-﻿/*******************************************************
- *
- * 使用此JS脚本之前请先仔细阅读YDXToken KEY帮助文档
- * 
- * @author		Longmai
- * @version		3.0
- * @date		2015/9/25
- * @explanation	 YDXToken Plugin 支持各浏览器
- *
-**********************************************************/
-	
+﻿
 	var token = new YDXToken("YDXTokenPlugin");
 	
 	//动态添加option选项
@@ -114,7 +104,7 @@
 		document.getElementById("contorlInfo").value = version;			
     }	
 	
-	//导出证书信息
+	//导出证书
 	function ExportUserCert()
 	{
 		document.getElementById("certData").value = "";	
@@ -126,7 +116,8 @@
 		{
 
 		}
-		else{
+		else
+		{
 			containerName = container.options[container.selectedIndex].text;
 		}
 
@@ -153,7 +144,8 @@
 		{
 
 		}
-		else{
+		else
+		{
 			containerName = container.options[container.selectedIndex].text;
 		}
 
@@ -163,7 +155,8 @@
 		{
 			document.getElementById("certData").value = cert;	
 		}
-		else{
+		else
+		{
 			alert("获取证书信息失败,错误码:" + token.SOF_GetLastError());
 		}
 	}
@@ -210,7 +203,8 @@
 		{
 
 		}
-		else{
+		else
+		{
 			containerName = container.options[container.selectedIndex].text;
 		}
 		
@@ -258,19 +252,24 @@
 	{
 		var ret = token.SOF_GetSignMethod();
 		
-		if(token.SGD_SM3_RSA == ret){
+		if(token.SGD_SM3_RSA == ret)
+		{
 			alert("SGD_SM3_RSA");
 		}
-		else if(token.SGD_SHA1_RSA == ret){
+		else if(token.SGD_SHA1_RSA == ret)
+		{
 			alert("SGD_SHA1_RSA");
 		}
-		else if(token.SGD_SHA256_RSA == ret){
+		else if(token.SGD_SHA256_RSA == ret)
+		{
 			alert("SGD_SHA256_RSA");
 		}
-		else if(token.SGD_SM3_SM2 == ret){
+		else if(token.SGD_SM3_SM2 == ret)
+		{
 			alert("SGD_SM3_SM2");
 		}
-		else{
+		else
+		{
 			alert("操作失败,错误码:" + token.SOF_GetLastError());
 		}
 	}
@@ -293,44 +292,57 @@
 	{
 		var ret = token.SOF_GetEncryptMethod();
 		
-		if(token.SGD_SM1_ECB == ret){
+		if(token.SGD_SM1_ECB == ret)
+		{
 			alert("SGD_SM1_ECB");
 		}
-		else if(token.SGD_SM1_CBC == ret){
+		else if(token.SGD_SM1_CBC == ret)
+		{
 			alert("SGD_SM1_CBC");
 		}
-		else if(token.SGD_SM1_CFB == ret){
+		else if(token.SGD_SM1_CFB == ret)
+		{
 			alert("SGD_SM1_CFB");
 		}
-		else if(token.SGD_SM1_OFB == ret){
+		else if(token.SGD_SM1_OFB == ret)
+		{
 			alert("SGD_SM1_OFB");
 		}
 		
-		else if(token.SGD_SSF33_ECB == ret){
+		else if(token.SGD_SSF33_ECB == ret)
+		{
 			alert("SGD_SSF33_ECB");
 		}
-		else if(token.SGD_SSF33_CBC == ret){
+		else if(token.SGD_SSF33_CBC == ret)
+		{
 			alert("SGD_SSF33_CBC");
 		}
-		else if(token.SGD_SSF33_CFB == ret){
+		else if(token.SGD_SSF33_CFB == ret)
+		{
 			alert("SGD_SSF33_CFB");
 		}
-		else if(token.SGD_SSF33_OFB == ret){
+		else if(token.SGD_SSF33_OFB == ret)
+		{
 			alert("SGD_SSF33_OFB");
 		}
-		else if(token.SGD_SM4_ECB == ret){
+		else if(token.SGD_SM4_ECB == ret)
+		{
 			alert("SGD_SM4_ECB");
 		}
-		else if(token.SGD_SM4_CBC == ret){
+		else if(token.SGD_SM4_CBC == ret)
+		{
 			alert("SGD_SM4_CBC");
 		}
-		else if(token.SGD_SM4_CFB == ret){
+		else if(token.SGD_SM4_CFB == ret)
+		{
 			alert("SGD_SM4_CFB");
 		}
-		else if(token.SGD_SM4_OFB == ret){
+		else if(token.SGD_SM4_OFB == ret)
+		{
 			alert("SGD_SM4_OFB");
 		}
-		else{
+		else
+		{
 			alert("操作失败,错误码:" + token.SOF_GetLastError());
 		}
 	}
@@ -346,16 +358,15 @@
 		}
 		
 		var container = document.getElementById("select_contentList");
+		var containerName = "";
+		
 		if(container.selectedIndex < 0)
 		{
-			alert("请选择容器操作");
-			return;
+
 		}
-		var containerName = container.options[container.selectedIndex].text;
-		if(containerName == null || containerName == "")
+		else
 		{
-			alert("请选择容器操作");
-			return;
+			containerName = container.options[container.selectedIndex].text;
 		}
 		
 		var cert  = token.SOF_ExportUserCert(containerName);
@@ -382,17 +393,17 @@
 		}
 		
 		var container = document.getElementById("select_contentList");
+		var containerName = "";
+		
 		if(container.selectedIndex < 0)
 		{
-			alert("请选择容器操作");
-			return;
+
 		}
-		var containerName = container.options[container.selectedIndex].text;
-		if(containerName == null || containerName == "")
+		else
 		{
-			alert("请选择容器操作");
-			return;
+			containerName = container.options[container.selectedIndex].text;
 		}
+		
 		var cert  = token.SOF_ExportUserCert(containerName);
 		
 		var ret = token.SOF_VerifySignedMessage(signed, inData);
@@ -413,23 +424,26 @@
 		}
 		
 		var container = document.getElementById("select_contentList");
+		var containerName = "";
+		
 		if(container.selectedIndex < 0)
 		{
-			alert("请选择容器操作");
-			return;
+
 		}
-		var containerName = container.options[container.selectedIndex].text;
-		if(containerName == null || containerName == "")
+		else
 		{
-			alert("请选择容器操作");
-			return;
+			containerName = container.options[container.selectedIndex].text;
 		}
 		
 		var ret = token.SOF_VerifySignedDataXML(signed);
 		if(token.TRUE != ret)
+		{
 			alert("验签失败,错误码:" + token.SOF_GetLastError());
+		}
 		else
+		{
 			alert("验签成功");
+		}
 	}
 				
 	//数据验签
@@ -444,17 +458,17 @@
 		}
 		
 		var container = document.getElementById("select_contentList");
+		var containerName = "";
+		
 		if(container.selectedIndex < 0)
 		{
-			alert("请选择容器操作");
-			return;
+
 		}
-		var containerName = container.options[container.selectedIndex].text;
-		if(containerName == null || containerName == "")
+		else
 		{
-			alert("请选择容器操作");
-			return;
+			containerName = container.options[container.selectedIndex].text;
 		}
+		
 		var cert  = token.SOF_ExportUserCert(containerName);
 		
 		var ret = token.SOF_VerifySignedData(cert, inData, signed);
@@ -475,7 +489,8 @@
 		{
 
 		}
-		else{
+		else
+		{
 			containerName = container.options[container.selectedIndex].text;
 		}
 		
@@ -499,7 +514,8 @@
 		{
 
 		}
-		else{
+		else
+		{
 			containerName = container.options[container.selectedIndex].text;
 		}
 
@@ -532,7 +548,8 @@
 		{
 
 		}
-		else{
+		else
+		{
 			containerName = container.options[container.selectedIndex].text;
 		}
 		
@@ -542,7 +559,6 @@
 		else
 			alert("签名失败,错误码:" + token.SOF_GetLastError());
 	}
-	
 	
 	//数据签名
 	function SignData()
@@ -556,7 +572,8 @@
 		{
 
 		}
-		else{
+		else
+		{
 			containerName = container.options[container.selectedIndex].text;
 		}
 		
@@ -573,16 +590,15 @@
 		var inData = document.getElementById("enData").value;
 		
 		var container = document.getElementById("select_contentList");
+		var containerName = "";
+		
 		if(container.selectedIndex < 0)
 		{
-			alert("请选择容器操作");
-			return;
+
 		}
-		var containerName = container.options[container.selectedIndex].text;
-		if(containerName == null || containerName == "")
+		else
 		{
-			alert("请选择容器操作");
-			return;
+			containerName = container.options[container.selectedIndex].text;
 		}
 		
 		var cert  = token.SOF_ExportUserCert(containerName);
@@ -601,36 +617,33 @@
 	
 	//数据加密
 	function EncryptFile()
-	{if(cerType == 1)
-		{
-			alert("请选择加密证书进行加密");
-			return ;
-		}
-		
+	{
 		var inData = document.getElementById("enData").value;
 		var OutData = document.getElementById("enedData").value;
 		
 		var container = document.getElementById("select_contentList");
+		var containerName = "";
+		
 		if(container.selectedIndex < 0)
 		{
-			alert("请选择容器操作");
-			return;
+
 		}
-				
-		var containerName = container.options[container.selectedIndex].text;
-		if(containerName == null || containerName == "")
+		else
 		{
-			alert("请选择容器操作");
-			return;
+			containerName = container.options[container.selectedIndex].text;
 		}
 		
 		var cert  = token.SOF_ExportUserCert(containerName, cerType);
 		
 		var envelopData = token.SOF_EncryptFile(cert, inData, OutData);
 		if(envelopData != null)
+		{
 			document.getElementById("enedData").value = envelopData;
+		}
 		else
+		{
 			alert("加密失败,错误码:" + token.SOF_GetLastError());
+		}
 	}
 	
 	function DecryptFile()
@@ -639,22 +652,22 @@
 		var inData = document.getElementById("enedData").value;
 		
 		var container = document.getElementById("select_contentList");
+		var containerName = "";
+		
 		if(container.selectedIndex < 0)
 		{
-			alert("请选择容器操作");
-			return;
+
 		}
-		
-		var containerName = container.options[container.selectedIndex].text;
-		if(containerName == null || containerName == "")
+		else
 		{
-			alert("请选择容器操作");
-			return;
+			containerName = container.options[container.selectedIndex].text;
 		}
 		
 		decryptedData = token.SOF_DecryptFile(containerName, inData, outFile);
 		if(decryptedData != 0)
+		{
 			alert("解密失败,错误码:" + token.SOF_GetLastError());
+		}
 		else
 		{
 			document.getElementById("deData").value = outFile;
@@ -673,24 +686,26 @@
 		}
 		
 		var container = document.getElementById("select_contentList");
+		var containerName = "";
+		
 		if(container.selectedIndex < 0)
 		{
-			alert("请选择容器操作");
-			return;
+
 		}
-		
-		var containerName = container.options[container.selectedIndex].text;
-		if(containerName == null || containerName == "")
+		else
 		{
-			alert("请选择容器操作");
-			return;
+			containerName = container.options[container.selectedIndex].text;
 		}
 		
 		decryptedData = token.SOF_DecryptData(containerName, encrypedData);
 		if(decryptedData != null && decryptedData != "")
+		{
 			document.getElementById("deData").value = decryptedData;
+		}
 		else
+		{
 			alert("解密失败,错误码:" + token.SOF_GetLastError());
+		}
 	}
 	
 	function encryptbyPubKey()
@@ -704,23 +719,23 @@
 			document.getElementById("AsymCipher").value = strAsymCipher;	
 		}
 		else
+		{
 			alert("公钥加密失败,错误码:" + token.SOF_GetLastError());
+		}
 	}
 	
 	function decryptbyPrvKey()
 	{
 		var container = document.getElementById("select_contentList");
+		var containerName = "";
+		
 		if(container.selectedIndex < 0)
 		{
-			alert("请选择容器操作");
-			return;
+
 		}
-		
-		var containerName = container.options[container.selectedIndex].text;
-		if(containerName == null || containerName == "")
+		else
 		{
-			alert("请选择容器操作");
-			return;
+			containerName = container.options[container.selectedIndex].text;
 		}
 		
 		var strAsymCipher = document.getElementById("AsymCipher").value;
@@ -735,15 +750,6 @@
 			alert("私钥解密失败,错误码:" + token.SOF_GetLastError());
 		}
 	}
-	
-	
-	
-	
-	
-	
-	
-	
-	
 	
 	
 	
