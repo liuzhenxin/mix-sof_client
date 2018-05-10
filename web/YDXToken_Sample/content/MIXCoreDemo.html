@@ -12,7 +12,7 @@
 			<table style="width:64%;table-layout: fixed; height:100%">
 				<th colspan="5">
 				<h2>
-					MixCore Info
+				MixCore 基本信息
 				</h2>
 				</th>
 				<tr>
@@ -40,27 +40,27 @@
 				
 				<tr>
 					<td>随机数：</td>
-					<td colspan="2"> <input type="text" id="txt_random" name="pwd" style="width:100%;height:100%"/></td>					
+					<td colspan="2"> <input type="text" id="input_random" style="width:100%;height:100%"/></td>					
 					<td><input type="button" value="生成 " style="width:100%;height:100%" onClick="return GenRandom()"/></td>
 				</tr>
 				
 				<tr>
 					<td>用户密码：</td>
-					<td colspan="2"> <input type="text" value="88888888" id="txt_pwd" name="pwd" style="width:100%;height:100%"/></td>					
+					<td colspan="2"> <input type="password"" value="88888888" id="input_password" style="width:100%;height:100%"/></td>					
 					<td><input type="button" value="登录" style="width:100%;height:50%" onClick="return Login()"/>
 					<input type="button" value="退出" style="width:100%;height:50%" onClick="return Logout()"/></td>
-					<td ><label id="tryCount"></></td>
+					<td ><label id="label_retryCount"></></td>
 				</tr>
 				<tr>
-					<td>修改用户密码：</td>
-					<td colspan="2"><input type="text" value="" id="txt_Changepwd" name="pwd" style="width:100%;height:100%"/></td>					
+					<td>新密码：</td>
+					<td colspan="2"><input type="password" value="" id="input_password_new" style="width:100%;height:100%"/></td>					
 					<td><input type="button" value="修改" style="width:100%;height:100%" onClick="return ChangePassWd()"/></td>				
 				</tr>
-               
+ 
 				<tr>
 					<td>导出数字证书：</td>
 					<td colspan="2">
-						<textarea id="certData" row="30" cols="23" style="width:100%;height:100%"></textarea>
+						<textarea id="certData" style="width:100%;height:100%"></textarea>
 					</td>
 					<td>
 						<input type="button" value="导出签名证书" style="width:100%;height:50%" onClick="return ExportUserCert()"/>
@@ -75,38 +75,36 @@
 				<tr>
 					<td>证书信息：</td>
 					<td colspan="2">
-						<textarea id="certInfo" row="30" cols="23" style="width:100%;height:100%"></textarea>
+						<textarea id="certInfo" style="width:100%;height:100%"></textarea>
 					</td>
-					<td><input type="button" value="获取" style="width:100%;height:100%" onClick="return GetCertInfo()"/></td>
-					<td><input type="button" value="获取(通过OID)" style="width:100%;height:100%" onClick="return GetCertInfoByOid()"/></td>
+					<td><input type="button" value="读取" style="width:100%;height:100%" onClick="return GetCertInfo()"/></td>
+					<td><input type="button" value="读取(通过OID)" style="width:100%;height:100%" onClick="return GetCertInfoByOid()"/></td>
 				</tr>
 				
 				<tr>
 					<td>设备信息：</td>
 					<td colspan="2">
-						<textarea id="deviceInfo" wrap="hard" row="30" cols="60" style="width:100%;height:100%" name="infoCer"></textarea>
+						<textarea id="deviceInfo" style="width:100%;height:100%"></textarea>
 					</td>
-					<td><input type="button" value="获取" style="width:100%;height:100%" onClick="return GetDeviceInfo()"/></td>
+					<td><input type="button" value="读取" style="width:100%;height:100%" onClick="return GetDeviceInfo()"/></td>
 				</tr>
-				
-				
 				<tr>
-					<td>版本信息：</td>
+					<td>版本号：</td>
 					<td colspan="2">
-						<input type="text" id="contorlInfo" name="infoCer" style="width:100%;height:100%"></textarea>
+						<input type="text" id="versionInfo" style="width:100%;height:100%"></textarea>
 					</td>
-					<td><input type="button" value="获取" style="width:100%;height:100%" onClick="return GetVersion()"/></td>
+					<td><input type="button" value="读取" style="width:100%;height:100%" onClick="return GetVersion()"/></td>
 					
 				</tr>
 				<th colspan="5">
 				<h2>
-				证书使用举例
+				MixCore 证书运算
 				</h2>
 				</th>
 				<tr>
 				<td> 签名算法：</td>
 				
-				<td  colspan="2"><select id="signMech" style="width:100%;height:100%">
+				<td colspan="2"><select id="signMech" style="width:100%;height:100%">
 							<option value="0x00010001">SGD_SM3_RSA</option>
 							<option value="0x00010002">SGD_SHA1_RSA</option>
 							<option value="0x00010004">SGD_SHA256_RSA</option>	
@@ -118,7 +116,7 @@
 				
 				<tr>
 				<td> 加密算法：</td>
-				<td  colspan="2"><select id="encMech" style="width:100%;height:100%">
+				<td colspan="2"><select id="encMech" style="width:100%;height:100%">
 							<option value="0x00000101">SGD_SM1_ECB</option>
 							<option value="0x00000102">SGD_SM1_CBC</option>
 							<option value="0x00000104">SGD_SM1_CFB</option>	
@@ -140,7 +138,7 @@
 				
 				<tr>
 				<td>消息签名格式：</td>
-				<td  colspan="2">
+				<td colspan="2">
 					<select id="select_signType" style="width:100%;height:100%">
 						<option value="0">带原文</option>
 						<option value="1">不带原文</option>					
@@ -160,7 +158,7 @@
 				</tr>
 				<tr>
 					<td>输出：</td>
-					<td  colspan="2">
+					<td colspan="2">
 						<textarea id="outputData" row="3" cols="23"style="width:100%;height:100%"></textarea>
 					</td>
 					
