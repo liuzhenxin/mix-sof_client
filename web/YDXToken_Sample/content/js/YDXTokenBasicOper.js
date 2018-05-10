@@ -349,8 +349,8 @@
 	
 	function VerifySignedFile()
 	{
-		var inData = document.getElementById("originalData").value;
-		var signed = document.getElementById("signedData").value;
+		var inData = document.getElementById("inputData").value;
+		var signed = document.getElementById("outputData").value;
 		if(signed == null || signed.length <= 0)
 		{
 			alert("请先签名后操作");
@@ -384,8 +384,8 @@
 
 	function VerifySignedMessage()
 	{
-		var inData = document.getElementById("originalData").value;
-		var signed = document.getElementById("signedData").value;
+		var inData = document.getElementById("inputData").value;
+		var signed = document.getElementById("outputData").value;
 		if(signed == null || signed.length <= 0)
 		{
 			alert("请先签名后操作");
@@ -408,15 +408,19 @@
 		
 		var ret = token.SOF_VerifySignedMessage(signed, inData);
 		if(token.TRUE != ret)
+		{
 			alert("验签失败,错误码:" + token.SOF_GetLastError());
+		}
 		else
+		{
 			alert("验签成功");
+		}
 	}
 				
 	function VerifySignedDataXML()
 	{
-		var inData = document.getElementById("originalData").value;
-		var signed = document.getElementById("signedData").value;
+		var inData = document.getElementById("inputData").value;
+		var signed = document.getElementById("outputData").value;
 		if(signed == null || signed.length <= 0)
 		{
 			alert("请先签名后操作");
@@ -449,8 +453,8 @@
 	//数据验签
 	function VerifySignedData()
 	{
-		var inData = document.getElementById("originalData").value;
-		var signed = document.getElementById("signedData").value;
+		var inData = document.getElementById("inputData").value;
+		var signed = document.getElementById("outputData").value;
 		if(signed == null || signed.length <= 0)
 		{
 			alert("请先签名后操作");
@@ -473,14 +477,18 @@
 		
 		var ret = token.SOF_VerifySignedData(cert, inData, signed);
 		if(token.TRUE != ret)
+		{
 			alert("验签失败,错误码:" + token.SOF_GetLastError());
+		}
 		else
+		{
 			alert("验签成功");
+		}
 	}
 	
 	function SignFile()
 	{
-		var inData = document.getElementById("originalData").value;
+		var inData = document.getElementById("inputData").value;
 			
 		var container = document.getElementById("select_contentList");
 		var containerName = "";
@@ -496,16 +504,20 @@
 		
 		var signed = token.SOF_SignFile(containerName, inData);
 		if(signed != null && signed != "")
-			document.getElementById("signedData").value = signed;
+		{
+			document.getElementById("outputData").value = signed;	
+		}
 		else
-			alert("签名失败,错误码:" + token.SOF_GetLastError());
+		{
+			alert("签名失败,错误码:" + token.SOF_GetLastError());	
+		}
 	}
 	
 	function SignMessage()
 	{
 		var selectSignType = document.getElementById("select_signType");
 		var signType = selectSignType.options[selectSignType.selectedIndex].value;
-		var inData = document.getElementById("originalData").value;
+		var inData = document.getElementById("inputData").value;
 			
 		var container = document.getElementById("select_contentList");
 		var containerName = "";
@@ -521,24 +533,44 @@
 
 		var signed = token.SOF_SignMessage(Number(signType), containerName, inData);
 		if(signed != null && signed != "")
-			document.getElementById("signedData").value = signed;
+		{
+			document.getElementById("outputData").value = signed;
+		}
 		else
+		{
 			alert("签名失败,错误码:" + token.SOF_GetLastError());
+		}
 	}
+	
+	function SetDataXMLTemplate()
+	{
+		var indata = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<!-- \nXML Security Library example: Original XML doc file for sign3 example. \n-->\n<Envelope xmlns=\"urn:envelope\">\n  <Data>\n	Hello,ABCDEFG World!\n  </Data>\n</Envelope>\n";
+			
+		document.getElementById("inputData").value = indata;
+	}
+	
+	function ExchangeData()
+	{
+		var indata = document.getElementById("inputData").value;
+		var outdata = document.getElementById("outputData").value;
+			
+		document.getElementById("inputData").value = outdata;
+		document.getElementById("outputData").value = indata;
+	}
+	
 	
 	function SignDataXML()
 	{
-		var inData = document.getElementById("originalDataXML").value;
+		var inData = document.getElementById("inputData").value;
 		
-		if(signed != null && signed != "")
+		if(inData != null && inData != "")
 		{
 
 		}
 		else
 		{
-			indata = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<!-- \nXML Security Library example: Original XML doc file for sign3 example. \n-->\n<Envelope xmlns=\"urn:envelope\">\n  <Data>\n	Hello,ABCDEFG World!\n  </Data>\n</Envelope>\n";
-			
-			document.getElementById("originalDataXML").value = indata;
+			alert("请设置XML输入数据");
+			return;
 		}
 			
 		var container = document.getElementById("select_contentList");
@@ -556,7 +588,7 @@
 		var signed = token.SOF_SignDataXML(containerName, inData);
 		if(signed != null && signed != "")
 		{
-			document.getElementById("signedData").value = signed;
+			document.getElementById("outputData").value = signed;
 		}
 		else
 		{
@@ -567,7 +599,7 @@
 	//数据签名
 	function SignData()
 	{
-		var inData = document.getElementById("originalData").value;
+		var inData = document.getElementById("inputData").value;
 			
 		var container = document.getElementById("select_contentList");
 		var containerName = "";
@@ -584,7 +616,7 @@
 		var signed = token.SOF_SignData(containerName, inData);
 		if(signed != null && signed != "")
 		{
-			document.getElementById("signedData").value = signed;
+			document.getElementById("outputData").value = signed;
 		}
 		else
 		{
@@ -595,7 +627,7 @@
 	//数据加密
 	function EncryptData()
 	{
-		var inData = document.getElementById("enData").value;
+		var inData = document.getElementById("inputData").value;
 		
 		var container = document.getElementById("select_contentList");
 		var containerName = "";
@@ -609,12 +641,72 @@
 			containerName = container.options[container.selectedIndex].text;
 		}
 		
-		var cert  = token.SOF_ExportUserCert(containerName);
+		var cert  = token.SOF_ExportExChangeUserCert(containerName);
 		
-		var encrypedData = token.SOF_EncryptData(cert, inData);
-		if(encrypedData != null || encrypedData == "")
+		var outData = token.SOF_EncryptData(cert, inData);
+		if(outData != null && outData != "")
 		{
-			document.getElementById("enedData").value = encrypedData;
+			document.getElementById("outputData").value = outData;
+		}	
+		else
+		{
+			alert("加密失败,错误码:" + token.SOF_GetLastError());
+		}
+			
+	}
+	
+	function PubKeyEncrypt()
+	{
+		var inData = document.getElementById("inputData").value;
+		
+		var container = document.getElementById("select_contentList");
+		var containerName = "";
+		
+		if(container.selectedIndex < 0)
+		{
+
+		}
+		else
+		{
+			containerName = container.options[container.selectedIndex].text;
+		}
+		
+		var cert  = token.SOF_ExportExChangeUserCert(containerName);
+		
+		var outData = token.SOF_PubKeyEncrypt(cert, inData);
+		if(outData != null && outData != "")
+		{
+			document.getElementById("outputData").value = outData;
+		}	
+		else
+		{
+			alert("加密失败,错误码:" + token.SOF_GetLastError());
+		}
+			
+	}
+	
+	function PubKeyEncryptLongData()
+	{
+		var inData = document.getElementById("inputData").value;
+		
+		var container = document.getElementById("select_contentList");
+		var containerName = "";
+		
+		if(container.selectedIndex < 0)
+		{
+
+		}
+		else
+		{
+			containerName = container.options[container.selectedIndex].text;
+		}
+		
+		var cert  = token.SOF_ExportExChangeUserCert(containerName);
+		
+		var outData = token.SOF_PubKeyEncryptLongData(cert, inData);
+		if(outData != null && outData != "")
+		{
+			document.getElementById("outputData").value = outData;
 		}	
 		else
 		{
@@ -626,8 +718,8 @@
 	//数据加密
 	function EncryptFile()
 	{
-		var inData = document.getElementById("enData").value;
-		var OutData = document.getElementById("enedData").value;
+		var inData = document.getElementById("inputData").value;
+		var outData = document.getElementById("outputData").value;
 		
 		var container = document.getElementById("select_contentList");
 		var containerName = "";
@@ -641,12 +733,12 @@
 			containerName = container.options[container.selectedIndex].text;
 		}
 		
-		var cert  = token.SOF_ExportUserCert(containerName, cerType);
+		var cert  = token.SOF_ExportExChangeUserCert(containerName);
 		
-		var envelopData = token.SOF_EncryptFile(cert, inData, OutData);
-		if(envelopData != null)
+		var ret = token.SOF_EncryptFile(cert, inData, outData);
+		if(token.TRUE == ret)
 		{
-			document.getElementById("enedData").value = envelopData;
+			alert("加密成功！");
 		}
 		else
 		{
@@ -656,8 +748,8 @@
 	
 	function DecryptFile()
 	{
-		var outFile = document.getElementById("enData").value;
-		var inData = document.getElementById("enedData").value;
+		var inData = document.getElementById("inputData").value;
+		var outData = document.getElementById("outputData").value;
 		
 		var container = document.getElementById("select_contentList");
 		var containerName = "";
@@ -671,23 +763,23 @@
 			containerName = container.options[container.selectedIndex].text;
 		}
 		
-		decryptedData = token.SOF_DecryptFile(containerName, inData, outFile);
-		if(decryptedData != 0)
+		var ret = token.SOF_DecryptFile(containerName, inData, outData);
+		
+		if(token.TRUE == ret)
 		{
-			alert("解密失败,错误码:" + token.SOF_GetLastError());
+			alert("解密成功！");
 		}
 		else
 		{
-			document.getElementById("deData").value = outFile;
-			alert("解密文件成功，目标文件:" + outFile);
+			alert("解密失败,错误码:" + token.SOF_GetLastError());
 		}
 	}
 		
 	//数据解密
 	function DecryptData()
 	{
-		var encrypedData = document.getElementById("enedData").value;
-		if(encrypedData == null || encrypedData.length <= 0)
+		var inData = document.getElementById("inputData").value;
+		if(inData == null || inData.length <= 0)
 		{
 			alert("请先加密后操作");
 			return;
@@ -705,10 +797,10 @@
 			containerName = container.options[container.selectedIndex].text;
 		}
 		
-		decryptedData = token.SOF_DecryptData(containerName, encrypedData);
+		decryptedData = token.SOF_DecryptData(containerName, inData);
 		if(decryptedData != null && decryptedData != "")
 		{
-			document.getElementById("deData").value = decryptedData;
+			document.getElementById("outputData").value = decryptedData;
 		}
 		else
 		{
@@ -716,24 +808,16 @@
 		}
 	}
 	
-	function encryptbyPubKey()
-	{
-		var strPubKey = document.getElementById("PubKey").value;
-		var strInput = document.getElementById("AsymPlain").value;
-		
-		var strAsymCipher = token.SOF_EncryptbyPubKey(strPubKey, strInput, cerType);
-		if(strAsymCipher != null && strAsymCipher != "")
-		{
-			document.getElementById("AsymCipher").value = strAsymCipher;	
-		}
-		else
-		{
-			alert("公钥加密失败,错误码:" + token.SOF_GetLastError());
-		}
-	}
 	
-	function decryptbyPrvKey()
+	function PriKeyDecryptLongData()
 	{
+		var inData = document.getElementById("inputData").value;
+		if(inData == null || inData.length <= 0)
+		{
+			alert("请先加密后操作");
+			return;
+		}
+		
 		var container = document.getElementById("select_contentList");
 		var containerName = "";
 		
@@ -746,18 +830,50 @@
 			containerName = container.options[container.selectedIndex].text;
 		}
 		
-		var strAsymCipher = document.getElementById("AsymCipher").value;
-		
-		var strAsymPlain = token.SOF_DecryptbyPrvKey(containerName, cerType, strAsymCipher);
-		if(strAsymPlain != null && strAsymPlain != "")
+		decryptedData = token.SOF_PriKeyDecryptLongData(containerName, inData);
+		if(decryptedData != null && decryptedData != "")
 		{
-			document.getElementById("AsymPlain").value = strAsymPlain;	
+			document.getElementById("outputData").value = decryptedData;
 		}
 		else
 		{
-			alert("私钥解密失败,错误码:" + token.SOF_GetLastError());
+			alert("解密失败,错误码:" + token.SOF_GetLastError());
 		}
 	}
+	
+	
+	function PriKeyDecrypt()
+	{
+		var inData = document.getElementById("inputData").value;
+		if(inData == null || inData.length <= 0)
+		{
+			alert("请先加密后操作");
+			return;
+		}
+		
+		var container = document.getElementById("select_contentList");
+		var containerName = "";
+		
+		if(container.selectedIndex < 0)
+		{
+
+		}
+		else
+		{
+			containerName = container.options[container.selectedIndex].text;
+		}
+		
+		decryptedData = token.SOF_PriKeyDecrypt(containerName, inData);
+		if(decryptedData != null && decryptedData != "")
+		{
+			document.getElementById("outputData").value = decryptedData;
+		}
+		else
+		{
+			alert("解密失败,错误码:" + token.SOF_GetLastError());
+		}
+	}
+	
 	
 	
 	
