@@ -1,11 +1,10 @@
 
-function YDXToken(obj){
+function MIXCore(obj){
 	this.obj = obj;	
 	
 	this.SAR_OK										=	0;
 	this.SAR_FALSE									= 	1;
 	
-	//分组加密算法标识
 	this.SGD_SM1_ECB								=	0x00000101;
 	this.SGD_SM1_CBC								=	0x00000102;
 	this.SGD_SM1_CFB								=	0x00000104;
@@ -22,13 +21,11 @@ function YDXToken(obj){
 	this.SGD_SM4_OFB								=	0x00000408;
 	this.SGD_SM4_MAC								=	0x00000410;
 	
-	//非对称密码算法标识
 	this.SGD_RSA									=	0x00010000;
 	this.SGD_SM2_1									=	0x00020100; //ECC签名
 	this.SGD_SM2_2									=	0x00020200; //ECC密钥交换
 	this.SGD_SM2_3									=	0x00020400; //ECC加密
 	
-	//密码杂凑算法标识
 	this.SGD_SM3									=	0x00000001;
 	this.SGD_SHA1									=	0x00000002;
 	this.SGD_SHA256									=	0x00000004;
@@ -477,13 +474,13 @@ function YDXToken(obj){
 					}
 					else
 					{
-						g_MIXPlugin = new YDXTokenPlugin();
+						g_MIXPlugin = new MIXCorePlugin();
 					}
 					
 				}
 
 			}else {
-				g_MIXPlugin = new YDXTokenPlugin();
+				g_MIXPlugin = new MIXCorePlugin();
 			}
 			
 		}
@@ -506,13 +503,13 @@ function YDXToken(obj){
 }
 
 
-function YDXTokenPlugin(){
+function MIXCorePlugin(){
 
 	var url = "http://127.0.0.1:8484/";
 	
 	var xhr ;
 	
-	function AjaxIO(json) {
+	function MixProcess(json) {
 		
 		if(xhr == null) {
 			if (window.XMLHttpRequest) {// code for IE7+, Firefox, Chrome, Opera, Safari
@@ -536,7 +533,7 @@ function YDXTokenPlugin(){
 		
 		try
 		{
-			AjaxIO(JSON.stringify(json));
+			MixProcess(JSON.stringify(json));
 		}
 		catch (e)
 		{
@@ -561,7 +558,7 @@ function YDXTokenPlugin(){
 		
 		try
 		{
-			AjaxIO(JSON.stringify(json));
+			MixProcess(JSON.stringify(json));
 		}
 		catch (e)
 		{
@@ -585,7 +582,7 @@ function YDXTokenPlugin(){
 		
 		try
 		{
-			AjaxIO(JSON.stringify(json));
+			MixProcess(JSON.stringify(json));
 		}
 		catch (e)
 		{
@@ -609,7 +606,7 @@ function YDXTokenPlugin(){
 		
 		try
 		{
-			AjaxIO(JSON.stringify(json));
+			MixProcess(JSON.stringify(json));
 		}
 		catch (e)
 		{
@@ -633,7 +630,7 @@ function YDXTokenPlugin(){
 		
 		try
 		{
-			AjaxIO(JSON.stringify(json));
+			MixProcess(JSON.stringify(json));
 		}
 		catch (e)
 		{
@@ -657,7 +654,7 @@ function YDXTokenPlugin(){
 		
 		try
 		{
-			AjaxIO(JSON.stringify(json));
+			MixProcess(JSON.stringify(json));
 		}
 		catch (e)
 		{
@@ -681,7 +678,7 @@ function YDXTokenPlugin(){
 		
 		try
 		{
-			AjaxIO(JSON.stringify(json));
+			MixProcess(JSON.stringify(json));
 		}
 		catch (e)
 		{
@@ -705,7 +702,7 @@ function YDXTokenPlugin(){
 		
 		try
 		{
-			AjaxIO(JSON.stringify(json));
+			MixProcess(JSON.stringify(json));
 		}
 		catch (e)
 		{
@@ -729,7 +726,7 @@ function YDXTokenPlugin(){
 		
 		try
 		{
-			AjaxIO(JSON.stringify(json));
+			MixProcess(JSON.stringify(json));
 		}
 		catch (e)
 		{
@@ -753,7 +750,7 @@ function YDXTokenPlugin(){
 		
 		try
 		{
-			AjaxIO(JSON.stringify(json));
+			MixProcess(JSON.stringify(json));
 		}
 		catch (e)
 		{
@@ -777,7 +774,7 @@ function YDXTokenPlugin(){
 		
 		try
 		{
-			AjaxIO(JSON.stringify(json));
+			MixProcess(JSON.stringify(json));
 		}
 		catch (e)
 		{
@@ -801,7 +798,7 @@ function YDXTokenPlugin(){
 		
 		try
 		{
-			AjaxIO(JSON.stringify(json));
+			MixProcess(JSON.stringify(json));
 		}
 		catch (e)
 		{
@@ -825,7 +822,7 @@ function YDXTokenPlugin(){
 		
 		try
 		{
-			AjaxIO(JSON.stringify(json));
+			MixProcess(JSON.stringify(json));
 		}
 		catch (e)
 		{
@@ -849,7 +846,7 @@ function YDXTokenPlugin(){
 		
 		try
 		{
-			AjaxIO(JSON.stringify(json));
+			MixProcess(JSON.stringify(json));
 		}
 		catch (e)
 		{
@@ -873,7 +870,7 @@ function YDXTokenPlugin(){
 		
 		try
 		{
-			AjaxIO(JSON.stringify(json));
+			MixProcess(JSON.stringify(json));
 		}
 		catch (e)
 		{
@@ -897,7 +894,7 @@ function YDXTokenPlugin(){
 		
 		try
 		{
-			AjaxIO(JSON.stringify(json));
+			MixProcess(JSON.stringify(json));
 		}
 		catch (e)
 		{
@@ -921,7 +918,7 @@ function YDXTokenPlugin(){
 		
 		try
 		{
-			AjaxIO(JSON.stringify(json));
+			MixProcess(JSON.stringify(json));
 		}
 		catch (e)
 		{
@@ -945,7 +942,7 @@ function YDXTokenPlugin(){
 		
 		try
 		{
-			AjaxIO(JSON.stringify(json));
+			MixProcess(JSON.stringify(json));
 		}
 		catch (e)
 		{
@@ -969,7 +966,7 @@ function YDXTokenPlugin(){
 		
 		try
 		{
-			AjaxIO(JSON.stringify(json));
+			MixProcess(JSON.stringify(json));
 		}
 		catch (e)
 		{
@@ -993,7 +990,7 @@ function YDXTokenPlugin(){
 		
 		try
 		{
-			AjaxIO(JSON.stringify(json));
+			MixProcess(JSON.stringify(json));
 		}
 		catch (e)
 		{
@@ -1017,7 +1014,7 @@ function YDXTokenPlugin(){
 		
 		try
 		{
-			AjaxIO(JSON.stringify(json));
+			MixProcess(JSON.stringify(json));
 		}
 		catch (e)
 		{
@@ -1041,7 +1038,7 @@ function YDXTokenPlugin(){
 		
 		try
 		{
-			AjaxIO(JSON.stringify(json));
+			MixProcess(JSON.stringify(json));
 		}
 		catch (e)
 		{
@@ -1065,7 +1062,7 @@ function YDXTokenPlugin(){
 		
 		try
 		{
-			AjaxIO(JSON.stringify(json));
+			MixProcess(JSON.stringify(json));
 		}
 		catch (e)
 		{
@@ -1089,7 +1086,7 @@ function YDXTokenPlugin(){
 		
 		try
 		{
-			AjaxIO(JSON.stringify(json));
+			MixProcess(JSON.stringify(json));
 		}
 		catch (e)
 		{
@@ -1113,7 +1110,7 @@ function YDXTokenPlugin(){
 		
 		try
 		{
-			AjaxIO(JSON.stringify(json));
+			MixProcess(JSON.stringify(json));
 		}
 		catch (e)
 		{
@@ -1137,7 +1134,7 @@ function YDXTokenPlugin(){
 		
 		try
 		{
-			AjaxIO(JSON.stringify(json));
+			MixProcess(JSON.stringify(json));
 		}
 		catch (e)
 		{
@@ -1161,7 +1158,7 @@ function YDXTokenPlugin(){
 		
 		try
 		{
-			AjaxIO(JSON.stringify(json));
+			MixProcess(JSON.stringify(json));
 		}
 		catch (e)
 		{
@@ -1185,7 +1182,7 @@ function YDXTokenPlugin(){
 		
 		try
 		{
-			AjaxIO(JSON.stringify(json));
+			MixProcess(JSON.stringify(json));
 		}
 		catch (e)
 		{
@@ -1209,7 +1206,7 @@ function YDXTokenPlugin(){
 		
 		try
 		{
-			AjaxIO(JSON.stringify(json));
+			MixProcess(JSON.stringify(json));
 		}
 		catch (e)
 		{
@@ -1233,7 +1230,7 @@ function YDXTokenPlugin(){
 		
 		try
 		{
-			AjaxIO(JSON.stringify(json));
+			MixProcess(JSON.stringify(json));
 		}
 		catch (e)
 		{
@@ -1257,7 +1254,7 @@ function YDXTokenPlugin(){
 		
 		try
 		{
-			AjaxIO(JSON.stringify(json));
+			MixProcess(JSON.stringify(json));
 		}
 		catch (e)
 		{
@@ -1282,7 +1279,7 @@ function YDXTokenPlugin(){
 		
 		try
 		{
-			AjaxIO(JSON.stringify(json));
+			MixProcess(JSON.stringify(json));
 		}
 		catch (e)
 		{
@@ -1306,7 +1303,7 @@ function YDXTokenPlugin(){
 		
 		try
 		{
-			AjaxIO(JSON.stringify(json));
+			MixProcess(JSON.stringify(json));
 		}
 		catch (e)
 		{
@@ -1330,7 +1327,7 @@ function YDXTokenPlugin(){
 		
 		try
 		{
-			AjaxIO(JSON.stringify(json));
+			MixProcess(JSON.stringify(json));
 		}
 		catch (e)
 		{
@@ -1354,7 +1351,7 @@ function YDXTokenPlugin(){
 		
 		try
 		{
-			AjaxIO(JSON.stringify(json));
+			MixProcess(JSON.stringify(json));
 		}
 		catch (e)
 		{
@@ -1378,7 +1375,7 @@ function YDXTokenPlugin(){
 		
 		try
 		{
-			AjaxIO(JSON.stringify(json));
+			MixProcess(JSON.stringify(json));
 		}
 		catch (e)
 		{
@@ -1402,7 +1399,7 @@ function YDXTokenPlugin(){
 			
 		try
 		{
-			AjaxIO(JSON.stringify(json));
+			MixProcess(JSON.stringify(json));
 		}
 		catch (e)
 		{
@@ -1429,7 +1426,7 @@ function YDXTokenPlugin(){
 		
 		try
 		{
-			AjaxIO(JSON.stringify(json));
+			MixProcess(JSON.stringify(json));
 		}
 		catch (e)
 		{

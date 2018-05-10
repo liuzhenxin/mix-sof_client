@@ -1,10 +1,9 @@
 ﻿
-	var token = new YDXToken("YDXTokenPlugin");
+	var mixCore = new MIXCore("MIXCorePlugin");
 	
-	//动态添加option选项
-	function addOption(optionStr, selectID)
+	function addSelectOption(val, elementId)
 	{	
-		selectID.options.add(new Option(optionStr, optionStr));
+		elementId.options.add(new Option(val, val));
 	}
 	
 	function InitializeLibraryNative()
@@ -14,16 +13,16 @@
 		
 		if(slectType == "WTSKFInterface.dll")
 		{
-			ret = token.SOF_InitializeLibraryNative("WTSKFInterface.dll");
+			ret = mixCore.SOF_InitializeLibraryNative("WTSKFInterface.dll");
 		}	
 		
-		if(token.TRUE == ret)
+		if(mixCore.TRUE == ret)
 		{
 			alert("加载控件成功!");
 		}
 		else
 		{
-			alert("加载控件失败,错误码:" + token.SOF_GetLastError());
+			alert("加载控件失败,错误码:" + mixCore.SOF_GetLastError());
 			return ;
 		}
 	}
@@ -33,27 +32,25 @@
 		var slectType = document.getElementById("SKFInterface").value;
 		var ret = 0;
 		
-		ret = token.SOF_FinalizeLibraryNative();
+		ret = mixCore.SOF_FinalizeLibraryNative();
 		
-		if(token.TRUE == ret)
+		if(mixCore.TRUE == ret)
 		{
 			alert("卸载控件成功!");
 		}
 		else
 		{
-			alert("卸载控件失败,错误码:" + token.SOF_GetLastError());
+			alert("卸载控件失败,错误码:" + mixCore.SOF_GetLastError());
 			return ;
 		}
 	}
 	
-	
-	//获取证书列表
 	function GetUserList()
 	{
-		var cerlistID = document.getElementById("select_contentList");
-		cerlistID.options.length = 0;
+		var containerID = document.getElementById("select_container");
+		containerID.options.length = 0;
 		
-		var userList = token.SOF_GetUserList();
+		var userList = mixCore.SOF_GetUserList();
 		
 		if(userList != null && userList.length > 0)
 		{
@@ -61,16 +58,16 @@
 			
 			for(var i = 0; i < arrList.length; ++i)
 			{
-				addOption(arrList[i].split("||")[1], cerlistID);
+				addSelectOption(arrList[i].split("||")[1], containerID);
 			}
 		}		
 		else if(userList == null)
 		{
-			alert("设备中无证书");
+			alert("未发现证书！");
 		}
 		else
 		{
-			alert("获取证书列表失败,错误码:" + token.SOF_GetLastError());
+			alert("获取证书列表失败,错误码:" + mixCore.SOF_GetLastError());
 		}
 			
 	}
@@ -79,13 +76,13 @@
 	function Login()
 	{
 		var pin = document.getElementById("txt_pwd").value;	
-		var ret = token.SOF_Login(document.getElementById("select_contentList").value, pin);			
-		if(token.TRUE != ret)
+		var ret = mixCore.SOF_Login(document.getElementById("select_container").value, pin);			
+		if(mixCore.TRUE != ret)
 		{	
 	
-			alert("验证用户密码失败,错误码:" + token.SOF_GetLastError());
+			alert("验证用户密码失败,错误码:" + mixCore.SOF_GetLastError());
 			
-			var retryCount = token.SOF_GetPinRetryCount(document.getElementById("select_contentList").value);	
+			var retryCount = mixCore.SOF_GetPinRetryCount(document.getElementById("select_container").value);	
 			
 			document.getElementById("tryCount").innerText = "剩余次数：" + retryCount;
 			
@@ -101,10 +98,10 @@
 	
 	function Logout()
 	{
-		var ret = token.SOF_Logout();
-		if(token.TRUE != ret)
+		var ret = mixCore.SOF_Logout();
+		if(mixCore.TRUE != ret)
 		{	
-			alert("退出失败,错误码:" + token.SOF_GetLastError());
+			alert("退出失败,错误码:" + mixCore.SOF_GetLastError());
 			
 			return;
 		}
@@ -116,14 +113,14 @@
 	
 	function GenRandom()
 	{
-		var ret = token.SOF_GenRandom(10);
+		var ret = mixCore.SOF_GenRandom(10);
 		if(ret != null && ret != "")
 		{
 			document.getElementById("txt_random").value = ret;	
 		}
 		else
 		{
-			alert("生成随机数失败,错误码:" + token.SOF_GetLastError());
+			alert("生成随机数失败,错误码:" + mixCore.SOF_GetLastError());
 		}
 	}
 	
@@ -133,10 +130,10 @@
 	{
 		var pin = document.getElementById("txt_pwd").value;	
 		var resetPin = document.getElementById("txt_Changepwd").value;
-		var ret = token.SOF_ChangePassWd("", pin, resetPin);
-		if(token.TRUE != ret)
+		var ret = mixCore.SOF_ChangePassWd("", pin, resetPin);
+		if(mixCore.TRUE != ret)
 		{
-			alert("密码修改失败,错误码:" + token.SOF_GetLastError());
+			alert("密码修改失败,错误码:" + mixCore.SOF_GetLastError());
 		}
 		else
 		{
@@ -148,7 +145,7 @@
 	{
 		var cert = document.getElementById("certData").value;	
 		
-		var ret = token.SOF_ValidateCert(cert);
+		var ret = mixCore.SOF_ValidateCert(cert);
 		
 		if(0 != ret)
 		{
@@ -165,7 +162,7 @@
 	//控件版本信息
 	 function GetVersion()
     {
-        var version = token.SOF_GetVersion();
+        var version = mixCore.SOF_GetVersion();
 		document.getElementById("contorlInfo").value = version;			
     }	
 	
@@ -174,7 +171,7 @@
 	{
 		document.getElementById("certData").value = "";	
 		
-		var container = document.getElementById("select_contentList");
+		var container = document.getElementById("select_container");
 		var containerName = "";
 		
 		if(container.selectedIndex < 0)
@@ -186,7 +183,7 @@
 			containerName = container.options[container.selectedIndex].text;
 		}
 
-		var cert = token.SOF_ExportUserCert(containerName);
+		var cert = mixCore.SOF_ExportUserCert(containerName);
 		
 		if(cert != null && cert != "")
 		{
@@ -194,7 +191,7 @@
 		}
 		else
 		{
-			alert("获取证书信息失败,错误码:" + token.SOF_GetLastError());
+			alert("获取证书失败,错误码:" + mixCore.SOF_GetLastError());
 		}
 	}
 	
@@ -202,7 +199,7 @@
 	{
 		document.getElementById("certData").value = "";	
 		
-		var container = document.getElementById("select_contentList");
+		var container = document.getElementById("select_container");
 		var containerName = "";
 		
 		if(container.selectedIndex < 0)
@@ -214,7 +211,7 @@
 			containerName = container.options[container.selectedIndex].text;
 		}
 
-		var cert = token.SOF_ExportExChangeUserCert(containerName);
+		var cert = mixCore.SOF_ExportExChangeUserCert(containerName);
 		
 		if(cert != null && cert != "")
 		{
@@ -222,7 +219,7 @@
 		}
 		else
 		{
-			alert("获取证书信息失败,错误码:" + token.SOF_GetLastError());
+			alert("获取证书失败,错误码:" + mixCore.SOF_GetLastError());
 		}
 	}
 	
@@ -233,23 +230,23 @@
 		
 		if(certData == "")
 		{
-			alert("请先导出证书");
+			alert("数据错误！");
 			return;	
 		}
 
 		var itemsInfo = "";
-		var str = token.SOF_GetCertInfo(certData, token.SGD_CERT_ISSUER_CN);
+		var str = mixCore.SOF_GetCertInfo(certData, mixCore.SGD_CERT_ISSUER_CN);
 		itemsInfo += "Issuer: " + str + "\r";
 		
-		str = token.SOF_GetCertInfo(certData, token.SGD_CERT_SUBJECT);
+		str = mixCore.SOF_GetCertInfo(certData, mixCore.SGD_CERT_SUBJECT);
 		itemsInfo += "Subject: " + str + "\r";
-		str = token.SOF_GetCertInfo(certData, token.SGD_CERT_SUBJECT_CN);
+		str = mixCore.SOF_GetCertInfo(certData, mixCore.SGD_CERT_SUBJECT_CN);
 		itemsInfo += "Subject_CN: " + str + "\r";
-		str = token.SOF_GetCertInfo(certData, token.SGD_CERT_SUBJECT_EMALL);
+		str = mixCore.SOF_GetCertInfo(certData, mixCore.SGD_CERT_SUBJECT_EMALL);
 		itemsInfo += "Subject_EMail: " + str + "\r";
-		str = token.SOF_GetCertInfo(certData, token.SGD_CERT_SERIAL);
+		str = mixCore.SOF_GetCertInfo(certData, mixCore.SGD_CERT_SERIAL);
 		itemsInfo += "Serial: " + str + "\r";
-		str = token.SOF_GetCertInfo(certData, token.SGD_CERT_CRL);
+		str = mixCore.SOF_GetCertInfo(certData, mixCore.SGD_CERT_CRL);
 		itemsInfo += "cRLDistributionPoints: " + str + "\r";
 		
 		document.getElementById("certInfo").value = itemsInfo;
@@ -267,18 +264,18 @@
 		}
 		
 		var itemsInfo = "";
-		var str = token.SOF_GetXMLSignatureInfo(inData, 1);
+		var str = mixCore.SOF_GetXMLSignatureInfo(inData, 1);
 		itemsInfo += "Data: " + str + "\r";
 		
-		str = token.SOF_GetXMLSignatureInfo(inData, 2);
+		str = mixCore.SOF_GetXMLSignatureInfo(inData, 2);
 		itemsInfo += "DigestValue: " + str + "\r";
-		str = token.SOF_GetXMLSignatureInfo(inData, 3);
+		str = mixCore.SOF_GetXMLSignatureInfo(inData, 3);
 		itemsInfo += "SignatureValue: " + str + "\r";
-		str = token.SOF_GetXMLSignatureInfo(inData, 4);
+		str = mixCore.SOF_GetXMLSignatureInfo(inData, 4);
 		itemsInfo += "X509Certificate: " + str + "\r";
-		str = token.SOF_GetXMLSignatureInfo(inData, 5);
+		str = mixCore.SOF_GetXMLSignatureInfo(inData, 5);
 		itemsInfo += "DigestMethod: " + str + "\r";
-		str = token.SOF_GetXMLSignatureInfo(inData, 6);
+		str = mixCore.SOF_GetXMLSignatureInfo(inData, 6);
 		itemsInfo += "SignatureMethod: " + str + "\r";
 		
 		document.getElementById("outputData").value = itemsInfo;
@@ -295,11 +292,11 @@
 		}
 		
 		var itemsInfo = "";
-		var str = token.SOF_GetInfoFromSignedMessage(inData, 1);
+		var str = mixCore.SOF_GetInfoFromSignedMessage(inData, 1);
 		itemsInfo += "Data: " + str + "\r";
-		str = token.SOF_GetInfoFromSignedMessage(inData, 2);
+		str = mixCore.SOF_GetInfoFromSignedMessage(inData, 2);
 		itemsInfo += "X509Certificate: " + str + "\r";
-		str = token.SOF_GetInfoFromSignedMessage(inData, 3);
+		str = mixCore.SOF_GetInfoFromSignedMessage(inData, 3);
 		itemsInfo += "SignatureValue: " + str + "\r";
 		
 		document.getElementById("outputData").value = itemsInfo;
@@ -313,7 +310,7 @@
 		
 		showCer.value = "";
 		var certInfo = "";
-		var str = token.SOF_GetCertInfoByOid(certData, "2.16.840.1.113732.2");
+		var str = mixCore.SOF_GetCertInfoByOid(certData, "2.16.840.1.113732.2");
 		certInfo += "2.16.840.1.113732.2: " + str;
 		
 		showCer.value = certInfo;
@@ -322,7 +319,7 @@
 	//获取设备信息
 	function GetDeviceInfo()
 	{
-		var container = document.getElementById("select_contentList");
+		var container = document.getElementById("select_container");
 		var containerName = "";
 		
 		if(container.selectedIndex < 0)
@@ -337,22 +334,22 @@
 		var deviceInfo = document.getElementById("deviceInfo");
 		deviceInfo.value = "";
 		var strInfo;
-		var str = token.SOF_GetDeviceInfo(containerName, token.SGD_DEVICE_NAME);
+		var str = mixCore.SOF_GetDeviceInfo(containerName, mixCore.SGD_DEVICE_NAME);
 		strInfo = "Device name: " + str + "\r";
 		
-		var str = token.SOF_GetDeviceInfo(containerName, token.SGD_DEVICE_SUPPORT_STORANGE_SPACE);
+		var str = mixCore.SOF_GetDeviceInfo(containerName, mixCore.SGD_DEVICE_SUPPORT_STORANGE_SPACE);
 		strInfo += "Device total space: " + str + "\r";
 		
-		var str = token.SOF_GetDeviceInfo(containerName, token.SGD_DEVICE_SUPPORT_FREE_SAPCE);
+		var str = mixCore.SOF_GetDeviceInfo(containerName, mixCore.SGD_DEVICE_SUPPORT_FREE_SAPCE);
 		strInfo += "Device free space: " + str + "\r";
 		
-		var str = token.SOF_GetDeviceInfo(containerName, token.SGD_DEVICE_HARDWARE_VERSION);
+		var str = mixCore.SOF_GetDeviceInfo(containerName, mixCore.SGD_DEVICE_HARDWARE_VERSION);
 		strInfo += "Hardware version: " + str + "\r";
 		
-		var str = token.SOF_GetDeviceInfo(containerName, token.SGD_DEVICE_SERIAL_NUMBER);
+		var str = mixCore.SOF_GetDeviceInfo(containerName, mixCore.SGD_DEVICE_SERIAL_NUMBER);
 		strInfo += "Device serial number: " + str + "\r";
 		
-		var str = token.SOF_GetDeviceInfo(containerName, token.SGD_DEVICE_MANUFACTURER);
+		var str = mixCore.SOF_GetDeviceInfo(containerName, mixCore.SGD_DEVICE_MANUFACTURER);
 		strInfo += "Device manufacturer: " + str + "\r";
 		
 		//strInfo += "如需获取更多信息请查看帮助文档";
@@ -363,10 +360,10 @@
 	function SetSignMethod()
 	{
 		var mech = document.getElementById("signMech").value;
-		var ret = token.SOF_SetSignMethod(Number(mech));
-		if(token.SAR_OK != ret)
+		var ret = mixCore.SOF_SetSignMethod(Number(mech));
+		if(mixCore.SAR_OK != ret)
 		{
-			alert("操作失败,错误码:" + token.SOF_GetLastError());
+			alert("操作失败,错误码:" + mixCore.SOF_GetLastError());
 		}
 		else
 		{
@@ -376,37 +373,37 @@
 	
 	function GetSignMethod()
 	{
-		var ret = token.SOF_GetSignMethod();
+		var ret = mixCore.SOF_GetSignMethod();
 		
-		if(token.SGD_SM3_RSA == ret)
+		if(mixCore.SGD_SM3_RSA == ret)
 		{
 			alert("SGD_SM3_RSA");
 		}
-		else if(token.SGD_SHA1_RSA == ret)
+		else if(mixCore.SGD_SHA1_RSA == ret)
 		{
 			alert("SGD_SHA1_RSA");
 		}
-		else if(token.SGD_SHA256_RSA == ret)
+		else if(mixCore.SGD_SHA256_RSA == ret)
 		{
 			alert("SGD_SHA256_RSA");
 		}
-		else if(token.SGD_SM3_SM2 == ret)
+		else if(mixCore.SGD_SM3_SM2 == ret)
 		{
 			alert("SGD_SM3_SM2");
 		}
 		else
 		{
-			alert("操作失败,错误码:" + token.SOF_GetLastError());
+			alert("操作失败,错误码:" + mixCore.SOF_GetLastError());
 		}
 	}
 	
 	function SetEncryptMethod()
 	{
 		var mech = document.getElementById("encMech").value;
-		var ret = token.SOF_SetEncryptMethod(Number(mech));
-		if(token.SAR_OK != ret)
+		var ret = mixCore.SOF_SetEncryptMethod(Number(mech));
+		if(mixCore.SAR_OK != ret)
 		{
-			alert("操作失败,错误码:" + token.SOF_GetLastError());
+			alert("操作失败,错误码:" + mixCore.SOF_GetLastError());
 		}
 		else
 		{
@@ -416,60 +413,60 @@
 	
 	function GetEncryptMethod()
 	{
-		var ret = token.SOF_GetEncryptMethod();
+		var ret = mixCore.SOF_GetEncryptMethod();
 		
-		if(token.SGD_SM1_ECB == ret)
+		if(mixCore.SGD_SM1_ECB == ret)
 		{
 			alert("SGD_SM1_ECB");
 		}
-		else if(token.SGD_SM1_CBC == ret)
+		else if(mixCore.SGD_SM1_CBC == ret)
 		{
 			alert("SGD_SM1_CBC");
 		}
-		else if(token.SGD_SM1_CFB == ret)
+		else if(mixCore.SGD_SM1_CFB == ret)
 		{
 			alert("SGD_SM1_CFB");
 		}
-		else if(token.SGD_SM1_OFB == ret)
+		else if(mixCore.SGD_SM1_OFB == ret)
 		{
 			alert("SGD_SM1_OFB");
 		}
 		
-		else if(token.SGD_SSF33_ECB == ret)
+		else if(mixCore.SGD_SSF33_ECB == ret)
 		{
 			alert("SGD_SSF33_ECB");
 		}
-		else if(token.SGD_SSF33_CBC == ret)
+		else if(mixCore.SGD_SSF33_CBC == ret)
 		{
 			alert("SGD_SSF33_CBC");
 		}
-		else if(token.SGD_SSF33_CFB == ret)
+		else if(mixCore.SGD_SSF33_CFB == ret)
 		{
 			alert("SGD_SSF33_CFB");
 		}
-		else if(token.SGD_SSF33_OFB == ret)
+		else if(mixCore.SGD_SSF33_OFB == ret)
 		{
 			alert("SGD_SSF33_OFB");
 		}
-		else if(token.SGD_SM4_ECB == ret)
+		else if(mixCore.SGD_SM4_ECB == ret)
 		{
 			alert("SGD_SM4_ECB");
 		}
-		else if(token.SGD_SM4_CBC == ret)
+		else if(mixCore.SGD_SM4_CBC == ret)
 		{
 			alert("SGD_SM4_CBC");
 		}
-		else if(token.SGD_SM4_CFB == ret)
+		else if(mixCore.SGD_SM4_CFB == ret)
 		{
 			alert("SGD_SM4_CFB");
 		}
-		else if(token.SGD_SM4_OFB == ret)
+		else if(mixCore.SGD_SM4_OFB == ret)
 		{
 			alert("SGD_SM4_OFB");
 		}
 		else
 		{
-			alert("操作失败,错误码:" + token.SOF_GetLastError());
+			alert("操作失败,错误码:" + mixCore.SOF_GetLastError());
 		}
 	}
 	
@@ -483,7 +480,7 @@
 			return;
 		}
 		
-		var container = document.getElementById("select_contentList");
+		var container = document.getElementById("select_container");
 		var containerName = "";
 		
 		if(container.selectedIndex < 0)
@@ -495,12 +492,12 @@
 			containerName = container.options[container.selectedIndex].text;
 		}
 		
-		var cert  = token.SOF_ExportUserCert(containerName);
+		var cert  = mixCore.SOF_ExportUserCert(containerName);
 		
-		var ret = token.SOF_VerifySignedFile(cert, inData, signed);
-		if(token.TRUE != ret)
+		var ret = mixCore.SOF_VerifySignedFile(cert, inData, signed);
+		if(mixCore.TRUE != ret)
 		{
-			alert("验签失败,错误码:" + token.SOF_GetLastError());
+			alert("验签失败,错误码:" + mixCore.SOF_GetLastError());
 		}
 		else
 		{
@@ -518,7 +515,7 @@
 			return;
 		}
 		
-		var container = document.getElementById("select_contentList");
+		var container = document.getElementById("select_container");
 		var containerName = "";
 		
 		if(container.selectedIndex < 0)
@@ -530,12 +527,12 @@
 			containerName = container.options[container.selectedIndex].text;
 		}
 		
-		var cert  = token.SOF_ExportUserCert(containerName);
+		var cert  = mixCore.SOF_ExportUserCert(containerName);
 		
-		var ret = token.SOF_VerifySignedMessage(signed, inData);
-		if(token.TRUE != ret)
+		var ret = mixCore.SOF_VerifySignedMessage(signed, inData);
+		if(mixCore.TRUE != ret)
 		{
-			alert("验签失败,错误码:" + token.SOF_GetLastError());
+			alert("验签失败,错误码:" + mixCore.SOF_GetLastError());
 		}
 		else
 		{
@@ -553,7 +550,7 @@
 			return;
 		}
 		
-		var container = document.getElementById("select_contentList");
+		var container = document.getElementById("select_container");
 		var containerName = "";
 		
 		if(container.selectedIndex < 0)
@@ -565,10 +562,10 @@
 			containerName = container.options[container.selectedIndex].text;
 		}
 		
-		var ret = token.SOF_VerifySignedDataXML(signed);
-		if(token.TRUE != ret)
+		var ret = mixCore.SOF_VerifySignedDataXML(signed);
+		if(mixCore.TRUE != ret)
 		{
-			alert("验签失败,错误码:" + token.SOF_GetLastError());
+			alert("验签失败,错误码:" + mixCore.SOF_GetLastError());
 		}
 		else
 		{
@@ -587,7 +584,7 @@
 			return;
 		}
 		
-		var container = document.getElementById("select_contentList");
+		var container = document.getElementById("select_container");
 		var containerName = "";
 		
 		if(container.selectedIndex < 0)
@@ -599,12 +596,12 @@
 			containerName = container.options[container.selectedIndex].text;
 		}
 		
-		var cert  = token.SOF_ExportUserCert(containerName);
+		var cert  = mixCore.SOF_ExportUserCert(containerName);
 		
-		var ret = token.SOF_VerifySignedData(cert, inData, signed);
-		if(token.TRUE != ret)
+		var ret = mixCore.SOF_VerifySignedData(cert, inData, signed);
+		if(mixCore.TRUE != ret)
 		{
-			alert("验签失败,错误码:" + token.SOF_GetLastError());
+			alert("验签失败,错误码:" + mixCore.SOF_GetLastError());
 		}
 		else
 		{
@@ -616,7 +613,7 @@
 	{
 		var inData = document.getElementById("inputData").value;
 			
-		var container = document.getElementById("select_contentList");
+		var container = document.getElementById("select_container");
 		var containerName = "";
 		
 		if(container.selectedIndex < 0)
@@ -628,14 +625,14 @@
 			containerName = container.options[container.selectedIndex].text;
 		}
 		
-		var signed = token.SOF_SignFile(containerName, inData);
+		var signed = mixCore.SOF_SignFile(containerName, inData);
 		if(signed != null && signed != "")
 		{
 			document.getElementById("outputData").value = signed;	
 		}
 		else
 		{
-			alert("签名失败,错误码:" + token.SOF_GetLastError());	
+			alert("签名失败,错误码:" + mixCore.SOF_GetLastError());	
 		}
 	}
 	
@@ -645,7 +642,7 @@
 		var signType = selectSignType.options[selectSignType.selectedIndex].value;
 		var inData = document.getElementById("inputData").value;
 			
-		var container = document.getElementById("select_contentList");
+		var container = document.getElementById("select_container");
 		var containerName = "";
 		
 		if(container.selectedIndex < 0)
@@ -657,14 +654,14 @@
 			containerName = container.options[container.selectedIndex].text;
 		}
 
-		var signed = token.SOF_SignMessage(Number(signType), containerName, inData);
+		var signed = mixCore.SOF_SignMessage(Number(signType), containerName, inData);
 		if(signed != null && signed != "")
 		{
 			document.getElementById("outputData").value = signed;
 		}
 		else
 		{
-			alert("签名失败,错误码:" + token.SOF_GetLastError());
+			alert("签名失败,错误码:" + mixCore.SOF_GetLastError());
 		}
 	}
 	
@@ -699,7 +696,7 @@
 			return;
 		}
 			
-		var container = document.getElementById("select_contentList");
+		var container = document.getElementById("select_container");
 		var containerName = "";
 		
 		if(container.selectedIndex < 0)
@@ -711,14 +708,14 @@
 			containerName = container.options[container.selectedIndex].text;
 		}
 		
-		var signed = token.SOF_SignDataXML(containerName, inData);
+		var signed = mixCore.SOF_SignDataXML(containerName, inData);
 		if(signed != null && signed != "")
 		{
 			document.getElementById("outputData").value = signed;
 		}
 		else
 		{
-			alert("签名失败,错误码:" + token.SOF_GetLastError());
+			alert("签名失败,错误码:" + mixCore.SOF_GetLastError());
 		}
 	}
 	
@@ -727,7 +724,7 @@
 	{
 		var inData = document.getElementById("inputData").value;
 			
-		var container = document.getElementById("select_contentList");
+		var container = document.getElementById("select_container");
 		var containerName = "";
 		
 		if(container.selectedIndex < 0)
@@ -739,14 +736,14 @@
 			containerName = container.options[container.selectedIndex].text;
 		}
 		
-		var signed = token.SOF_SignData(containerName, inData);
+		var signed = mixCore.SOF_SignData(containerName, inData);
 		if(signed != null && signed != "")
 		{
 			document.getElementById("outputData").value = signed;
 		}
 		else
 		{
-			alert("签名失败,错误码:" + token.SOF_GetLastError());
+			alert("签名失败,错误码:" + mixCore.SOF_GetLastError());
 		}
 	}
 	
@@ -755,7 +752,7 @@
 	{
 		var inData = document.getElementById("inputData").value;
 		
-		var container = document.getElementById("select_contentList");
+		var container = document.getElementById("select_container");
 		var containerName = "";
 		
 		if(container.selectedIndex < 0)
@@ -767,16 +764,16 @@
 			containerName = container.options[container.selectedIndex].text;
 		}
 		
-		var cert  = token.SOF_ExportExChangeUserCert(containerName);
+		var cert  = mixCore.SOF_ExportExChangeUserCert(containerName);
 		
-		var outData = token.SOF_EncryptData(cert, inData);
+		var outData = mixCore.SOF_EncryptData(cert, inData);
 		if(outData != null && outData != "")
 		{
 			document.getElementById("outputData").value = outData;
 		}	
 		else
 		{
-			alert("加密失败,错误码:" + token.SOF_GetLastError());
+			alert("加密失败,错误码:" + mixCore.SOF_GetLastError());
 		}
 			
 	}
@@ -785,7 +782,7 @@
 	{
 		var inData = document.getElementById("inputData").value;
 		
-		var container = document.getElementById("select_contentList");
+		var container = document.getElementById("select_container");
 		var containerName = "";
 		
 		if(container.selectedIndex < 0)
@@ -797,16 +794,16 @@
 			containerName = container.options[container.selectedIndex].text;
 		}
 		
-		var cert  = token.SOF_ExportExChangeUserCert(containerName);
+		var cert  = mixCore.SOF_ExportExChangeUserCert(containerName);
 		
-		var outData = token.SOF_PubKeyEncrypt(cert, inData);
+		var outData = mixCore.SOF_PubKeyEncrypt(cert, inData);
 		if(outData != null && outData != "")
 		{
 			document.getElementById("outputData").value = outData;
 		}	
 		else
 		{
-			alert("加密失败,错误码:" + token.SOF_GetLastError());
+			alert("加密失败,错误码:" + mixCore.SOF_GetLastError());
 		}
 			
 	}
@@ -815,7 +812,7 @@
 	{
 		var inData = document.getElementById("inputData").value;
 		
-		var container = document.getElementById("select_contentList");
+		var container = document.getElementById("select_container");
 		var containerName = "";
 		
 		if(container.selectedIndex < 0)
@@ -827,16 +824,16 @@
 			containerName = container.options[container.selectedIndex].text;
 		}
 		
-		var cert  = token.SOF_ExportExChangeUserCert(containerName);
+		var cert  = mixCore.SOF_ExportExChangeUserCert(containerName);
 		
-		var outData = token.SOF_PubKeyEncryptLongData(cert, inData);
+		var outData = mixCore.SOF_PubKeyEncryptLongData(cert, inData);
 		if(outData != null && outData != "")
 		{
 			document.getElementById("outputData").value = outData;
 		}	
 		else
 		{
-			alert("加密失败,错误码:" + token.SOF_GetLastError());
+			alert("加密失败,错误码:" + mixCore.SOF_GetLastError());
 		}
 			
 	}
@@ -847,7 +844,7 @@
 		var inData = document.getElementById("inputData").value;
 		var outData = document.getElementById("outputData").value;
 		
-		var container = document.getElementById("select_contentList");
+		var container = document.getElementById("select_container");
 		var containerName = "";
 		
 		if(container.selectedIndex < 0)
@@ -859,16 +856,16 @@
 			containerName = container.options[container.selectedIndex].text;
 		}
 		
-		var cert  = token.SOF_ExportExChangeUserCert(containerName);
+		var cert  = mixCore.SOF_ExportExChangeUserCert(containerName);
 		
-		var ret = token.SOF_EncryptFile(cert, inData, outData);
-		if(token.TRUE == ret)
+		var ret = mixCore.SOF_EncryptFile(cert, inData, outData);
+		if(mixCore.TRUE == ret)
 		{
 			alert("加密成功！");
 		}
 		else
 		{
-			alert("加密失败,错误码:" + token.SOF_GetLastError());
+			alert("加密失败,错误码:" + mixCore.SOF_GetLastError());
 		}
 	}
 	
@@ -877,7 +874,7 @@
 		var inData = document.getElementById("inputData").value;
 		var outData = document.getElementById("outputData").value;
 		
-		var container = document.getElementById("select_contentList");
+		var container = document.getElementById("select_container");
 		var containerName = "";
 		
 		if(container.selectedIndex < 0)
@@ -889,15 +886,15 @@
 			containerName = container.options[container.selectedIndex].text;
 		}
 		
-		var ret = token.SOF_DecryptFile(containerName, inData, outData);
+		var ret = mixCore.SOF_DecryptFile(containerName, inData, outData);
 		
-		if(token.TRUE == ret)
+		if(mixCore.TRUE == ret)
 		{
 			alert("解密成功！");
 		}
 		else
 		{
-			alert("解密失败,错误码:" + token.SOF_GetLastError());
+			alert("解密失败,错误码:" + mixCore.SOF_GetLastError());
 		}
 	}
 		
@@ -907,11 +904,11 @@
 		var inData = document.getElementById("inputData").value;
 		if(inData == null || inData.length <= 0)
 		{
-			alert("请先加密后操作");
+			alert("数据错误！");
 			return;
 		}
 		
-		var container = document.getElementById("select_contentList");
+		var container = document.getElementById("select_container");
 		var containerName = "";
 		
 		if(container.selectedIndex < 0)
@@ -923,14 +920,14 @@
 			containerName = container.options[container.selectedIndex].text;
 		}
 		
-		decryptedData = token.SOF_DecryptData(containerName, inData);
+		decryptedData = mixCore.SOF_DecryptData(containerName, inData);
 		if(decryptedData != null && decryptedData != "")
 		{
 			document.getElementById("outputData").value = decryptedData;
 		}
 		else
 		{
-			alert("解密失败,错误码:" + token.SOF_GetLastError());
+			alert("解密失败,错误码:" + mixCore.SOF_GetLastError());
 		}
 	}
 	
@@ -940,11 +937,11 @@
 		var inData = document.getElementById("inputData").value;
 		if(inData == null || inData.length <= 0)
 		{
-			alert("请先加密后操作");
+			alert("数据错误！");
 			return;
 		}
 		
-		var container = document.getElementById("select_contentList");
+		var container = document.getElementById("select_container");
 		var containerName = "";
 		
 		if(container.selectedIndex < 0)
@@ -956,14 +953,14 @@
 			containerName = container.options[container.selectedIndex].text;
 		}
 		
-		decryptedData = token.SOF_PriKeyDecryptLongData(containerName, inData);
+		decryptedData = mixCore.SOF_PriKeyDecryptLongData(containerName, inData);
 		if(decryptedData != null && decryptedData != "")
 		{
 			document.getElementById("outputData").value = decryptedData;
 		}
 		else
 		{
-			alert("解密失败,错误码:" + token.SOF_GetLastError());
+			alert("解密失败,错误码:" + mixCore.SOF_GetLastError());
 		}
 	}
 	
@@ -973,11 +970,11 @@
 		var inData = document.getElementById("inputData").value;
 		if(inData == null || inData.length <= 0)
 		{
-			alert("请先加密后操作");
+			alert("数据错误！");
 			return;
 		}
 		
-		var container = document.getElementById("select_contentList");
+		var container = document.getElementById("select_container");
 		var containerName = "";
 		
 		if(container.selectedIndex < 0)
@@ -989,14 +986,14 @@
 			containerName = container.options[container.selectedIndex].text;
 		}
 		
-		decryptedData = token.SOF_PriKeyDecrypt(containerName, inData);
+		decryptedData = mixCore.SOF_PriKeyDecrypt(containerName, inData);
 		if(decryptedData != null && decryptedData != "")
 		{
 			document.getElementById("outputData").value = decryptedData;
 		}
 		else
 		{
-			alert("解密失败,错误码:" + token.SOF_GetLastError());
+			alert("解密失败,错误码:" + mixCore.SOF_GetLastError());
 		}
 	}
 	
