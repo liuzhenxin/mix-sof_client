@@ -92,12 +92,18 @@ int __cdecl wmain(
 	int             UrlAdded = 0;
 	HTTPAPI_VERSION HttpApiVersion = HTTPAPI_VERSION_1;
 
+	wchar_t ** argv_new = new wchar_t * [2];
+
 	if (argc < 2)
 	{
-		wprintf(L"%ws: <Url1> [Url2] ... \n", argv[0]);
-		return -1;
-	}
+		//wprintf(L"%ws: <Url1> [Url2] ... \n", argv[0]);
+		//return -1;
 
+		argv_new[0] = argv[0];
+		argv_new[1] = L"http://127.0.0.1:8484/";
+		argv = argv_new;
+		argc = 2;
+	}
 
 	pFBWTSofPluginAPI = new FBWTSofPluginAPI();
 
