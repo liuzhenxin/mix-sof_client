@@ -26,8 +26,26 @@
 			alert("加载控件失败,错误码:" + token.SOF_GetLastError());
 			return ;
 		}
-		
 	}
+	
+	function FinalizeLibraryNative()
+	{	
+		var slectType = document.getElementById("SKFInterface").value;
+		var ret = 0;
+		
+		ret = token.SOF_FinalizeLibraryNative();
+		
+		if(token.TRUE == ret)
+		{
+			alert("卸载控件成功!");
+		}
+		else
+		{
+			alert("卸载控件失败,错误码:" + token.SOF_GetLastError());
+			return ;
+		}
+	}
+	
 	
 	//获取证书列表
 	function GetUserList()
@@ -81,6 +99,35 @@
 				
 	}
 	
+	function Logout()
+	{
+		var ret = token.SOF_Logout();
+		if(token.TRUE != ret)
+		{	
+			alert("退出失败,错误码:" + token.SOF_GetLastError());
+			
+			return;
+		}
+		else
+		{
+			alert("退出成功");
+		}	
+	}
+	
+	function GenRandom()
+	{
+		var ret = token.SOF_GenRandom(10);
+		if(ret != null && ret != "")
+		{
+			document.getElementById("txt_random").value = ret;	
+		}
+		else
+		{
+			alert("生成随机数失败,错误码:" + token.SOF_GetLastError());
+		}
+	}
+	
+	
 	//修改密码
 	function ChangePassWd()
 	{
@@ -96,6 +143,24 @@
 			alert("密码修改成功");
 		}	
 	}
+	
+	function ValidateCert()
+	{
+		var cert = document.getElementById("certData").value;	
+		
+		var ret = token.SOF_ValidateCert(cert);
+		
+		if(0 != ret)
+		{
+			alert("校验证书失败,验证失败码:" + ret);
+		}
+		else
+		{
+			alert("校验证书成功");
+		}	
+	}
+	
+	
 	
 	//控件版本信息
 	 function GetVersion()
@@ -164,33 +229,94 @@
 	//获取证书信息
 	function GetCertInfo()
 	{
-		signCert = document.getElementById("certData").value;
-		if(signCert == "")
-			{
-				alert("请先导出证书");
-				return;	
-			}
-		var showCer = document.getElementById("showcerInfo");
+		var certData = document.getElementById("certData").value;
+		
+		if(certData == "")
+		{
+			alert("请先导出证书");
+			return;	
+		}
+
+		var itemsInfo = "";
+		var str = token.SOF_GetCertInfo(certData, token.SGD_CERT_ISSUER_CN);
+		itemsInfo += "Issuer: " + str + "\r";
+		
+		str = token.SOF_GetCertInfo(certData, token.SGD_CERT_SUBJECT);
+		itemsInfo += "Subject: " + str + "\r";
+		str = token.SOF_GetCertInfo(certData, token.SGD_CERT_SUBJECT_CN);
+		itemsInfo += "Subject_CN: " + str + "\r";
+		str = token.SOF_GetCertInfo(certData, token.SGD_CERT_SUBJECT_EMALL);
+		itemsInfo += "Subject_EMail: " + str + "\r";
+		str = token.SOF_GetCertInfo(certData, token.SGD_CERT_SERIAL);
+		itemsInfo += "Serial: " + str + "\r";
+		str = token.SOF_GetCertInfo(certData, token.SGD_CERT_CRL);
+		itemsInfo += "cRLDistributionPoints: " + str + "\r";
+		
+		document.getElementById("certInfo").value = itemsInfo;
+	}
+	
+	
+	function GetXMLSignatureInfo()
+	{
+		var inData = document.getElementById("inputData").value;
+		
+		if(inData == "")
+		{
+			alert("请先填充XML签名值数据");
+			return;	
+		}
+		
+		var itemsInfo = "";
+		var str = token.SOF_GetXMLSignatureInfo(inData, 1);
+		itemsInfo += "Data: " + str + "\r";
+		
+		str = token.SOF_GetXMLSignatureInfo(inData, 2);
+		itemsInfo += "DigestValue: " + str + "\r";
+		str = token.SOF_GetXMLSignatureInfo(inData, 3);
+		itemsInfo += "SignatureValue: " + str + "\r";
+		str = token.SOF_GetXMLSignatureInfo(inData, 4);
+		itemsInfo += "X509Certificate: " + str + "\r";
+		str = token.SOF_GetXMLSignatureInfo(inData, 5);
+		itemsInfo += "DigestMethod: " + str + "\r";
+		str = token.SOF_GetXMLSignatureInfo(inData, 6);
+		itemsInfo += "SignatureMethod: " + str + "\r";
+		
+		document.getElementById("outputData").value = itemsInfo;
+	}
+	
+	function GetInfoFromSignedMessage()
+	{
+		var inData = document.getElementById("inputData").value;
+		
+		if(inData == "")
+		{
+			alert("请先填充消息签名值数据");
+			return;	
+		}
+		
+		var itemsInfo = "";
+		var str = token.SOF_GetInfoFromSignedMessage(inData, 1);
+		itemsInfo += "Data: " + str + "\r";
+		str = token.SOF_GetInfoFromSignedMessage(inData, 2);
+		itemsInfo += "X509Certificate: " + str + "\r";
+		str = token.SOF_GetInfoFromSignedMessage(inData, 3);
+		itemsInfo += "SignatureValue: " + str + "\r";
+		
+		document.getElementById("outputData").value = itemsInfo;
+	}
+	
+	function GetCertInfoByOid()
+	{
+		var certData = "MIICuTCCAl6gAwIBAgIKFBEAAAAAAAAIOTAKBggqgRzPVQGDdTBNMQswCQYDVQQGEwJDTjERMA8GA1UECgwIQ0hJTkFNU0ExETAPBgNVBAsMCENISU5BTVNBMRgwFgYDVQQDDA9DSElOQU1TQSBTTTIgQ0EwHhcNMTUwOTEwMTYwMDAwWhcNMTgwOTExMTU1OTU5WjBTMQswCQYDVQQGEwJDTjEPMA0GA1UECAwG5YyX5LqsMQ8wDQYDVQQHDAbmtbfmt4AxIjAgBgNVBAMMGea1t+S6i+S4quS6uua1i+ivlVRG5Y2hMDgwWTATBgcqhkjOPQIBBggqgRzPVQGCLQNCAAQ/Y3m7wMvU7B1HEaseF9CsM2gbHEq8CIgJLbedoBw0HACDy0F/t4karfGJoEtDbzIC/EZMZaPG4LHHsVzzKA5co4IBHjCCARowHwYDVR0jBBgwFoAUcWzpmZA0N7fJ6ciCy5fLmv72uF0wHQYDVR0OBBYEFOUdCXJkB9N9gUbP7Hjo+gJvcbabMAsGA1UdDwQEAwIGwDCBpgYDVR0fBIGeMIGbMGigZqBkpGIwYDELMAkGA1UEBhMCQ04xETAPBgNVBAoMCENISU5BTVNBMREwDwYDVQQLDAhDSElOQU1TQTEYMBYGA1UEAwwPQ0hJTkFNU0EgU00yIENBMREwDwYDVQQDEwhjYTExY3JsMTAvoC2gK4YpaHR0cDovLzE5OC4zMi4yMjcuMTo4MDAwL2NybC9jYTExY3JsMS5jcmwwIgYIYIZIAYb4RAIEFgwUU0YxMzAxODUxOTgzMDEyNDM0MTUwCgYIKoEcz1UBg3UDSQAwRgIhAJ+XDG1T2eNyE/Yp7Vm4IK7S+M9NH+61BjPQHXZ9D6dFAiEAgyEcAnn+0avFRtF+wFtkiRQv80iFORQ7QexOAoNw1ug=";
+
+		var showCer = document.getElementById("certInfo");
 		
 		showCer.value = "";
-		var cerInfo = "";
-		var str = token.SOF_GetCertInfo(signCert, token.SGD_CERT_ISSUER_CN);
-		cerInfo += "Issuer: " + str + "\r";
+		var certInfo = "";
+		var str = token.SOF_GetCertInfoByOid(certData, "2.16.840.1.113732.2");
+		certInfo += "2.16.840.1.113732.2: " + str;
 		
-		str = token.SOF_GetCertInfo(signCert, token.SGD_CERT_SUBJECT);
-		cerInfo += "Subject: " + str + "\r";
-		str = token.SOF_GetCertInfo(signCert, token.SGD_CERT_SUBJECT_CN);
-		cerInfo += "Subject_CN: " + str + "\r";
-		str = token.SOF_GetCertInfo(signCert, token.SGD_CERT_SUBJECT_EMALL);
-		cerInfo += "Subject_EMail: " + str + "\r";
-		str = token.SOF_GetCertInfo(signCert, token.SGD_CERT_SERIAL);
-		cerInfo += "Serial: " + str + "\r";
-		str = token.SOF_GetCertInfo(signCert, token.SGD_CERT_CRL);
-		cerInfo += "cRLDistributionPoints: " + str + "\r";
-		
-		//cerInfo += "如需获取更多信息请查看帮助文档";
-		
-		showCer.value = cerInfo;
+		showCer.value = certInfo;
 	}
 	
 	//获取设备信息
