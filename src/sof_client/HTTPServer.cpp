@@ -15,6 +15,8 @@
 #include <stdio.h>
 #include <FILE_LOG.h>
 
+#pragma comment( linker, "/subsystem:\"windows\" /entry:\"wmainCRTStartup\"")
+
 #include "FBWTSofPluginAPI.h"
 
 #include "mix_server.h"
@@ -494,15 +496,15 @@ DWORD SendHttpPostResponse(
 	PUCHAR          pEntityBuffer;
 	ULONG           EntityBufferLength;
 	ULONG           BytesRead;
-	ULONG           TempFileBytesWritten;
-	HANDLE          hTempFile;
-	TCHAR           szTempName[MAX_PATH + 1];
+	//ULONG           TempFileBytesWritten;
+	//HANDLE          hTempFile;
+	//TCHAR           szTempName[MAX_PATH + 1];
 	CHAR            szContentLength[MAX_ULONG_STR];
 	HTTP_DATA_CHUNK dataChunk;
 	ULONG           TotalBytesRead = 0;
 
 	BytesRead = 0;
-	hTempFile = INVALID_HANDLE_VALUE;
+	//hTempFile = INVALID_HANDLE_VALUE;
 	std::string strFmtCommandIn;
 	std::string strFmtCommandOut;
 
@@ -543,35 +545,35 @@ DWORD SendHttpPostResponse(
 		// file.
 		//
 
-		if (GetTempFileName(
-			L".",
-			L"New",
-			0,
-			szTempName
-		) == 0)
-		{
-			result = GetLastError();
-			wprintf(L"GetTempFileName failed with %lu \n", result);
-			goto Done;
-		}
+		//if (GetTempFileName(
+		//	L".",
+		//	L"New",
+		//	0,
+		//	szTempName
+		//) == 0)
+		//{
+		//	result = GetLastError();
+		//	wprintf(L"GetTempFileName failed with %lu \n", result);
+		//	goto Done;
+		//}
 
-		hTempFile = CreateFile(
-			szTempName,
-			GENERIC_READ | GENERIC_WRITE,
-			0,                  // Do not share.
-			NULL,               // No security descriptor.
-			CREATE_ALWAYS,      // Overrwrite existing.
-			FILE_ATTRIBUTE_NORMAL,    // Normal file.
-			NULL
-		);
+		//hTempFile = CreateFile(
+		//	szTempName,
+		//	GENERIC_READ | GENERIC_WRITE,
+		//	0,                  // Do not share.
+		//	NULL,               // No security descriptor.
+		//	CREATE_ALWAYS,      // Overrwrite existing.
+		//	FILE_ATTRIBUTE_NORMAL,    // Normal file.
+		//	NULL
+		//);
 
-		if (hTempFile == INVALID_HANDLE_VALUE)
-		{
-			result = GetLastError();
-			wprintf(L"Cannot create temporary file. Error %lu \n",
-				result);
-			goto Done;
-		}
+		//if (hTempFile == INVALID_HANDLE_VALUE)
+		//{
+		//	result = GetLastError();
+		//	wprintf(L"Cannot create temporary file. Error %lu \n",
+		//		result);
+		//	goto Done;
+		//}
 
 		do
 		{
@@ -597,15 +599,15 @@ DWORD SendHttpPostResponse(
 				if (BytesRead != 0)
 				{
 					TotalBytesRead += BytesRead;
-					WriteFile(
-						hTempFile,
-						pEntityBuffer,
-						BytesRead,
-						&TempFileBytesWritten,
-						NULL
-					);
+					//WriteFile(
+					//	hTempFile,
+					//	pEntityBuffer,
+					//	BytesRead,
+					//	&TempFileBytesWritten,
+					//	NULL
+					//);
 
-					strFmtCommandIn.append(std::string(pEntityBuffer, pEntityBuffer + TempFileBytesWritten));
+					strFmtCommandIn.append(std::string(pEntityBuffer, pEntityBuffer + BytesRead));
 				}
 				break;
 
@@ -624,14 +626,14 @@ DWORD SendHttpPostResponse(
 				if (BytesRead != 0)
 				{
 					TotalBytesRead += BytesRead;
-					WriteFile(
-						hTempFile,
-						pEntityBuffer,
-						BytesRead,
-						&TempFileBytesWritten,
-						NULL
-					);
-					strFmtCommandIn.append(std::string(BytesRead, BytesRead + TempFileBytesWritten));
+					//WriteFile(
+					//	hTempFile,
+					//	pEntityBuffer,
+					//	BytesRead,
+					//	&TempFileBytesWritten,
+					//	NULL
+					//);
+					strFmtCommandIn.append(std::string(BytesRead, BytesRead + BytesRead));
 				}
 
 				//
@@ -655,11 +657,11 @@ DWORD SendHttpPostResponse(
 
 				//strFmtCommandOut = strFmtCommandIn;
 
-				printf("Server Recv BytesRead=%d pEntityBuffer=%s\n", strFmtCommandIn.size(), strFmtCommandIn.c_str());
+				//printf("Server Recv BytesRead=%d pEntityBuffer=%s\n", strFmtCommandIn.size(), strFmtCommandIn.c_str());
 
 				http_server_command_exec(strFmtCommandIn, strFmtCommandOut, pFBWTSofPluginAPI);
 
-				printf("Server Send BytesSend=%d pEntityBuffer=%s\n", strFmtCommandOut.size(), strFmtCommandOut.c_str());
+				//printf("Server Send BytesSend=%d pEntityBuffer=%s\n", strFmtCommandOut.size(), strFmtCommandOut.c_str());
 
 				sprintf_s(szContentLength, MAX_ULONG_STR, "%lu", strFmtCommandOut.size());
 
@@ -704,17 +706,17 @@ DWORD SendHttpPostResponse(
 				//
 				// Send entity body from a file handle.
 				//
-				dataChunk.DataChunkType =
-					HttpDataChunkFromFileHandle;
+				//dataChunk.DataChunkType =
+				//	HttpDataChunkFromFileHandle;
 
-				dataChunk.FromFileHandle.
-					ByteRange.StartingOffset.QuadPart = 0;
+				//dataChunk.FromFileHandle.
+				//	ByteRange.StartingOffset.QuadPart = 0;
 
-				dataChunk.FromFileHandle.
-					ByteRange.Length.QuadPart =
-					HTTP_BYTE_RANGE_TO_EOF;
+				//dataChunk.FromFileHandle.
+				//	ByteRange.Length.QuadPart =
+				//	HTTP_BYTE_RANGE_TO_EOF;
 
-				dataChunk.FromFileHandle.FileHandle = hTempFile;
+				//dataChunk.FromFileHandle.FileHandle = hTempFile;
 
 
 				////////////////////////
@@ -795,11 +797,11 @@ Done:
 		delete[] response.Headers.pUnknownHeaders;
 	}
 
-	if (INVALID_HANDLE_VALUE != hTempFile)
-	{
-		CloseHandle(hTempFile);
-		DeleteFile(szTempName);
-	}
+	//if (INVALID_HANDLE_VALUE != hTempFile)
+	//{
+	//	CloseHandle(hTempFile);
+	//	DeleteFile(szTempName);
+	//}
 
 	return result;
 }
