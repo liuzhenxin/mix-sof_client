@@ -537,7 +537,7 @@
 		else
 		{
 			indata = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<!-- \nXML Security Library example: Original XML doc file for sign3 example. \n-->\n<Envelope xmlns=\"urn:envelope\">\n  <Data>\n	Hello,ABCDEFG World!\n  </Data>\n</Envelope>\n";
-				
+			
 			document.getElementById("originalDataXML").value = indata;
 		}
 			
@@ -555,9 +555,13 @@
 		
 		var signed = token.SOF_SignDataXML(containerName, inData);
 		if(signed != null && signed != "")
+		{
 			document.getElementById("signedData").value = signed;
+		}
 		else
+		{
 			alert("签名失败,错误码:" + token.SOF_GetLastError());
+		}
 	}
 	
 	//数据签名
@@ -579,9 +583,13 @@
 		
 		var signed = token.SOF_SignData(containerName, inData);
 		if(signed != null && signed != "")
+		{
 			document.getElementById("signedData").value = signed;
+		}
 		else
+		{
 			alert("签名失败,错误码:" + token.SOF_GetLastError());
+		}
 	}
 	
 	//数据加密
