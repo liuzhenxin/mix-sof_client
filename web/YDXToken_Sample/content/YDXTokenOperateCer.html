@@ -61,16 +61,11 @@
 				<tr>
 					<td>导出指定数字证书：</td>
 					<td>
-						<textarea id="cerInfo" row="3" cols="23" style="height:80px;width:450px"></textarea>
+						<textarea id="certData" row="3" cols="23" style="height:80px;width:450px"></textarea>
 					</td>
 					<td align="center">
-						<select id="sele_cerType" style="width:120px">	
-							<option value="0">加密证书</option>	
-							<option value="1">签名证书</option>												
-						</select>
-					</td>
-					<td >
-						<input type="button" value="导出" style="width:120px" onClick="return ExportUserCert()"/>
+						<input type="button" value="导出签名证书" style="width:120px" onClick="return ExportUserCert()"/>
+						<input type="button" value="导出加密证书" style="width:120px" onClick="return ExportExChangeUserCert()"/>
 					</td>
 					
 				</tr>
@@ -204,51 +199,29 @@
 			<td><input type="button" value="获取加密算法" style="width:120px" onClick="return GetEncryptMethod()"/></td>
 			</tr>
 			<tr>
-				<td>非对称运算明文：</td>
+				<td>明文：</td>
 				<td>
-					<textarea id="AsymPlain" row="3" cols="23" style="height:80px;width:450px"></textarea>
+					<textarea id="inputData" row="3" cols="23" style="height:80px;width:450px"></textarea>
 				</td>
-				<td><input type="button" value="公钥加密"style="width:120px" onClick="return encryptbyPubKey()"/></td>
-				<td><input type="button" value="私钥解密"style="width:120px" onClick="return decryptbyPrvKey()"/></td>
+				<td><input type="button" value="公钥加密"style="width:120px" onClick="return PubKeyEncrypt()"/></td>
+				<td><input type="button" value="公钥加密(大数据)"style="width:120px" onClick="return PubKeyEncryptLongData()"/></td>
+				<td><input type="button" value="数据加密" style="width:120px" onClick="return EncryptData()"/></td>
+				<td><input type="button" value="文件加密" style="width:120px" onClick="return EncryptFile()"/></td>
 			</tr>
 			<tr>
-				<td>非对称运算密文：</td>
+				<td>密文：</td>
 				<td>
-					<textarea id="AsymCipher" row="3" cols="23" style="height:80px;width:450px"></textarea>
+					<textarea id="outputData" row="3" cols="23" style="height:80px;width:450px"></textarea>
 				</td>
-				<td></td>
+				<td><input type="button" value="私钥解密" style="width:120px" onClick="return PriKeyDecrypt()"/></td>
+				<td><input type="button" value="私钥解密(大数据)" style="width:120px" onClick="return PriKeyDecryptLongData()"/></td>
+				<td><input type="button" value="数据解密"style="width:120px" onClick="return DecryptData()"/></td>
+				<td><input type="button" value="文件解密"style="width:120px" onClick="return DecryptFile()"/></td>
 			</tr>
 			<br>
-			
-			<tr>
-				<td>
-					待加密数据：
-				</td>
-				<td>
-					<input type="text" value="d:\test.txt" id="enFile" name="srcFile" style=" width:450px"/>
-					<input type="text" value="d:\test.txt.cip" id="enDstFile" name="enDstFile" style=" width:450px"/>
-				</td>
-				
-				<td><input type="button" value="数据加密" style="width:120px" onClick="return encryptData()"/></td>
-				<td><input type="button" value="文件加密" style="width:120px" onClick="return encryptFile()"/></td>
-			</tr>
-			<tr>
-				<td>加密后结果：</td>
-				<td>
-					<textarea id="enedData" row="3" cols="23" style="height:80px;width:450px"></textarea>
-				</td>
-				<td><input type="button" value="数据解密"style="width:120px" onClick="return decryptData()"/></td>
-				<td><input type="button" value="文件解密"style="width:120px" onClick="return decryptFile()"/></td>
-				
-			</tr>
-			<tr>
-				<td>解密后数据:</td>
-				<td>
-					<input type="text" value="" id="deData" name="deData" style=" width:450px"/>
-				</td>
-				<td></td>
-				<td></td>
-			</tr>
-		</table>	
+		</table>
+		</br>
+		</br>
+		</br></br>
 	</body>
 </html>

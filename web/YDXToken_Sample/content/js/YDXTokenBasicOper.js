@@ -113,7 +113,7 @@
 	//导出证书信息
 	function ExportUserCert()
 	{
-		document.getElementById("cerInfo").value = "";	
+		document.getElementById("certData").value = "";	
 		
 		var container = document.getElementById("sele_contentList");
 		var containerName = "";
@@ -125,35 +125,49 @@
 		else{
 			containerName = container.options[container.selectedIndex].text;
 		}
-		
-		var selectType = document.getElementById("sele_cerType");
-		
-		
-		var cerType = selectType.options[selectType.selectedIndex].value;
-		
-		var cert = null;
-		
-		if(cerType == 0)
-		{
-			cert = token.SOF_ExportExChangeUserCert(containerName);
-		}
-		else if(cerType == 1)
-		{
-			cert = token.SOF_ExportUserCert(containerName);
-		}
+
+		var cert = token.SOF_ExportUserCert(containerName);
 		
 		if(cert != null && cert != "")
 		{
-			document.getElementById("cerInfo").value = cert;	
+			document.getElementById("certData").value = cert;	
 		}
 		else
+		{
 			alert("获取证书信息失败,错误码:" + token.SOF_GetLastError());
+		}
+	}
+	
+	function ExportExChangeUserCert()
+	{
+		document.getElementById("certData").value = "";	
+		
+		var container = document.getElementById("sele_contentList");
+		var containerName = "";
+		
+		if(container.selectedIndex < 0)
+		{
+
+		}
+		else{
+			containerName = container.options[container.selectedIndex].text;
+		}
+
+		var cert = token.SOF_ExportExChangeUserCert(containerName);
+		
+		if(cert != null && cert != "")
+		{
+			document.getElementById("certData").value = cert;	
+		}
+		else{
+			alert("获取证书信息失败,错误码:" + token.SOF_GetLastError());
+		}
 	}
 	
 	//获取证书信息
 	function GetCertInfo()
 	{
-		signCert = document.getElementById("cerInfo").value;
+		signCert = document.getElementById("certData").value;
 		if(signCert == "")
 			{
 				alert("请先导出证书");
@@ -332,17 +346,13 @@
 		{
 			alert("请选择容器操作");
 			return;
-		}
-		
-		var selectType = document.getElementById("sele_cerType");
-		var containerName = container.options[container.selectedIndex].text;
+		}var containerName = container.options[container.selectedIndex].text;
 		if(containerName == null || containerName == "")
 		{
 			alert("请选择容器操作");
 			return;
 		}
 		
-		var cerType = selectType.options[selectType.selectedIndex].value;
 		var cert  = token.SOF_ExportUserCert(containerName);
 		
 		var ret = token.SOF_VerifySignedFile(cert, inData, signed);
@@ -367,18 +377,12 @@
 		{
 			alert("请选择容器操作");
 			return;
-		}
-		
-		var selectType = document.getElementById("sele_cerType");
-		var containerName = container.options[container.selectedIndex].text;
+		}var containerName = container.options[container.selectedIndex].text;
 		if(containerName == null || containerName == "")
 		{
 			alert("请选择容器操作");
 			return;
-		}
-		
-		var cerType = selectType.options[selectType.selectedIndex].value;
-		var cert  = token.SOF_ExportUserCert(containerName);
+		}var cert  = token.SOF_ExportUserCert(containerName);
 		
 		var ret = token.SOF_VerifySignedMessage(signed, inData);
 		if(token.TRUE != ret)
@@ -402,10 +406,7 @@
 		{
 			alert("请选择容器操作");
 			return;
-		}
-		
-		var selectType = document.getElementById("sele_cerType");
-		var containerName = container.options[container.selectedIndex].text;
+		}var containerName = container.options[container.selectedIndex].text;
 		if(containerName == null || containerName == "")
 		{
 			alert("请选择容器操作");
@@ -435,18 +436,12 @@
 		{
 			alert("请选择容器操作");
 			return;
-		}
-		
-		var selectType = document.getElementById("sele_cerType");
-		var containerName = container.options[container.selectedIndex].text;
+		}var containerName = container.options[container.selectedIndex].text;
 		if(containerName == null || containerName == "")
 		{
 			alert("请选择容器操作");
 			return;
-		}
-		
-		var cerType = selectType.options[selectType.selectedIndex].value;
-		var cert  = token.SOF_ExportUserCert(containerName);
+		}var cert  = token.SOF_ExportUserCert(containerName);
 		
 		var ret = token.SOF_VerifySignedData(cert, inData, signed);
 		if(token.TRUE != ret)
@@ -457,14 +452,6 @@
 	
 	function SignFile()
 	{
-		var selectType = document.getElementById("sele_cerType");
-		var cerType = selectType.options[selectType.selectedIndex].value;
-		if(cerType == 0)
-		{
-			alert("请选择签名密钥进行签名");
-			return ;
-		}
-		
 		var inData = document.getElementById("originalData").value;
 			
 		var container = document.getElementById("sele_contentList");
@@ -486,15 +473,9 @@
 	}
 	
 	function SignMessage()
-	{
-		var selectType = document.getElementById("sele_cerType");
+	{var selectSignType = document.getElementById("sele_signType");
 		
-		var selectSignType = document.getElementById("sele_signType");
-		
-		var signType = selectSignType.options[selectSignType.selectedIndex].value;
-		
-		var cerType = selectType.options[selectType.selectedIndex].value;
-		if(cerType == 0)
+		var signType = selectSignType.options[selectSignType.selectedIndex].value;if(cerType == 0)
 		{
 			alert("请选择签名密钥进行签名");
 			return ;
@@ -521,10 +502,7 @@
 	}
 	
 	function SignDataXML()
-	{
-		var selectType = document.getElementById("sele_cerType");
-		var cerType = selectType.options[selectType.selectedIndex].value;
-		if(cerType == 0)
+	{if(cerType == 0)
 		{
 			alert("请选择签名密钥进行签名");
 			return ;
@@ -564,10 +542,7 @@
 	
 	//数据签名
 	function SignData()
-	{
-		var selectType = document.getElementById("sele_cerType");
-		var cerType = selectType.options[selectType.selectedIndex].value;
-		if(cerType == 0)
+	{if(cerType == 0)
 		{
 			alert("请选择签名密钥进行签名");
 			return ;
@@ -593,20 +568,9 @@
 			alert("签名失败,错误码:" + token.SOF_GetLastError());
 	}
 	
-	
-	
 	//数据加密
-	function encryptData()
+	function EncryptData()
 	{
-		var selectType = document.getElementById("sele_cerType");
-		var cerType = selectType.options[selectType.selectedIndex].value;
-		if(cerType == 1)
-		{
-			alert("请选择加密证书进行加密");
-			return ;
-		}
-		var DigestMethod = document.getElementById("encrymech").value;
-		var iv = document.getElementById("iv").value;
 		var inData = document.getElementById("enData").value;
 		
 		var container = document.getElementById("sele_contentList");
@@ -615,8 +579,6 @@
 			alert("请选择容器操作");
 			return;
 		}
-		
-		
 		var containerName = container.options[container.selectedIndex].text;
 		if(containerName == null || containerName == "")
 		{
@@ -624,70 +586,30 @@
 			return;
 		}
 		
+		var cert  = token.SOF_ExportUserCert(containerName);
 		
-		var cert  = token.SOF_ExportUserCert(containerName, cerType);
-		
-		token.SOF_SetEncryptMethodAndIV(DigestMethod, iv);
-		var encrypedData = token.SOF_EncryptData(cert, inData, inData.length);
+		var encrypedData = token.SOF_EncryptData(cert, inData);
 		if(encrypedData != null || encrypedData == "")
+		{
 			document.getElementById("enedData").value = encrypedData;
+		}	
 		else
+		{
 			alert("加密失败,错误码:" + token.SOF_GetLastError());
-	}
-	
-	function encryptData_P7()
-	{
-	var selectType = document.getElementById("sele_cerType");
-		var cerType = selectType.options[selectType.selectedIndex].value;
-		if(cerType == 1)
-		{
-			alert("请选择加密证书进行加密");
-			return ;
 		}
-		var DigestMethod = document.getElementById("encrymech").value;
-		var iv = document.getElementById("iv").value;
-		var inData = document.getElementById("enData").value;
-		
-		var container = document.getElementById("sele_contentList");
-		if(container.selectedIndex < 0)
-		{
-			alert("请选择容器操作");
-			return;
-		}
-		
-		
-		var containerName = container.options[container.selectedIndex].text;
-		if(containerName == null || containerName == "")
-		{
-			alert("请选择容器操作");
-			return;
-		}
-		
-		
-		var cert  = token.SOF_ExportUserCert(containerName, cerType);
-		
-		token.SOF_SetEncryptMethodAndIV(DigestMethod, iv);
-		var encrypedData = token.SOF_SignDataToPKCS7(containerName, cerType, inData, inData.length, 0);
-		if(encrypedData != null || encrypedData == "")
-			document.getElementById("enedData").value = encrypedData;
-		else
-			alert("加密失败,错误码:" + token.SOF_GetLastError());	
+			
 	}
 	
 	//数据加密
-	function encryptFile()
-	{
-		var selectType = document.getElementById("sele_cerType");
-		var cerType = selectType.options[selectType.selectedIndex].value;
-		if(cerType == 1)
+	function EncryptFile()
+	{if(cerType == 1)
 		{
 			alert("请选择加密证书进行加密");
 			return ;
 		}
-		var DigestMethod = document.getElementById("encrymech").value;
-		var iv = document.getElementById("iv").value;
-		var inData = document.getElementById("enFile").value;
-		var OutData = document.getElementById("enDstFile").value;
+		
+		var inData = document.getElementById("enData").value;
+		var OutData = document.getElementById("enedData").value;
 		
 		var container = document.getElementById("sele_contentList");
 		if(container.selectedIndex < 0)
@@ -703,30 +625,19 @@
 			return;
 		}
 		
-		
-		
 		var cert  = token.SOF_ExportUserCert(containerName, cerType);
 		
-		token.SOF_SetEncryptMethodAndIV(DigestMethod, iv);
-		var envelopData = token.SOF_EncryptFileToPKCS7(cert, inData, OutData, 1);
+		var envelopData = token.SOF_EncryptFile(cert, inData, OutData);
 		if(envelopData != null)
 			document.getElementById("enedData").value = envelopData;
 		else
 			alert("加密失败,错误码:" + token.SOF_GetLastError());
 	}
 	
-	function decryptFile()
+	function DecryptFile()
 	{
-		var DigestMethod = document.getElementById("encrymech").value;
-		var iv = document.getElementById("iv").value;
-		var outFile = document.getElementById("enFile").value;
-		var inData = document.getElementById("enDstFile").value;
-		var encrypedData = document.getElementById("enedData").value;
-		if(encrypedData == null || encrypedData.length <= 0)
-		{
-			alert("请先加密后操作");
-			return;
-		}
+		var outFile = document.getElementById("enData").value;
+		var inData = document.getElementById("enedData").value;
 		
 		var container = document.getElementById("sele_contentList");
 		if(container.selectedIndex < 0)
@@ -742,13 +653,7 @@
 			return;
 		}
 		
-		token.SOF_SetEncryptMethodAndIV(DigestMethod, iv);
-		
-		var selectType = document.getElementById("sele_cerType");
-		var cerType = selectType.options[selectType.selectedIndex].value;
-		
-		outFile = outFile + ".plainText";
-		decryptedData = token.SOF_DecryptFileToPKCS7(containerName, cerType, encrypedData, inData, outFile, 1);
+		decryptedData = token.SOF_DecryptFile(containerName, inData, outFile);
 		if(decryptedData != 0)
 			alert("解密失败,错误码:" + token.SOF_GetLastError());
 		else
@@ -759,10 +664,8 @@
 	}
 		
 	//数据解密
-	function decryptData()
+	function DecryptData()
 	{
-		var DigestMethod = document.getElementById("encrymech").value;
-		var iv = document.getElementById("iv").value;
 		var encrypedData = document.getElementById("enedData").value;
 		if(encrypedData == null || encrypedData.length <= 0)
 		{
@@ -784,130 +687,17 @@
 			return;
 		}
 		
-		token.SOF_SetEncryptMethodAndIV(DigestMethod, iv);
-		
-		var selectType = document.getElementById("sele_cerType");
-		var cerType = selectType.options[selectType.selectedIndex].value;
-		
-		decryptedData = token.SOF_DecryptData(containerName, cerType, encrypedData);
+		decryptedData = token.SOF_DecryptData(containerName, encrypedData);
 		if(decryptedData != null && decryptedData != "")
 			document.getElementById("deData").value = decryptedData;
 		else
 			alert("解密失败,错误码:" + token.SOF_GetLastError());
 	}
 	
-	
-	
-	//对数据做摘要
-	function digestData()
-	{
-		var DigestMethod = document.getElementById("digestmech").value;
-		var inData = document.getElementById("digestData").value;	
-		var userID = document.getElementById("userID").value;		
-		token.SOF_SetDigestMethod(DigestMethod);
-		ret = token.SOF_SetUserID(userID);
-		
-		var container = document.getElementById("sele_contentList");
-		if(container.selectedIndex < 0)
-		{
-			alert("请选择容器操作");
-			return;
-		}
-		
-		var containerName = container.options[container.selectedIndex].text;
-		if(containerName == null || containerName == "")
-		{
-			alert("请选择容器操作");
-			return;
-		}
-
-		digest = token.SOF_DigestData(containerName, inData, inData.length);
-		if(digest != null)
-			document.getElementById("digestedData").value = digest;
-		else
-			alert("数据摘要失败,错误码:" + token.SOF_GetLastError());
-	}
-	
-	
-	function GenRemoteUnlockPin()
-	{
-		var request = token.SOF_GenRemoteUnblockRequest();
-		if(request == null || request == "")
-		{
-			alert("生成解锁请求失败");
-			return;
-		}
-		
-		document.getElementById("remoteUnlockPin").value = request;
-	}
-	
-	function GenUnlockPinResponse()
-	{
-		var encrypedData = document.getElementById("remoteUnlockPin").value;
-		var SoPinData = document.getElementById("SoPinData").value;
-		var UserData = document.getElementById("newPinData").value;
-		var request = token.SOF_GenResetpwdResponse(encrypedData, SoPinData, UserData);
-		if(request == null || request == "")
-		{
-			alert("生成解锁请求失败");
-			return;
-		}
-		
-		document.getElementById("remoteUnlockPin").value = request;
-	}
-	
-	
-	function RemoteUnlockPin()
-	{
-		var encrypedData = document.getElementById("remoteUnlockPin").value;
-		var request = token.SOF_RemoteUnblockPIN(encrypedData);
-		if(request != 0)
-		{
-			alert("解锁失败");
-			return;
-		}
-		else
-		{
-			alert("解锁成功");
-		}
-	}
-	
-	function exportPubKey()
-	{
-		document.getElementById("PubKey").value = "";	
-		
-		var container = document.getElementById("sele_contentList");
-		if(container.selectedIndex < 0)
-		{
-			alert("请选择容器操作");
-			return;
-		}
-		
-		var selectType = document.getElementById("sele_cerType");
-		var containerName = container.options[container.selectedIndex].text;
-		if(containerName == null || containerName == "")
-		{
-			alert("请选择容器操作");
-			return;
-		}
-		
-		var cerType = selectType.options[selectType.selectedIndex].value;
-		var strPubKey  = token.SOF_ExportPubKey(containerName, cerType);
-		if(strPubKey != null && strPubKey != "")
-		{
-			document.getElementById("PubKey").value = strPubKey;	
-		}
-		else
-			alert("获取公钥失败,错误码:" + token.SOF_GetLastError());
-	}
-	
 	function encryptbyPubKey()
 	{
 		var strPubKey = document.getElementById("PubKey").value;
 		var strInput = document.getElementById("AsymPlain").value;
-		
-		var selectType = document.getElementById("sele_cerType");
-		var cerType = selectType.options[selectType.selectedIndex].value;
 		
 		var strAsymCipher = token.SOF_EncryptbyPubKey(strPubKey, strInput, cerType);
 		if(strAsymCipher != null && strAsymCipher != "")
@@ -927,15 +717,12 @@
 			return;
 		}
 		
-		var selectType = document.getElementById("sele_cerType");
 		var containerName = container.options[container.selectedIndex].text;
 		if(containerName == null || containerName == "")
 		{
 			alert("请选择容器操作");
 			return;
 		}
-		
-		var cerType = selectType.options[selectType.selectedIndex].value;
 		
 		var strAsymCipher = document.getElementById("AsymCipher").value;
 		
@@ -945,7 +732,9 @@
 			document.getElementById("AsymPlain").value = strAsymPlain;	
 		}
 		else
+		{
 			alert("私钥解密失败,错误码:" + token.SOF_GetLastError());
+		}
 	}
 	
 	
