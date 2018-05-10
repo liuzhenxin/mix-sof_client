@@ -81,18 +81,17 @@ function YDXToken(obj){
 	this.FALSE										=	0;
 	
 	
-	var g_YDXTokenPlugin = null;
-	var g_deviceNames = null;
+	var g_MIXPlugin = null;
 	
 	
 	this.SOF_GetLastError = function()
 	{
-		if(g_YDXTokenPlugin == null)
+		if(g_MIXPlugin == null)
 		{
 			return -1;
 		}
 		
-		return g_YDXTokenPlugin.SOF_GetLastError();
+		return g_MIXPlugin.SOF_GetLastError();
 	}
 	
 	function isIe()
@@ -132,394 +131,377 @@ function YDXToken(obj){
 		}
 	}
 	
-	this.SOF_EnumDevice = function()
-	{
-		if(g_YDXTokenPlugin == null)
-		{
-			return null;
-		}
-		
-		var array = g_YDXTokenPlugin.SOF_EnumDevice();
-		if(array == null || array.length <= 0)
-		{
-			return null;
-		}
-		
-		return array.split("||");
-		
-	};
-	
 	this.SOF_GetVersion = function()
 	{
-		if(g_YDXTokenPlugin == null)
+		if(g_MIXPlugin == null)
 		{
 			return null;
 		}
-		return g_YDXTokenPlugin.SOF_GetVersion();
+		return g_MIXPlugin.SOF_GetVersion();
 	}
 
 	this.SOF_SetSignMethod = function(ulMethod)
 	{
-		if(g_YDXTokenPlugin == null)
+		if(g_MIXPlugin == null)
 		{
 			return null;
 		}
-		return g_YDXTokenPlugin.SOF_SetSignMethod(ulMethod);
+		return g_MIXPlugin.SOF_SetSignMethod(ulMethod);
 	}
 
 	this.SOF_GetSignMethod = function()
 	{
-		if(g_YDXTokenPlugin == null)
+		if(g_MIXPlugin == null)
 		{
 			return null;
 		}
-		return g_YDXTokenPlugin.SOF_GetSignMethod();
+		return g_MIXPlugin.SOF_GetSignMethod();
 	}
 
 	this.SOF_SetEncryptMethod = function(ulMethod)
 	{
-		if(g_YDXTokenPlugin == null)
+		if(g_MIXPlugin == null)
 		{
 			return null;
 		}
-		return g_YDXTokenPlugin.SOF_SetEncryptMethod(ulMethod);
+		return g_MIXPlugin.SOF_SetEncryptMethod(ulMethod);
 	}
 
 	this.SOF_GetEncryptMethod = function()
 	{
-		if(g_YDXTokenPlugin == null)
+		if(g_MIXPlugin == null)
 		{
 			return null;
 		}
-		return g_YDXTokenPlugin.SOF_GetEncryptMethod();
+		return g_MIXPlugin.SOF_GetEncryptMethod();
 	}
 
 	this.SOF_GetUserList = function()
 	{
-		if(g_YDXTokenPlugin == null)
+		if(g_MIXPlugin == null)
 		{
 			return null;
 		}
-		return g_YDXTokenPlugin.SOF_GetUserList();
+		return g_MIXPlugin.SOF_GetUserList();
 	}
 
 	this.SOF_ExportUserCert = function(strContainerName)
 	{
-		if(g_YDXTokenPlugin == null)
+		if(g_MIXPlugin == null)
 		{
 			return null;
 		}
-		return g_YDXTokenPlugin.SOF_ExportUserCert(strContainerName);
+		return g_MIXPlugin.SOF_ExportUserCert(strContainerName);
 	}
 
 	this.SOF_Login = function(strContainerName,strPIN)
 	{
-		if(g_YDXTokenPlugin == null)
+		if(g_MIXPlugin == null)
 		{
 			return null;
 		}
-		return g_YDXTokenPlugin.SOF_Login(strContainerName,strPIN);
+		return g_MIXPlugin.SOF_Login(strContainerName,strPIN);
 	}
 
 	this.SOF_GetPinRetryCount = function(strContainerName)
 	{
-		if(g_YDXTokenPlugin == null)
+		if(g_MIXPlugin == null)
 		{
 			return null;
 		}
-		return g_YDXTokenPlugin.SOF_GetPinRetryCount(strContainerName);
+		return g_MIXPlugin.SOF_GetPinRetryCount(strContainerName);
 	}
 
 	this.SOF_ChangePassWd = function(strContainerName, strPINOld, strPINNew)
 	{
-		if(g_YDXTokenPlugin == null)
+		if(g_MIXPlugin == null)
 		{
 			return null;
 		}
-		return g_YDXTokenPlugin.SOF_ChangePassWd(strContainerName, strPINOld, strPINNew);
+		return g_MIXPlugin.SOF_ChangePassWd(strContainerName, strPINOld, strPINNew);
 	}
 
 	this.SOF_ExportExChangeUserCert = function(strContainerName)
 	{
-		if(g_YDXTokenPlugin == null)
+		if(g_MIXPlugin == null)
 		{
 			return null;
 		}
-		return g_YDXTokenPlugin.SOF_ExportExChangeUserCert(strContainerName);
+		return g_MIXPlugin.SOF_ExportExChangeUserCert(strContainerName);
 	}
 
 	this.SOF_GetCertInfo = function(strCert, u16Type)
 	{
-		if(g_YDXTokenPlugin == null)
+		if(g_MIXPlugin == null)
 		{
 			return null;
 		}
-		return g_YDXTokenPlugin.SOF_GetCertInfo(strCert, u16Type);
+		return g_MIXPlugin.SOF_GetCertInfo(strCert, u16Type);
 	}
 
 	this.SOF_GetCertInfoByOid = function(strCert, strOidString)
 	{
-		if(g_YDXTokenPlugin == null)
+		if(g_MIXPlugin == null)
 		{
 			return null;
 		}
-		return g_YDXTokenPlugin.SOF_GetCertInfoByOid(strCert, strOidString);
+		return g_MIXPlugin.SOF_GetCertInfoByOid(strCert, strOidString);
 	}
 
 	this.SOF_GetDeviceInfo = function(strContainerName, ulType)
 	{
-		if(g_YDXTokenPlugin == null)
+		if(g_MIXPlugin == null)
 		{
 			return null;
 		}
-		return g_YDXTokenPlugin.SOF_GetDeviceInfo(strContainerName, ulType);
+		return g_MIXPlugin.SOF_GetDeviceInfo(strContainerName, ulType);
 	}
 
 	this.SOF_ValidateCert = function(strCert)
 	{
-		if(g_YDXTokenPlugin == null)
+		if(g_MIXPlugin == null)
 		{
 			return null;
 		}
-		return g_YDXTokenPlugin.SOF_ValidateCert(strCert);
+		return g_MIXPlugin.SOF_ValidateCert(strCert);
 	}
 
 	this.SOF_SignData = function(strContainerName, strDataIn)
 	{
-		if(g_YDXTokenPlugin == null)
+		if(g_MIXPlugin == null)
 		{
 			return null;
 		}
-		return g_YDXTokenPlugin.SOF_SignData(strContainerName, strDataIn);
+		return g_MIXPlugin.SOF_SignData(strContainerName, strDataIn);
 	}
 
 	this.SOF_VerifySignedData = function(strCert, strDataIn, strDataOut)
 	{
-		if(g_YDXTokenPlugin == null)
+		if(g_MIXPlugin == null)
 		{
 			return null;
 		}
-		return g_YDXTokenPlugin.SOF_VerifySignedData(strCert, strDataIn, strDataOut);
+		return g_MIXPlugin.SOF_VerifySignedData(strCert, strDataIn, strDataOut);
 	}
 
 	this.SOF_SignFile = function(strContainerName, strFileIn)
 	{
-		if(g_YDXTokenPlugin == null)
+		if(g_MIXPlugin == null)
 		{
 			return null;
 		}
-		return g_YDXTokenPlugin.SOF_SignFile(strContainerName, strFileIn);
+		return g_MIXPlugin.SOF_SignFile(strContainerName, strFileIn);
 	}
 
 	this.SOF_VerifySignedFile = function(strCert, strFileIn, strDataOut)
 	{
-		if(g_YDXTokenPlugin == null)
+		if(g_MIXPlugin == null)
 		{
 			return null;
 		}
-		return g_YDXTokenPlugin.SOF_VerifySignedFile(strCert, strFileIn, strDataOut);
+		return g_MIXPlugin.SOF_VerifySignedFile(strCert, strFileIn, strDataOut);
 	}
 
 	this.SOF_EncryptData = function(strCert,strDataIn)
 	{
-		if(g_YDXTokenPlugin == null)
+		if(g_MIXPlugin == null)
 		{
 			return null;
 		}
-		return g_YDXTokenPlugin.SOF_EncryptData(strCert,strDataIn);
+		return g_MIXPlugin.SOF_EncryptData(strCert,strDataIn);
 	}
 
 	this.SOF_DecryptData = function(strContainerName,strDataIn)
 	{
-		if(g_YDXTokenPlugin == null)
+		if(g_MIXPlugin == null)
 		{
 			return null;
 		}
-		return g_YDXTokenPlugin.SOF_DecryptData(strContainerName,strDataIn);
+		return g_MIXPlugin.SOF_DecryptData(strContainerName,strDataIn);
 	}
 
 	this.SOF_EncryptFile = function(strCert, strFileIn, strFileOut)
 	{
-		if(g_YDXTokenPlugin == null)
+		if(g_MIXPlugin == null)
 		{
 			return null;
 		}
-		return g_YDXTokenPlugin.SOF_EncryptFile(strCert, strFileIn, strFileOut);
+		return g_MIXPlugin.SOF_EncryptFile(strCert, strFileIn, strFileOut);
 	}
 
 	this.SOF_DecryptFile = function(strContainerName, strFileIn, strFileOut)
 	{
-		if(g_YDXTokenPlugin == null)
+		if(g_MIXPlugin == null)
 		{
 			return null;
 		}
-		return g_YDXTokenPlugin.SOF_DecryptFile(strContainerName, strFileIn, strFileOut);
+		return g_MIXPlugin.SOF_DecryptFile(strContainerName, strFileIn, strFileOut);
 	}
 
 	this.SOF_SignMessage = function(u16Flag,strContainerName, strDataIn)
 	{
-		if(g_YDXTokenPlugin == null)
+		if(g_MIXPlugin == null)
 		{
 			return null;
 		}
-		return g_YDXTokenPlugin.SOF_SignMessage(u16Flag,strContainerName, strDataIn);
+		return g_MIXPlugin.SOF_SignMessage(u16Flag,strContainerName, strDataIn);
 	}
 
 	this.SOF_VerifySignedMessage = function(strDataOut, strDataIn)
 	{
-		if(g_YDXTokenPlugin == null)
+		if(g_MIXPlugin == null)
 		{
 			return null;
 		}
-		return g_YDXTokenPlugin.SOF_VerifySignedMessage(strDataOut, strDataIn);
+		return g_MIXPlugin.SOF_VerifySignedMessage(strDataOut, strDataIn);
 	}
 
 	this.SOF_GetInfoFromSignedMessage = function(strMessageData, u16Type)
 	{
-		if(g_YDXTokenPlugin == null)
+		if(g_MIXPlugin == null)
 		{
 			return null;
 		}
-		return g_YDXTokenPlugin.SOF_GetInfoFromSignedMessage(strMessageData, u16Type);
+		return g_MIXPlugin.SOF_GetInfoFromSignedMessage(strMessageData, u16Type);
 	}
 
 	this.SOF_SignDataXML = function(strContainerName,strDataIn)
 	{
-		if(g_YDXTokenPlugin == null)
+		if(g_MIXPlugin == null)
 		{
 			return null;
 		}
-		return g_YDXTokenPlugin.SOF_SignDataXML(strContainerName,strDataIn);
+		return g_MIXPlugin.SOF_SignDataXML(strContainerName,strDataIn);
 	}
 
 	this.SOF_VerifySignedDataXML = function(strDataIn)
 	{
-		if(g_YDXTokenPlugin == null)
+		if(g_MIXPlugin == null)
 		{
 			return null;
 		}
-		return g_YDXTokenPlugin.SOF_VerifySignedDataXML(strDataIn);
+		return g_MIXPlugin.SOF_VerifySignedDataXML(strDataIn);
 	}
 
 	this.SOF_GetXMLSignatureInfo = function(strDataIn, u16Type)
 	{
-		if(g_YDXTokenPlugin == null)
+		if(g_MIXPlugin == null)
 		{
 			return null;
 		}
-		return g_YDXTokenPlugin.SOF_GetXMLSignatureInfo(strDataIn, u16Type);
+		return g_MIXPlugin.SOF_GetXMLSignatureInfo(strDataIn, u16Type);
 	}
 
 	this.SOF_GenRandom = function(u16Type)
 	{
-		if(g_YDXTokenPlugin == null)
+		if(g_MIXPlugin == null)
 		{
 			return null;
 		}
-		return g_YDXTokenPlugin.SOF_GenRandom(u16Type);
+		return g_MIXPlugin.SOF_GenRandom(u16Type);
 	}
 
 	this.SOF_PubKeyEncrypt = function(strCert,strDataIn)
 	{
-		if(g_YDXTokenPlugin == null)
+		if(g_MIXPlugin == null)
 		{
 			return null;
 		}
-		return g_YDXTokenPlugin.SOF_PubKeyEncrypt(strCert,strDataIn);
+		return g_MIXPlugin.SOF_PubKeyEncrypt(strCert,strDataIn);
 	}
 
 	this.SOF_PriKeyDecrypt = function(strContainerName,strDataIn)
 	{
-		if(g_YDXTokenPlugin == null)
+		if(g_MIXPlugin == null)
 		{
 			return null;
 		}
-		return g_YDXTokenPlugin.SOF_PriKeyDecrypt(strContainerName,strDataIn);
+		return g_MIXPlugin.SOF_PriKeyDecrypt(strContainerName,strDataIn);
 	}
 
 	this.SOF_PubKeyEncryptLongData = function(strCert,strDataIn)
 	{
-		if(g_YDXTokenPlugin == null)
+		if(g_MIXPlugin == null)
 		{
 			return null;
 		}
-		return g_YDXTokenPlugin.SOF_PubKeyEncryptLongData(strCert,strDataIn);
+		return g_MIXPlugin.SOF_PubKeyEncryptLongData(strCert,strDataIn);
 	}
 
 	this.SOF_PriKeyDecryptLongData = function(strContainerName,strDataIn)
 	{
-		if(g_YDXTokenPlugin == null)
+		if(g_MIXPlugin == null)
 		{
 			return null;
 		}
-		return g_YDXTokenPlugin.SOF_PriKeyDecryptLongData(strContainerName,strDataIn);
+		return g_MIXPlugin.SOF_PriKeyDecryptLongData(strContainerName,strDataIn);
 	}
 
 	this.SOF_Logout = function()
 	{
-		if(g_YDXTokenPlugin == null)
+		if(g_MIXPlugin == null)
 		{
 			return null;
 		}
-		return g_YDXTokenPlugin.SOF_Logout();
+		return g_MIXPlugin.SOF_Logout();
 	}
 
 	this.SOF_GetLastError = function()
 	{
-		if(g_YDXTokenPlugin == null)
+		if(g_MIXPlugin == null)
 		{
 			return null;
 		}
-		return g_YDXTokenPlugin.SOF_GetLastError();
+		return g_MIXPlugin.SOF_GetLastError();
 	}
 
 	this.SOF_InitializeLibraryNative = function(strLibrary)
 	{
 		var ret;
-		if(g_YDXTokenPlugin == null)
+		if(g_MIXPlugin == null)
 		{
 			if(isIe() )
 			{	//IE
 				if(!-[1,])
 				{	//IE678
-					g_YDXTokenPlugin = document.getElementById(obj);
-					g_YDXTokenPlugin.setAttribute("type", "application/x-fbwtsofplugin");
+					g_MIXPlugin = document.getElementById(obj);
+					g_MIXPlugin.setAttribute("type", "application/x-fbwtsofplugin");
 					
 				}
 				else
 				{	//IE9+
 					if(!!window.ActiveXObject)
 					{
-						g_YDXTokenPlugin = document.getElementById(obj);
-						g_YDXTokenPlugin.setAttribute("type", "application/x-fbwtsofplugin");
+						g_MIXPlugin = document.getElementById(obj);
+						g_MIXPlugin.setAttribute("type", "application/x-fbwtsofplugin");
 					}
 					else
 					{
-						g_YDXTokenPlugin = new YDXTokenPlugin();
+						g_MIXPlugin = new YDXTokenPlugin();
 					}
 					
 				}
 
 			}else {
-				g_YDXTokenPlugin = new YDXTokenPlugin();
+				g_MIXPlugin = new YDXTokenPlugin();
 			}
 			
 		}
 		
-		if(g_YDXTokenPlugin == null)
+		if(g_MIXPlugin == null)
 		{
 			return null;
 		}
-		return g_YDXTokenPlugin.SOF_InitializeLibraryNative(strLibrary);
+		return g_MIXPlugin.SOF_InitializeLibraryNative(strLibrary);
 	}
 
 	this.SOF_FinalizeLibraryNative = function()
 	{
-		if(g_YDXTokenPlugin == null)
+		if(g_MIXPlugin == null)
 		{
 			return null;
 		}
-		return g_YDXTokenPlugin.SOF_FinalizeLibraryNative();
+		return g_MIXPlugin.SOF_FinalizeLibraryNative();
 	}
 }
 
@@ -528,21 +510,21 @@ function YDXTokenPlugin(){
 
 	var url = "http://127.0.0.1:8484/";
 	
-	var xmlhttp ;
+	var xhr ;
 	
 	function AjaxIO(json) {
 		
-		if(xmlhttp == null) {
+		if(xhr == null) {
 			if (window.XMLHttpRequest) {// code for IE7+, Firefox, Chrome, Opera, Safari
-				xmlhttp = new XMLHttpRequest();
+				xhr = new XMLHttpRequest();
 			} else {// code for IE6, IE5
-				xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+				xhr = new ActiveXObject("Microsoft.XMLHTTP");
 			}
 		}
 
-		xmlhttp.open("POST", url, false);
-		xmlhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-		xmlhttp.send(json);
+		xhr.open("POST", url, false);
+		xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+		xhr.send(json);
 	}
 
 	this.SOF_GetVersion = function()
@@ -561,8 +543,8 @@ function YDXTokenPlugin(){
 			return -3;
 		}
 		
-		if(xmlhttp.readyState == 4 && xmlhttp.status == 200) {
-			var obj = eval("(" + xmlhttp.responseText + ")");
+		if(xhr.readyState == 4 && xhr.status == 200) {
+			var obj = eval("(" + xhr.responseText + ")");
 			return obj.exec_result;
 		}else{
 			return -2;
@@ -586,8 +568,8 @@ function YDXTokenPlugin(){
 			return -3;
 		}
 		
-		if(xmlhttp.readyState == 4 && xmlhttp.status == 200) {
-			var obj = eval("(" + xmlhttp.responseText + ")");
+		if(xhr.readyState == 4 && xhr.status == 200) {
+			var obj = eval("(" + xhr.responseText + ")");
 			return obj.exec_result;
 		}else{
 			return -2;
@@ -610,8 +592,8 @@ function YDXTokenPlugin(){
 			return -3;
 		}
 		
-		if(xmlhttp.readyState == 4 && xmlhttp.status == 200) {
-			var obj = eval("(" + xmlhttp.responseText + ")");
+		if(xhr.readyState == 4 && xhr.status == 200) {
+			var obj = eval("(" + xhr.responseText + ")");
 			return obj.exec_result;
 		}else{
 			return -2;
@@ -634,8 +616,8 @@ function YDXTokenPlugin(){
 			return -3;
 		}
 		
-		if(xmlhttp.readyState == 4 && xmlhttp.status == 200) {
-			var obj = eval("(" + xmlhttp.responseText + ")");
+		if(xhr.readyState == 4 && xhr.status == 200) {
+			var obj = eval("(" + xhr.responseText + ")");
 			return obj.exec_result;
 		}else{
 			return -2;
@@ -658,8 +640,8 @@ function YDXTokenPlugin(){
 			return -3;
 		}
 		
-		if(xmlhttp.readyState == 4 && xmlhttp.status == 200) {
-			var obj = eval("(" + xmlhttp.responseText + ")");
+		if(xhr.readyState == 4 && xhr.status == 200) {
+			var obj = eval("(" + xhr.responseText + ")");
 			return obj.exec_result;
 		}else{
 			return -2;
@@ -682,8 +664,8 @@ function YDXTokenPlugin(){
 			return -3;
 		}
 		
-		if(xmlhttp.readyState == 4 && xmlhttp.status == 200) {
-			var obj = eval("(" + xmlhttp.responseText + ")");
+		if(xhr.readyState == 4 && xhr.status == 200) {
+			var obj = eval("(" + xhr.responseText + ")");
 			return obj.exec_result;
 		}else{
 			return -2;
@@ -706,8 +688,8 @@ function YDXTokenPlugin(){
 			return -3;
 		}
 		
-		if(xmlhttp.readyState == 4 && xmlhttp.status == 200) {
-			var obj = eval("(" + xmlhttp.responseText + ")");
+		if(xhr.readyState == 4 && xhr.status == 200) {
+			var obj = eval("(" + xhr.responseText + ")");
 			return obj.exec_result;
 		}else{
 			return -2;
@@ -730,8 +712,8 @@ function YDXTokenPlugin(){
 			return -3;
 		}
 		
-		if(xmlhttp.readyState == 4 && xmlhttp.status == 200) {
-			var obj = eval("(" + xmlhttp.responseText + ")");
+		if(xhr.readyState == 4 && xhr.status == 200) {
+			var obj = eval("(" + xhr.responseText + ")");
 			return obj.exec_result;
 		}else{
 			return -2;
@@ -754,8 +736,8 @@ function YDXTokenPlugin(){
 			return -3;
 		}
 		
-		if(xmlhttp.readyState == 4 && xmlhttp.status == 200) {
-			var obj = eval("(" + xmlhttp.responseText + ")");
+		if(xhr.readyState == 4 && xhr.status == 200) {
+			var obj = eval("(" + xhr.responseText + ")");
 			return obj.exec_result;
 		}else{
 			return -2;
@@ -778,8 +760,8 @@ function YDXTokenPlugin(){
 			return -3;
 		}
 		
-		if(xmlhttp.readyState == 4 && xmlhttp.status == 200) {
-			var obj = eval("(" + xmlhttp.responseText + ")");
+		if(xhr.readyState == 4 && xhr.status == 200) {
+			var obj = eval("(" + xhr.responseText + ")");
 			return obj.exec_result;
 		}else{
 			return -2;
@@ -802,8 +784,8 @@ function YDXTokenPlugin(){
 			return -3;
 		}
 		
-		if(xmlhttp.readyState == 4 && xmlhttp.status == 200) {
-			var obj = eval("(" + xmlhttp.responseText + ")");
+		if(xhr.readyState == 4 && xhr.status == 200) {
+			var obj = eval("(" + xhr.responseText + ")");
 			return obj.exec_result;
 		}else{
 			return -2;
@@ -826,8 +808,8 @@ function YDXTokenPlugin(){
 			return -3;
 		}
 		
-		if(xmlhttp.readyState == 4 && xmlhttp.status == 200) {
-			var obj = eval("(" + xmlhttp.responseText + ")");
+		if(xhr.readyState == 4 && xhr.status == 200) {
+			var obj = eval("(" + xhr.responseText + ")");
 			return obj.exec_result;
 		}else{
 			return -2;
@@ -850,8 +832,8 @@ function YDXTokenPlugin(){
 			return -3;
 		}
 		
-		if(xmlhttp.readyState == 4 && xmlhttp.status == 200) {
-			var obj = eval("(" + xmlhttp.responseText + ")");
+		if(xhr.readyState == 4 && xhr.status == 200) {
+			var obj = eval("(" + xhr.responseText + ")");
 			return obj.exec_result;
 		}else{
 			return -2;
@@ -874,8 +856,8 @@ function YDXTokenPlugin(){
 			return -3;
 		}
 		
-		if(xmlhttp.readyState == 4 && xmlhttp.status == 200) {
-			var obj = eval("(" + xmlhttp.responseText + ")");
+		if(xhr.readyState == 4 && xhr.status == 200) {
+			var obj = eval("(" + xhr.responseText + ")");
 			return obj.exec_result;
 		}else{
 			return -2;
@@ -898,8 +880,8 @@ function YDXTokenPlugin(){
 			return -3;
 		}
 		
-		if(xmlhttp.readyState == 4 && xmlhttp.status == 200) {
-			var obj = eval("(" + xmlhttp.responseText + ")");
+		if(xhr.readyState == 4 && xhr.status == 200) {
+			var obj = eval("(" + xhr.responseText + ")");
 			return obj.exec_result;
 		}else{
 			return -2;
@@ -922,8 +904,8 @@ function YDXTokenPlugin(){
 			return -3;
 		}
 		
-		if(xmlhttp.readyState == 4 && xmlhttp.status == 200) {
-			var obj = eval("(" + xmlhttp.responseText + ")");
+		if(xhr.readyState == 4 && xhr.status == 200) {
+			var obj = eval("(" + xhr.responseText + ")");
 			return obj.exec_result;
 		}else{
 			return -2;
@@ -946,8 +928,8 @@ function YDXTokenPlugin(){
 			return -3;
 		}
 		
-		if(xmlhttp.readyState == 4 && xmlhttp.status == 200) {
-			var obj = eval("(" + xmlhttp.responseText + ")");
+		if(xhr.readyState == 4 && xhr.status == 200) {
+			var obj = eval("(" + xhr.responseText + ")");
 			return obj.exec_result;
 		}else{
 			return -2;
@@ -970,8 +952,8 @@ function YDXTokenPlugin(){
 			return -3;
 		}
 		
-		if(xmlhttp.readyState == 4 && xmlhttp.status == 200) {
-			var obj = eval("(" + xmlhttp.responseText + ")");
+		if(xhr.readyState == 4 && xhr.status == 200) {
+			var obj = eval("(" + xhr.responseText + ")");
 			return obj.exec_result;
 		}else{
 			return -2;
@@ -994,8 +976,8 @@ function YDXTokenPlugin(){
 			return -3;
 		}
 		
-		if(xmlhttp.readyState == 4 && xmlhttp.status == 200) {
-			var obj = eval("(" + xmlhttp.responseText + ")");
+		if(xhr.readyState == 4 && xhr.status == 200) {
+			var obj = eval("(" + xhr.responseText + ")");
 			return obj.exec_result;
 		}else{
 			return -2;
@@ -1018,8 +1000,8 @@ function YDXTokenPlugin(){
 			return -3;
 		}
 		
-		if(xmlhttp.readyState == 4 && xmlhttp.status == 200) {
-			var obj = eval("(" + xmlhttp.responseText + ")");
+		if(xhr.readyState == 4 && xhr.status == 200) {
+			var obj = eval("(" + xhr.responseText + ")");
 			return obj.exec_result;
 		}else{
 			return -2;
@@ -1042,8 +1024,8 @@ function YDXTokenPlugin(){
 			return -3;
 		}
 		
-		if(xmlhttp.readyState == 4 && xmlhttp.status == 200) {
-			var obj = eval("(" + xmlhttp.responseText + ")");
+		if(xhr.readyState == 4 && xhr.status == 200) {
+			var obj = eval("(" + xhr.responseText + ")");
 			return obj.exec_result;
 		}else{
 			return -2;
@@ -1066,8 +1048,8 @@ function YDXTokenPlugin(){
 			return -3;
 		}
 		
-		if(xmlhttp.readyState == 4 && xmlhttp.status == 200) {
-			var obj = eval("(" + xmlhttp.responseText + ")");
+		if(xhr.readyState == 4 && xhr.status == 200) {
+			var obj = eval("(" + xhr.responseText + ")");
 			return obj.exec_result;
 		}else{
 			return -2;
@@ -1090,8 +1072,8 @@ function YDXTokenPlugin(){
 			return -3;
 		}
 		
-		if(xmlhttp.readyState == 4 && xmlhttp.status == 200) {
-			var obj = eval("(" + xmlhttp.responseText + ")");
+		if(xhr.readyState == 4 && xhr.status == 200) {
+			var obj = eval("(" + xhr.responseText + ")");
 			return obj.exec_result;
 		}else{
 			return -2;
@@ -1114,8 +1096,8 @@ function YDXTokenPlugin(){
 			return -3;
 		}
 		
-		if(xmlhttp.readyState == 4 && xmlhttp.status == 200) {
-			var obj = eval("(" + xmlhttp.responseText + ")");
+		if(xhr.readyState == 4 && xhr.status == 200) {
+			var obj = eval("(" + xhr.responseText + ")");
 			return obj.exec_result;
 		}else{
 			return -2;
@@ -1138,8 +1120,8 @@ function YDXTokenPlugin(){
 			return -3;
 		}
 		
-		if(xmlhttp.readyState == 4 && xmlhttp.status == 200) {
-			var obj = eval("(" + xmlhttp.responseText + ")");
+		if(xhr.readyState == 4 && xhr.status == 200) {
+			var obj = eval("(" + xhr.responseText + ")");
 			return obj.exec_result;
 		}else{
 			return -2;
@@ -1162,8 +1144,8 @@ function YDXTokenPlugin(){
 			return -3;
 		}
 		
-		if(xmlhttp.readyState == 4 && xmlhttp.status == 200) {
-			var obj = eval("(" + xmlhttp.responseText + ")");
+		if(xhr.readyState == 4 && xhr.status == 200) {
+			var obj = eval("(" + xhr.responseText + ")");
 			return obj.exec_result;
 		}else{
 			return -2;
@@ -1186,8 +1168,8 @@ function YDXTokenPlugin(){
 			return -3;
 		}
 		
-		if(xmlhttp.readyState == 4 && xmlhttp.status == 200) {
-			var obj = eval("(" + xmlhttp.responseText + ")");
+		if(xhr.readyState == 4 && xhr.status == 200) {
+			var obj = eval("(" + xhr.responseText + ")");
 			return obj.exec_result;
 		}else{
 			return -2;
@@ -1210,8 +1192,8 @@ function YDXTokenPlugin(){
 			return -3;
 		}
 		
-		if(xmlhttp.readyState == 4 && xmlhttp.status == 200) {
-			var obj = eval("(" + xmlhttp.responseText + ")");
+		if(xhr.readyState == 4 && xhr.status == 200) {
+			var obj = eval("(" + xhr.responseText + ")");
 			return obj.exec_result;
 		}else{
 			return -2;
@@ -1234,8 +1216,8 @@ function YDXTokenPlugin(){
 			return -3;
 		}
 		
-		if(xmlhttp.readyState == 4 && xmlhttp.status == 200) {
-			var obj = eval("(" + xmlhttp.responseText + ")");
+		if(xhr.readyState == 4 && xhr.status == 200) {
+			var obj = eval("(" + xhr.responseText + ")");
 			return obj.exec_result;
 		}else{
 			return -2;
@@ -1258,8 +1240,8 @@ function YDXTokenPlugin(){
 			return -3;
 		}
 		
-		if(xmlhttp.readyState == 4 && xmlhttp.status == 200) {
-			var obj = eval("(" + xmlhttp.responseText + ")");
+		if(xhr.readyState == 4 && xhr.status == 200) {
+			var obj = eval("(" + xhr.responseText + ")");
 			return obj.exec_result;
 		}else{
 			return -2;
@@ -1282,8 +1264,8 @@ function YDXTokenPlugin(){
 			return -3;
 		}
 		
-		if(xmlhttp.readyState == 4 && xmlhttp.status == 200) {
-			var obj = eval("(" + xmlhttp.responseText + ")");
+		if(xhr.readyState == 4 && xhr.status == 200) {
+			var obj = eval("(" + xhr.responseText + ")");
 			return obj.exec_result;
 		}else{
 			return -2;
@@ -1307,8 +1289,8 @@ function YDXTokenPlugin(){
 			return -3;
 		}
 		
-		if(xmlhttp.readyState == 4 && xmlhttp.status == 200) {
-			var obj = eval("(" + xmlhttp.responseText + ")");
+		if(xhr.readyState == 4 && xhr.status == 200) {
+			var obj = eval("(" + xhr.responseText + ")");
 			return obj.exec_result;
 		}else{
 			return -2;
@@ -1331,8 +1313,8 @@ function YDXTokenPlugin(){
 			return -3;
 		}
 		
-		if(xmlhttp.readyState == 4 && xmlhttp.status == 200) {
-			var obj = eval("(" + xmlhttp.responseText + ")");
+		if(xhr.readyState == 4 && xhr.status == 200) {
+			var obj = eval("(" + xhr.responseText + ")");
 			return obj.exec_result;
 		}else{
 			return -2;
@@ -1355,8 +1337,8 @@ function YDXTokenPlugin(){
 			return -3;
 		}
 		
-		if(xmlhttp.readyState == 4 && xmlhttp.status == 200) {
-			var obj = eval("(" + xmlhttp.responseText + ")");
+		if(xhr.readyState == 4 && xhr.status == 200) {
+			var obj = eval("(" + xhr.responseText + ")");
 			return obj.exec_result;
 		}else{
 			return -2;
@@ -1379,8 +1361,8 @@ function YDXTokenPlugin(){
 			return -3;
 		}
 		
-		if(xmlhttp.readyState == 4 && xmlhttp.status == 200) {
-			var obj = eval("(" + xmlhttp.responseText + ")");
+		if(xhr.readyState == 4 && xhr.status == 200) {
+			var obj = eval("(" + xhr.responseText + ")");
 			return obj.exec_result;
 		}else{
 			return -2;
@@ -1403,8 +1385,8 @@ function YDXTokenPlugin(){
 			return -3;
 		}
 		
-		if(xmlhttp.readyState == 4 && xmlhttp.status == 200) {
-			var obj = eval("(" + xmlhttp.responseText + ")");
+		if(xhr.readyState == 4 && xhr.status == 200) {
+			var obj = eval("(" + xhr.responseText + ")");
 			return obj.exec_result;
 		}else{
 			return -2;
@@ -1427,8 +1409,8 @@ function YDXTokenPlugin(){
 			return -3;
 		}
 
-		if(xmlhttp.readyState == 4 && xmlhttp.status == 200) {
-			var obj = eval("(" + xmlhttp.responseText + ")");
+		if(xhr.readyState == 4 && xhr.status == 200) {
+			var obj = eval("(" + xhr.responseText + ")");
 			return obj.exec_result;
 
 		}else{
@@ -1454,8 +1436,8 @@ function YDXTokenPlugin(){
 			return -3;
 		}
 		
-		if(xmlhttp.readyState == 4 && xmlhttp.status == 200) {
-			var obj = eval("(" + xmlhttp.responseText + ")");
+		if(xhr.readyState == 4 && xhr.status == 200) {
+			var obj = eval("(" + xhr.responseText + ")");
 			return obj.exec_result;
 		}else{
 			return -2;
