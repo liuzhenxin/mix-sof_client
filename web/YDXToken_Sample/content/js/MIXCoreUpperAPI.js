@@ -143,8 +143,8 @@
 	
 	function ValidateCert()
 	{
-		var cert = document.getElementById("certData").value;	
-		var result = mixCore.SOF_ValidateCert(cert);
+		var certData = document.getElementById("certData").value;	
+		var result = mixCore.SOF_ValidateCert(certData);
 		
 		if(0 != result)
 		{
@@ -206,7 +206,7 @@
 			default_container_name = select_container.options[select_container.selectedIndex].text;
 		}
 
-		var cert = mixCore.SOF_ExportExChangeUserCert(default_container_name);
+		var certData = mixCore.SOF_ExportExChangeUserCert(default_container_name);
 		
 		if(null != certData && "" != certData)
 		{
@@ -480,9 +480,9 @@
 			default_container_name = select_container.options[select_container.selectedIndex].text;
 		}
 		
-		var cert  = mixCore.SOF_ExportUserCert(default_container_name);
+		var certData  = mixCore.SOF_ExportUserCert(default_container_name);
 		
-		var result = mixCore.SOF_VerifySignedFile(cert, inputData, outputData);
+		var result = mixCore.SOF_VerifySignedFile(certData, inputData, outputData);
 		if(mixCore.TRUE != result)
 		{
 			alert("验签失败,错误码:" + mixCore.SOF_GetLastError());
@@ -515,7 +515,7 @@
 			default_container_name = select_container.options[select_container.selectedIndex].text;
 		}
 		
-		var cert  = mixCore.SOF_ExportUserCert(default_container_name);
+		var certData  = mixCore.SOF_ExportUserCert(default_container_name);
 		
 		var result = mixCore.SOF_VerifySignedMessage(outputData, inputData);
 		if(mixCore.TRUE != result)
@@ -583,9 +583,9 @@
 			default_container_name = select_container.options[select_container.selectedIndex].text;
 		}
 		
-		var cert  = mixCore.SOF_ExportUserCert(default_container_name);
+		var certData  = mixCore.SOF_ExportUserCert(default_container_name);
 		
-		var result = mixCore.SOF_VerifySignedData(cert, inputData, outputData);
+		var result = mixCore.SOF_VerifySignedData(certData, inputData, outputData);
 		if(mixCore.TRUE != result)
 		{
 			alert("验签失败,错误码:" + mixCore.SOF_GetLastError());
@@ -748,9 +748,9 @@
 			default_container_name = select_container.options[select_container.selectedIndex].text;
 		}
 		
-		var cert  = mixCore.SOF_ExportExChangeUserCert(default_container_name);
+		var certData  = mixCore.SOF_ExportExChangeUserCert(default_container_name);
 		
-		var outputData = mixCore.SOF_EncryptData(cert, inputData);
+		var outputData = mixCore.SOF_EncryptData(certData, inputData);
 		if(null != outputData &&  "" != outputData)
 		{
 			document.getElementById("outputData").value = outputData;
@@ -778,9 +778,9 @@
 			default_container_name = select_container.options[select_container.selectedIndex].text;
 		}
 		
-		var cert  = mixCore.SOF_ExportExChangeUserCert(default_container_name);
+		var certData  = mixCore.SOF_ExportExChangeUserCert(default_container_name);
 		
-		var outputData = mixCore.SOF_PubKeyEncrypt(cert, inputData);
+		var outputData = mixCore.SOF_PubKeyEncrypt(certData, inputData);
 		if(null != outputData &&  "" != outputData)
 		{
 			document.getElementById("outputData").value = outputData;
@@ -808,9 +808,9 @@
 			default_container_name = select_container.options[select_container.selectedIndex].text;
 		}
 		
-		var cert  = mixCore.SOF_ExportExChangeUserCert(default_container_name);
+		var certData  = mixCore.SOF_ExportExChangeUserCert(default_container_name);
 		
-		var outputData = mixCore.SOF_PubKeyEncryptLongData(cert, inputData);
+		var outputData = mixCore.SOF_PubKeyEncryptLongData(certData, inputData);
 		if(null != outputData &&  "" != outputData)
 		{
 			document.getElementById("outputData").value = outputData;
@@ -839,9 +839,9 @@
 			default_container_name = select_container.options[select_container.selectedIndex].text;
 		}
 		
-		var cert  = mixCore.SOF_ExportExChangeUserCert(default_container_name);
+		var certData  = mixCore.SOF_ExportExChangeUserCert(default_container_name);
 		
-		var result = mixCore.SOF_EncryptFile(cert, inputData, outputData);
+		var result = mixCore.SOF_EncryptFile(certData, inputData, outputData);
 		if(mixCore.TRUE == result)
 		{
 			alert("加密成功！");

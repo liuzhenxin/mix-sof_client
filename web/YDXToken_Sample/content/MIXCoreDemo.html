@@ -105,10 +105,10 @@
 				<td> 签名算法：</td>
 				
 				<td colspan="2"><select id="signMech" style="width:100%;height:100%">
+							<option value="0x00020201">SGD_SM3_SM2</option>		
 							<option value="0x00010001">SGD_SM3_RSA</option>
 							<option value="0x00010002">SGD_SHA1_RSA</option>
-							<option value="0x00010004">SGD_SHA256_RSA</option>	
-							<option value="0x00020201">SGD_SM3_SM2</option>							
+							<option value="0x00010004">SGD_SHA256_RSA</option>					
 						</select></td>
 				<td><input type="button" value="设置签名算法" style="width:100%;height:100%" onClick="return SetSignMethod()"/></td>
 				<td><input type="button" value="获取签名算法" style="width:100%;height:100%" onClick="return GetSignMethod()"/></td>
