@@ -1093,6 +1093,8 @@ end:
 
 		CertificateItemParse certParse;
 
+		*pulValidate = -6;
+
 		certParse.setCertificate(pbCert, ulCertLen);
 
 		if (0 != certParse.parse())
