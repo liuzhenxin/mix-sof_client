@@ -1,22 +1,22 @@
 ﻿
 	var mixCore = new MIXCore("MIXCorePlugin");
 	
-	function addSelectOption(val, elementId)
+	function addSelectOption(elementId, name, val)
 	{	
-		elementId.options.add(new Option(val, val));
+		elementId.options.add(new Option(name, val));
 	}
 	
 	function InitializeLibraryNative()
 	{	
 		var slectType = document.getElementById("SKFInterface").value;
-		var ret = 0;
+		var result = 0;
 		
 		if(slectType == "WTSKFInterface.dll")
 		{
-			ret = mixCore.SOF_InitializeLibraryNative("WTSKFInterface.dll");
+			result = mixCore.SOF_InitializeLibraryNative("WTSKFInterface.dll");
 		}	
 		
-		if(mixCore.TRUE == ret)
+		if(mixCore.TRUE == result)
 		{
 			alert("加载控件成功!");
 		}
@@ -30,11 +30,11 @@
 	function FinalizeLibraryNative()
 	{	
 		var slectType = document.getElementById("SKFInterface").value;
-		var ret = 0;
+		var result = 0;
 		
-		ret = mixCore.SOF_FinalizeLibraryNative();
+		result = mixCore.SOF_FinalizeLibraryNative();
 		
-		if(mixCore.TRUE == ret)
+		if(mixCore.TRUE == result)
 		{
 			alert("卸载控件成功!");
 		}
@@ -52,16 +52,16 @@
 		
 		var userList = mixCore.SOF_GetUserList();
 		
-		if(userList != null && userList.length > 0)
+		if(null != userList && 0 < userList.length)
 		{
 			var arrList = userList.split("&&&");
 			
 			for(var i = 0; i < arrList.length; ++i)
 			{
-				addSelectOption(arrList[i].split("||")[1], select_container);
+				addSelectOption(select_container, arrList[i].split("||")[1], arrList[i].split("||")[1]);
 			}
 		}		
-		else if(userList == null)
+		else if(null == userList)
 		{
 			alert("未发现证书！");
 		}
@@ -69,14 +69,14 @@
 		{
 			alert("获取用户列表失败,错误码:" + mixCore.SOF_GetLastError());
 		}
-			
 	}
 	
 	function Login()
 	{
 		var pin = document.getElementById("input_password").value;	
-		var ret = mixCore.SOF_Login(document.getElementById("select_container").value, pin);			
-		if(mixCore.TRUE != ret)
+		var result = mixCore.SOF_Login(document.getElementById("select_container").value, pin);	
+		
+		if(mixCore.TRUE != result)
 		{	
 	
 			alert("验证用户密码失败,错误码:" + mixCore.SOF_GetLastError());
@@ -97,8 +97,9 @@
 	
 	function Logout()
 	{
-		var ret = mixCore.SOF_Logout();
-		if(mixCore.TRUE != ret)
+		var result = mixCore.SOF_Logout();
+		
+		if(mixCore.TRUE != result)
 		{	
 			alert("退出失败,错误码:" + mixCore.SOF_GetLastError());
 			
@@ -112,10 +113,11 @@
 	
 	function GenRandom()
 	{
-		var ret = mixCore.SOF_GenRandom(10);
-		if(ret != null && ret != "")
+		var result = mixCore.SOF_GenRandom(10);
+		
+		if(null !=result && "" != result)
 		{
-			document.getElementById("input_random").value = ret;	
+			document.getElementById("input_random").value = result;	
 		}
 		else
 		{
@@ -127,8 +129,9 @@
 	{
 		var pin = document.getElementById("input_password").value;	
 		var resetPin = document.getElementById("input_password_new").value;
-		var ret = mixCore.SOF_ChangePassWd("", pin, resetPin);
-		if(mixCore.TRUE != ret)
+		var result = mixCore.SOF_ChangePassWd("", pin, resetPin);
+		
+		if(mixCore.TRUE != result)
 		{
 			alert("密码修改失败,错误码:" + mixCore.SOF_GetLastError());
 		}
@@ -141,12 +144,11 @@
 	function ValidateCert()
 	{
 		var cert = document.getElementById("certData").value;	
+		var result = mixCore.SOF_ValidateCert(cert);
 		
-		var ret = mixCore.SOF_ValidateCert(cert);
-		
-		if(0 != ret)
+		if(0 != result)
 		{
-			alert("校验证书失败,验证失败码:" + ret);
+			alert("校验证书失败,验证失败码:" + result);
 		}
 		else
 		{
@@ -167,7 +169,7 @@
 		var select_container = document.getElementById("select_container");
 		var default_container_name = "";
 		
-		if(select_container.selectedIndex < 0)
+		if(0 > select_container.selectedIndex)
 		{
 
 		}
@@ -176,11 +178,11 @@
 			default_container_name = select_container.options[select_container.selectedIndex].text;
 		}
 
-		var cert = mixCore.SOF_ExportUserCert(default_container_name);
+		var certData = mixCore.SOF_ExportUserCert(default_container_name);
 		
-		if(cert != null && cert != "")
+		if(null != certData && "" != certData)
 		{
-			document.getElementById("certData").value = cert;	
+			document.getElementById("certData").value = certData;	
 		}
 		else
 		{
@@ -195,7 +197,7 @@
 		var select_container = document.getElementById("select_container");
 		var default_container_name = "";
 		
-		if(select_container.selectedIndex < 0)
+		if(0 > select_container.selectedIndex)
 		{
 
 		}
@@ -206,9 +208,9 @@
 
 		var cert = mixCore.SOF_ExportExChangeUserCert(default_container_name);
 		
-		if(cert != null && cert != "")
+		if(null != certData && "" != certData)
 		{
-			document.getElementById("certData").value = cert;	
+			document.getElementById("certData").value = certData;	
 		}
 		else
 		{
@@ -221,7 +223,7 @@
 	{
 		var certData = document.getElementById("certData").value;
 		
-		if(certData == "")
+		if("" == certData)
 		{
 			alert("数据错误！");
 			return;	
@@ -248,27 +250,27 @@
 	
 	function GetXMLSignatureInfo()
 	{
-		var inData = document.getElementById("inputData").value;
+		var inputData = document.getElementById("inputData").value;
 		
-		if(inData == "")
+		if("" == inputData)
 		{
 			alert("请先填充XML签名值数据");
 			return;	
 		}
 		
 		var itemsInfo = "";
-		var str = mixCore.SOF_GetXMLSignatureInfo(inData, 1);
+		var str = mixCore.SOF_GetXMLSignatureInfo(inputData, 1);
 		itemsInfo += "Data: " + str + "\r";
 		
-		str = mixCore.SOF_GetXMLSignatureInfo(inData, 2);
+		str = mixCore.SOF_GetXMLSignatureInfo(inputData, 2);
 		itemsInfo += "DigestValue: " + str + "\r";
-		str = mixCore.SOF_GetXMLSignatureInfo(inData, 3);
+		str = mixCore.SOF_GetXMLSignatureInfo(inputData, 3);
 		itemsInfo += "SignatureValue: " + str + "\r";
-		str = mixCore.SOF_GetXMLSignatureInfo(inData, 4);
+		str = mixCore.SOF_GetXMLSignatureInfo(inputData, 4);
 		itemsInfo += "X509Certificate: " + str + "\r";
-		str = mixCore.SOF_GetXMLSignatureInfo(inData, 5);
+		str = mixCore.SOF_GetXMLSignatureInfo(inputData, 5);
 		itemsInfo += "DigestMethod: " + str + "\r";
-		str = mixCore.SOF_GetXMLSignatureInfo(inData, 6);
+		str = mixCore.SOF_GetXMLSignatureInfo(inputData, 6);
 		itemsInfo += "SignatureMethod: " + str + "\r";
 		
 		document.getElementById("outputData").value = itemsInfo;
@@ -276,20 +278,20 @@
 	
 	function GetInfoFromSignedMessage()
 	{
-		var inData = document.getElementById("inputData").value;
+		var inputData = document.getElementById("inputData").value;
 		
-		if(inData == "")
+		if("" == inputData)
 		{
 			alert("请先填充消息签名值数据");
 			return;	
 		}
 		
 		var itemsInfo = "";
-		var str = mixCore.SOF_GetInfoFromSignedMessage(inData, 1);
+		var str = mixCore.SOF_GetInfoFromSignedMessage(inputData, 1);
 		itemsInfo += "Data: " + str + "\r";
-		str = mixCore.SOF_GetInfoFromSignedMessage(inData, 2);
+		str = mixCore.SOF_GetInfoFromSignedMessage(inputData, 2);
 		itemsInfo += "X509Certificate: " + str + "\r";
-		str = mixCore.SOF_GetInfoFromSignedMessage(inData, 3);
+		str = mixCore.SOF_GetInfoFromSignedMessage(inputData, 3);
 		itemsInfo += "SignatureValue: " + str + "\r";
 		
 		document.getElementById("outputData").value = itemsInfo;
@@ -311,7 +313,7 @@
 		var select_container = document.getElementById("select_container");
 		var default_container_name = "";
 		
-		if(select_container.selectedIndex < 0)
+		if(0 > select_container.selectedIndex)
 		{
 
 		}
@@ -346,8 +348,8 @@
 	function SetSignMethod()
 	{
 		var mech = document.getElementById("signMech").value;
-		var ret = mixCore.SOF_SetSignMethod(Number(mech));
-		if(mixCore.SAR_OK != ret)
+		var result = mixCore.SOF_SetSignMethod(Number(mech));
+		if(mixCore.SAR_OK != result)
 		{
 			alert("操作失败,错误码:" + mixCore.SOF_GetLastError());
 		}
@@ -359,21 +361,21 @@
 	
 	function GetSignMethod()
 	{
-		var ret = mixCore.SOF_GetSignMethod();
+		var result = mixCore.SOF_GetSignMethod();
 		
-		if(mixCore.SGD_SM3_RSA == ret)
+		if(mixCore.SGD_SM3_RSA == result)
 		{
 			alert("SGD_SM3_RSA");
 		}
-		else if(mixCore.SGD_SHA1_RSA == ret)
+		else if(mixCore.SGD_SHA1_RSA == result)
 		{
 			alert("SGD_SHA1_RSA");
 		}
-		else if(mixCore.SGD_SHA256_RSA == ret)
+		else if(mixCore.SGD_SHA256_RSA == result)
 		{
 			alert("SGD_SHA256_RSA");
 		}
-		else if(mixCore.SGD_SM3_SM2 == ret)
+		else if(mixCore.SGD_SM3_SM2 == result)
 		{
 			alert("SGD_SM3_SM2");
 		}
@@ -386,8 +388,8 @@
 	function SetEncryptMethod()
 	{
 		var mech = document.getElementById("encMech").value;
-		var ret = mixCore.SOF_SetEncryptMethod(Number(mech));
-		if(mixCore.SAR_OK != ret)
+		var result = mixCore.SOF_SetEncryptMethod(Number(mech));
+		if(mixCore.SAR_OK != result)
 		{
 			alert("操作失败,错误码:" + mixCore.SOF_GetLastError());
 		}
@@ -399,54 +401,54 @@
 	
 	function GetEncryptMethod()
 	{
-		var ret = mixCore.SOF_GetEncryptMethod();
+		var result = mixCore.SOF_GetEncryptMethod();
 		
-		if(mixCore.SGD_SM1_ECB == ret)
+		if(mixCore.SGD_SM1_ECB == result)
 		{
 			alert("SGD_SM1_ECB");
 		}
-		else if(mixCore.SGD_SM1_CBC == ret)
+		else if(mixCore.SGD_SM1_CBC == result)
 		{
 			alert("SGD_SM1_CBC");
 		}
-		else if(mixCore.SGD_SM1_CFB == ret)
+		else if(mixCore.SGD_SM1_CFB == result)
 		{
 			alert("SGD_SM1_CFB");
 		}
-		else if(mixCore.SGD_SM1_OFB == ret)
+		else if(mixCore.SGD_SM1_OFB == result)
 		{
 			alert("SGD_SM1_OFB");
 		}
 		
-		else if(mixCore.SGD_SSF33_ECB == ret)
+		else if(mixCore.SGD_SSF33_ECB == result)
 		{
 			alert("SGD_SSF33_ECB");
 		}
-		else if(mixCore.SGD_SSF33_CBC == ret)
+		else if(mixCore.SGD_SSF33_CBC == result)
 		{
 			alert("SGD_SSF33_CBC");
 		}
-		else if(mixCore.SGD_SSF33_CFB == ret)
+		else if(mixCore.SGD_SSF33_CFB == result)
 		{
 			alert("SGD_SSF33_CFB");
 		}
-		else if(mixCore.SGD_SSF33_OFB == ret)
+		else if(mixCore.SGD_SSF33_OFB == result)
 		{
 			alert("SGD_SSF33_OFB");
 		}
-		else if(mixCore.SGD_SM4_ECB == ret)
+		else if(mixCore.SGD_SM4_ECB == result)
 		{
 			alert("SGD_SM4_ECB");
 		}
-		else if(mixCore.SGD_SM4_CBC == ret)
+		else if(mixCore.SGD_SM4_CBC == result)
 		{
 			alert("SGD_SM4_CBC");
 		}
-		else if(mixCore.SGD_SM4_CFB == ret)
+		else if(mixCore.SGD_SM4_CFB == result)
 		{
 			alert("SGD_SM4_CFB");
 		}
-		else if(mixCore.SGD_SM4_OFB == ret)
+		else if(mixCore.SGD_SM4_OFB == result)
 		{
 			alert("SGD_SM4_OFB");
 		}
@@ -458,9 +460,9 @@
 	
 	function VerifySignedFile()
 	{
-		var inData = document.getElementById("inputData").value;
-		var outData = document.getElementById("outputData").value;
-		if(outData == null || outData.length <= 0)
+		var inputData = document.getElementById("inputData").value;
+		var outputData = document.getElementById("outputData").value;
+		if(null == outputData || 0 >= outputData.length)
 		{
 			alert("数据错误！");
 			return;
@@ -469,7 +471,7 @@
 		var select_container = document.getElementById("select_container");
 		var default_container_name = "";
 		
-		if(select_container.selectedIndex < 0)
+		if(0 > select_container.selectedIndex)
 		{
 
 		}
@@ -480,8 +482,8 @@
 		
 		var cert  = mixCore.SOF_ExportUserCert(default_container_name);
 		
-		var ret = mixCore.SOF_VerifySignedFile(cert, inData, outData);
-		if(mixCore.TRUE != ret)
+		var result = mixCore.SOF_VerifySignedFile(cert, inputData, outputData);
+		if(mixCore.TRUE != result)
 		{
 			alert("验签失败,错误码:" + mixCore.SOF_GetLastError());
 		}
@@ -493,9 +495,9 @@
 
 	function VerifySignedMessage()
 	{
-		var inData = document.getElementById("inputData").value;
-		var outData = document.getElementById("outputData").value;
-		if(outData == null || outData.length <= 0)
+		var inputData = document.getElementById("inputData").value;
+		var outputData = document.getElementById("outputData").value;
+		if(null == outputData || 0 >= outputData.length)
 		{
 			alert("数据错误！");
 			return;
@@ -504,7 +506,7 @@
 		var select_container = document.getElementById("select_container");
 		var default_container_name = "";
 		
-		if(select_container.selectedIndex < 0)
+		if(0 > select_container.selectedIndex)
 		{
 
 		}
@@ -515,8 +517,8 @@
 		
 		var cert  = mixCore.SOF_ExportUserCert(default_container_name);
 		
-		var ret = mixCore.SOF_VerifySignedMessage(outData, inData);
-		if(mixCore.TRUE != ret)
+		var result = mixCore.SOF_VerifySignedMessage(outputData, inputData);
+		if(mixCore.TRUE != result)
 		{
 			alert("验签失败,错误码:" + mixCore.SOF_GetLastError());
 		}
@@ -528,9 +530,9 @@
 				
 	function VerifySignedDataXML()
 	{
-		var inData = document.getElementById("inputData").value;
-		var outData = document.getElementById("outputData").value;
-		if(outData == null || outData.length <= 0)
+		var inputData = document.getElementById("inputData").value;
+		var outputData = document.getElementById("outputData").value;
+		if(null == outputData || 0 >= outputData.length)
 		{
 			alert("数据错误！");
 			return;
@@ -539,7 +541,7 @@
 		var select_container = document.getElementById("select_container");
 		var default_container_name = "";
 		
-		if(select_container.selectedIndex < 0)
+		if(0 > select_container.selectedIndex)
 		{
 
 		}
@@ -548,8 +550,8 @@
 			default_container_name = select_container.options[select_container.selectedIndex].text;
 		}
 		
-		var ret = mixCore.SOF_VerifySignedDataXML(outData);
-		if(mixCore.TRUE != ret)
+		var result = mixCore.SOF_VerifySignedDataXML(outputData);
+		if(mixCore.TRUE != result)
 		{
 			alert("验签失败,错误码:" + mixCore.SOF_GetLastError());
 		}
@@ -561,9 +563,9 @@
 
 	function VerifySignedData()
 	{
-		var inData = document.getElementById("inputData").value;
-		var outData = document.getElementById("outputData").value;
-		if(outData == null || outData.length <= 0)
+		var inputData = document.getElementById("inputData").value;
+		var outputData = document.getElementById("outputData").value;
+		if(null == outputData || 0 >= outputData.length)
 		{
 			alert("数据错误！");
 			return;
@@ -572,7 +574,7 @@
 		var select_container = document.getElementById("select_container");
 		var default_container_name = "";
 		
-		if(select_container.selectedIndex < 0)
+		if(0 > select_container.selectedIndex)
 		{
 
 		}
@@ -583,8 +585,8 @@
 		
 		var cert  = mixCore.SOF_ExportUserCert(default_container_name);
 		
-		var ret = mixCore.SOF_VerifySignedData(cert, inData, outData);
-		if(mixCore.TRUE != ret)
+		var result = mixCore.SOF_VerifySignedData(cert, inputData, outputData);
+		if(mixCore.TRUE != result)
 		{
 			alert("验签失败,错误码:" + mixCore.SOF_GetLastError());
 		}
@@ -596,12 +598,12 @@
 	
 	function SignFile()
 	{
-		var inData = document.getElementById("inputData").value;
+		var inputData = document.getElementById("inputData").value;
 			
 		var select_container = document.getElementById("select_container");
 		var default_container_name = "";
 		
-		if(select_container.selectedIndex < 0)
+		if(0 > select_container.selectedIndex)
 		{
 
 		}
@@ -610,10 +612,10 @@
 			default_container_name = select_container.options[select_container.selectedIndex].text;
 		}
 		
-		var outData = mixCore.SOF_SignFile(default_container_name, inData);
-		if(outData != null && outData != "")
+		var outputData = mixCore.SOF_SignFile(default_container_name, inputData);
+		if(null != outputData &&  "" != outputData)
 		{
-			document.getElementById("outputData").value = outData;	
+			document.getElementById("outputData").value = outputData;	
 		}
 		else
 		{
@@ -625,12 +627,12 @@
 	{
 		var selectSignType = document.getElementById("select_signType");
 		var signType = selectSignType.options[selectSignType.selectedIndex].value;
-		var inData = document.getElementById("inputData").value;
+		var inputData = document.getElementById("inputData").value;
 			
 		var select_container = document.getElementById("select_container");
 		var default_container_name = "";
 		
-		if(select_container.selectedIndex < 0)
+		if(0 > select_container.selectedIndex)
 		{
 
 		}
@@ -639,10 +641,10 @@
 			default_container_name = select_container.options[select_container.selectedIndex].text;
 		}
 
-		var outData = mixCore.SOF_SignMessage(Number(signType), default_container_name, inData);
-		if(outData != null && outData != "")
+		var outputData = mixCore.SOF_SignMessage(Number(signType), default_container_name, inputData);
+		if(null != outputData &&  "" != outputData)
 		{
-			document.getElementById("outputData").value = outData;
+			document.getElementById("outputData").value = outputData;
 		}
 		else
 		{
@@ -652,25 +654,25 @@
 	
 	function SetDataXMLTemplate()
 	{
-		var indata = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<!-- \nXML Security Library example: Original XML doc file for sign3 example. \n-->\n<Envelope xmlns=\"urn:envelope\">\n  <Data>\n	Hello,ABCDEFG World!\n  </Data>\n</Envelope>\n";
+		var inputData = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<!-- \nXML Security Library example: Original XML doc file for sign3 example. \n-->\n<Envelope xmlns=\"urn:envelope\">\n  <Data>\n	Hello,ABCDEFG World!\n  </Data>\n</Envelope>\n";
 			
-		document.getElementById("inputData").value = indata;
+		document.getElementById("inputData").value = inputData;
 	}
 	
 	function ExchangeData()
 	{
-		var indata = document.getElementById("inputData").value;
-		var outdata = document.getElementById("outputData").value;
+		var inputData = document.getElementById("inputData").value;
+		var outputData = document.getElementById("outputData").value;
 			
-		document.getElementById("inputData").value = outdata;
-		document.getElementById("outputData").value = indata;
+		document.getElementById("inputData").value = outputData;
+		document.getElementById("outputData").value = inputData;
 	}
 	
 	function SignDataXML()
 	{
-		var inData = document.getElementById("inputData").value;
+		var inputData = document.getElementById("inputData").value;
 		
-		if(inData != null && inData != "")
+		if(null != inputData && "" != inputData)
 		{
 
 		}
@@ -683,7 +685,7 @@
 		var select_container = document.getElementById("select_container");
 		var default_container_name = "";
 		
-		if(select_container.selectedIndex < 0)
+		if(0 > select_container.selectedIndex)
 		{
 
 		}
@@ -692,10 +694,10 @@
 			default_container_name = select_container.options[select_container.selectedIndex].text;
 		}
 		
-		var outData = mixCore.SOF_SignDataXML(default_container_name, inData);
-		if(outData != null && outData != "")
+		var outputData = mixCore.SOF_SignDataXML(default_container_name, inputData);
+		if(null != outputData &&  "" != outputData)
 		{
-			document.getElementById("outputData").value = outData;
+			document.getElementById("outputData").value = outputData;
 		}
 		else
 		{
@@ -705,12 +707,12 @@
 	
 	function SignData()
 	{
-		var inData = document.getElementById("inputData").value;
+		var inputData = document.getElementById("inputData").value;
 			
 		var select_container = document.getElementById("select_container");
 		var default_container_name = "";
 		
-		if(select_container.selectedIndex < 0)
+		if(0 > select_container.selectedIndex)
 		{
 
 		}
@@ -719,10 +721,10 @@
 			default_container_name = select_container.options[select_container.selectedIndex].text;
 		}
 		
-		var outData = mixCore.SOF_SignData(default_container_name, inData);
-		if(outData != null && outData != "")
+		var outputData = mixCore.SOF_SignData(default_container_name, inputData);
+		if(null != outputData &&  "" != outputData)
 		{
-			document.getElementById("outputData").value = outData;
+			document.getElementById("outputData").value = outputData;
 		}
 		else
 		{
@@ -732,12 +734,12 @@
 	
 	function EncryptData()
 	{
-		var inData = document.getElementById("inputData").value;
+		var inputData = document.getElementById("inputData").value;
 		
 		var select_container = document.getElementById("select_container");
 		var default_container_name = "";
 		
-		if(select_container.selectedIndex < 0)
+		if(0 > select_container.selectedIndex)
 		{
 
 		}
@@ -748,10 +750,10 @@
 		
 		var cert  = mixCore.SOF_ExportExChangeUserCert(default_container_name);
 		
-		var outData = mixCore.SOF_EncryptData(cert, inData);
-		if(outData != null && outData != "")
+		var outputData = mixCore.SOF_EncryptData(cert, inputData);
+		if(null != outputData &&  "" != outputData)
 		{
-			document.getElementById("outputData").value = outData;
+			document.getElementById("outputData").value = outputData;
 		}	
 		else
 		{
@@ -762,12 +764,12 @@
 	
 	function PubKeyEncrypt()
 	{
-		var inData = document.getElementById("inputData").value;
+		var inputData = document.getElementById("inputData").value;
 		
 		var select_container = document.getElementById("select_container");
 		var default_container_name = "";
 		
-		if(select_container.selectedIndex < 0)
+		if(0 > select_container.selectedIndex)
 		{
 
 		}
@@ -778,10 +780,10 @@
 		
 		var cert  = mixCore.SOF_ExportExChangeUserCert(default_container_name);
 		
-		var outData = mixCore.SOF_PubKeyEncrypt(cert, inData);
-		if(outData != null && outData != "")
+		var outputData = mixCore.SOF_PubKeyEncrypt(cert, inputData);
+		if(null != outputData &&  "" != outputData)
 		{
-			document.getElementById("outputData").value = outData;
+			document.getElementById("outputData").value = outputData;
 		}	
 		else
 		{
@@ -792,12 +794,12 @@
 	
 	function PubKeyEncryptLongData()
 	{
-		var inData = document.getElementById("inputData").value;
+		var inputData = document.getElementById("inputData").value;
 		
 		var select_container = document.getElementById("select_container");
 		var default_container_name = "";
 		
-		if(select_container.selectedIndex < 0)
+		if(0 > select_container.selectedIndex)
 		{
 
 		}
@@ -808,10 +810,10 @@
 		
 		var cert  = mixCore.SOF_ExportExChangeUserCert(default_container_name);
 		
-		var outData = mixCore.SOF_PubKeyEncryptLongData(cert, inData);
-		if(outData != null && outData != "")
+		var outputData = mixCore.SOF_PubKeyEncryptLongData(cert, inputData);
+		if(null != outputData &&  "" != outputData)
 		{
-			document.getElementById("outputData").value = outData;
+			document.getElementById("outputData").value = outputData;
 		}	
 		else
 		{
@@ -822,13 +824,13 @@
 	
 	function EncryptFile()
 	{
-		var inData = document.getElementById("inputData").value;
-		var outData = document.getElementById("outputData").value;
+		var inputData = document.getElementById("inputData").value;
+		var outputData = document.getElementById("outputData").value;
 		
 		var select_container = document.getElementById("select_container");
 		var default_container_name = "";
 		
-		if(select_container.selectedIndex < 0)
+		if(0 > select_container.selectedIndex)
 		{
 
 		}
@@ -839,8 +841,8 @@
 		
 		var cert  = mixCore.SOF_ExportExChangeUserCert(default_container_name);
 		
-		var ret = mixCore.SOF_EncryptFile(cert, inData, outData);
-		if(mixCore.TRUE == ret)
+		var result = mixCore.SOF_EncryptFile(cert, inputData, outputData);
+		if(mixCore.TRUE == result)
 		{
 			alert("加密成功！");
 		}
@@ -852,13 +854,13 @@
 	
 	function DecryptFile()
 	{
-		var inData = document.getElementById("inputData").value;
-		var outData = document.getElementById("outputData").value;
+		var inputData = document.getElementById("inputData").value;
+		var outputData = document.getElementById("outputData").value;
 		
 		var select_container = document.getElementById("select_container");
 		var default_container_name = "";
 		
-		if(select_container.selectedIndex < 0)
+		if(0 > select_container.selectedIndex)
 		{
 
 		}
@@ -867,9 +869,9 @@
 			default_container_name = select_container.options[select_container.selectedIndex].text;
 		}
 		
-		var ret = mixCore.SOF_DecryptFile(default_container_name, inData, outData);
+		var result = mixCore.SOF_DecryptFile(default_container_name, inputData, outputData);
 		
-		if(mixCore.TRUE == ret)
+		if(mixCore.TRUE == result)
 		{
 			alert("解密成功！");
 		}
@@ -881,8 +883,8 @@
 	
 	function DecryptData()
 	{
-		var inData = document.getElementById("inputData").value;
-		if(inData == null || inData.length <= 0)
+		var inputData = document.getElementById("inputData").value;
+		if(null == inputData || 0 >= inputData.length)
 		{
 			alert("数据错误！");
 			return;
@@ -891,7 +893,7 @@
 		var select_container = document.getElementById("select_container");
 		var default_container_name = "";
 		
-		if(select_container.selectedIndex < 0)
+		if(0 > select_container.selectedIndex)
 		{
 
 		}
@@ -900,10 +902,10 @@
 			default_container_name = select_container.options[select_container.selectedIndex].text;
 		}
 		
-		decryptedData = mixCore.SOF_DecryptData(default_container_name, inData);
-		if(decryptedData != null && decryptedData != "")
+		outputData = mixCore.SOF_DecryptData(default_container_name, inputData);
+		if(null != outputData && "" != outputData)
 		{
-			document.getElementById("outputData").value = decryptedData;
+			document.getElementById("outputData").value = outputData;
 		}
 		else
 		{
@@ -913,8 +915,8 @@
 	
 	function PriKeyDecryptLongData()
 	{
-		var inData = document.getElementById("inputData").value;
-		if(inData == null || inData.length <= 0)
+		var inputData = document.getElementById("inputData").value;
+		if(null == inputData || 0 >= inputData.length)
 		{
 			alert("数据错误！");
 			return;
@@ -923,7 +925,7 @@
 		var select_container = document.getElementById("select_container");
 		var default_container_name = "";
 		
-		if(select_container.selectedIndex < 0)
+		if(0 > select_container.selectedIndex)
 		{
 
 		}
@@ -932,10 +934,10 @@
 			default_container_name = select_container.options[select_container.selectedIndex].text;
 		}
 		
-		decryptedData = mixCore.SOF_PriKeyDecryptLongData(default_container_name, inData);
-		if(decryptedData != null && decryptedData != "")
+		outputData = mixCore.SOF_PriKeyDecryptLongData(default_container_name, inputData);
+		if(null != outputData && "" != outputData)
 		{
-			document.getElementById("outputData").value = decryptedData;
+			document.getElementById("outputData").value = outputData;
 		}
 		else
 		{
@@ -945,8 +947,8 @@
 	
 	function PriKeyDecrypt()
 	{
-		var inData = document.getElementById("inputData").value;
-		if(inData == null || inData.length <= 0)
+		var inputData = document.getElementById("inputData").value;
+		if(null == inputData || 0 >= inputData.length)
 		{
 			alert("数据错误！");
 			return;
@@ -955,7 +957,7 @@
 		var select_container = document.getElementById("select_container");
 		var default_container_name = "";
 		
-		if(select_container.selectedIndex < 0)
+		if(0 > select_container.selectedIndex)
 		{
 
 		}
@@ -964,10 +966,10 @@
 			default_container_name = select_container.options[select_container.selectedIndex].text;
 		}
 		
-		decryptedData = mixCore.SOF_PriKeyDecrypt(default_container_name, inData);
-		if(decryptedData != null && decryptedData != "")
+		outputData = mixCore.SOF_PriKeyDecrypt(default_container_name, inputData);
+		if(null != outputData && "" != outputData)
 		{
-			document.getElementById("outputData").value = decryptedData;
+			document.getElementById("outputData").value = outputData;
 		}
 		else
 		{

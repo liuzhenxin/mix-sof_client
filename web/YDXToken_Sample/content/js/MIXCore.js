@@ -1,6 +1,6 @@
 
-function MIXCore(obj){
-	this.obj = obj;	
+function MIXCore(object){
+	this.object = object;	
 	
 	this.SAR_OK										=	0;
 	this.SAR_FALSE									= 	1;
@@ -83,7 +83,7 @@ function MIXCore(obj){
 	
 	this.SOF_GetLastError = function()
 	{
-		if(g_MIXPlugin == null)
+		if(null == g_MIXPlugin)
 		{
 			return -1;
 		}
@@ -91,46 +91,9 @@ function MIXCore(obj){
 		return g_MIXPlugin.SOF_GetLastError();
 	}
 	
-	function isIe()
-	{
-		return ("ActiveXObject" in window);
-	}
-	
-	function isMobile()
-	{
-		var browser = {
-			versions : function() {
-				var u = navigator.userAgent, app = navigator.appVersion;
-				return {//移动终端浏览器版本信息   
-					trident : u.indexOf('Trident') > -1, //IE内核  
-					presto : u.indexOf('Presto') > -1, //opera内核  
-					webKit : u.indexOf('AppleWebKit') > -1, //苹果、谷歌内核  
-					gecko : u.indexOf('Gecko') > -1 && u.indexOf('KHTML') == -1, //火狐内核  
-					mobile : !!u.match(/AppleWebKit.*Mobile.*/), //是否为移动终端  
-					ios : !!u.match(/\(i[^;]+;( U;)? CPU.+Mac OS X/), //ios终端  
-					android : u.indexOf('Android') > -1 || u.indexOf('Linux') > -1, //android终端或者uc浏览器  
-					iPhone : u.indexOf('iPhone') > -1, //是否为iPhone或者QQHD浏览器  
-					iPad : u.indexOf('iPad') > -1, //是否iPad    
-					webApp : u.indexOf('Safari') == -1
-				//是否web应该程序，没有头部与底部  
-				};
-			}(),
-			language : (navigator.browserLanguage || navigator.language).toLowerCase()
-		}
-		
-		if ((browser.versions.mobile) && (browser.versions.ios || browser.versions.android || browser.versions.iPhone || browser.versions.iPad))
-		{
-			return true;
-		}
-		else
-		{
-			return false;
-		}
-	}
-	
 	this.SOF_GetVersion = function()
 	{
-		if(g_MIXPlugin == null)
+		if(null == g_MIXPlugin)
 		{
 			return null;
 		}
@@ -139,7 +102,7 @@ function MIXCore(obj){
 
 	this.SOF_SetSignMethod = function(ulMethod)
 	{
-		if(g_MIXPlugin == null)
+		if(null == g_MIXPlugin)
 		{
 			return null;
 		}
@@ -148,7 +111,7 @@ function MIXCore(obj){
 
 	this.SOF_GetSignMethod = function()
 	{
-		if(g_MIXPlugin == null)
+		if(null == g_MIXPlugin)
 		{
 			return null;
 		}
@@ -157,7 +120,7 @@ function MIXCore(obj){
 
 	this.SOF_SetEncryptMethod = function(ulMethod)
 	{
-		if(g_MIXPlugin == null)
+		if(null == g_MIXPlugin)
 		{
 			return null;
 		}
@@ -166,7 +129,7 @@ function MIXCore(obj){
 
 	this.SOF_GetEncryptMethod = function()
 	{
-		if(g_MIXPlugin == null)
+		if(null == g_MIXPlugin)
 		{
 			return null;
 		}
@@ -175,7 +138,7 @@ function MIXCore(obj){
 
 	this.SOF_GetUserList = function()
 	{
-		if(g_MIXPlugin == null)
+		if(null == g_MIXPlugin)
 		{
 			return null;
 		}
@@ -184,7 +147,7 @@ function MIXCore(obj){
 
 	this.SOF_ExportUserCert = function(strContainerName)
 	{
-		if(g_MIXPlugin == null)
+		if(null == g_MIXPlugin)
 		{
 			return null;
 		}
@@ -193,7 +156,7 @@ function MIXCore(obj){
 
 	this.SOF_Login = function(strContainerName,strPIN)
 	{
-		if(g_MIXPlugin == null)
+		if(null == g_MIXPlugin)
 		{
 			return null;
 		}
@@ -202,7 +165,7 @@ function MIXCore(obj){
 
 	this.SOF_GetPinRetryCount = function(strContainerName)
 	{
-		if(g_MIXPlugin == null)
+		if(null == g_MIXPlugin)
 		{
 			return null;
 		}
@@ -211,7 +174,7 @@ function MIXCore(obj){
 
 	this.SOF_ChangePassWd = function(strContainerName, strPINOld, strPINNew)
 	{
-		if(g_MIXPlugin == null)
+		if(null == g_MIXPlugin)
 		{
 			return null;
 		}
@@ -220,7 +183,7 @@ function MIXCore(obj){
 
 	this.SOF_ExportExChangeUserCert = function(strContainerName)
 	{
-		if(g_MIXPlugin == null)
+		if(null == g_MIXPlugin)
 		{
 			return null;
 		}
@@ -229,7 +192,7 @@ function MIXCore(obj){
 
 	this.SOF_GetCertInfo = function(strCert, u16Type)
 	{
-		if(g_MIXPlugin == null)
+		if(null == g_MIXPlugin)
 		{
 			return null;
 		}
@@ -238,7 +201,7 @@ function MIXCore(obj){
 
 	this.SOF_GetCertInfoByOid = function(strCert, strOidString)
 	{
-		if(g_MIXPlugin == null)
+		if(null == g_MIXPlugin)
 		{
 			return null;
 		}
@@ -247,7 +210,7 @@ function MIXCore(obj){
 
 	this.SOF_GetDeviceInfo = function(strContainerName, ulType)
 	{
-		if(g_MIXPlugin == null)
+		if(null == g_MIXPlugin)
 		{
 			return null;
 		}
@@ -256,7 +219,7 @@ function MIXCore(obj){
 
 	this.SOF_ValidateCert = function(strCert)
 	{
-		if(g_MIXPlugin == null)
+		if(null == g_MIXPlugin)
 		{
 			return null;
 		}
@@ -265,7 +228,7 @@ function MIXCore(obj){
 
 	this.SOF_SignData = function(strContainerName, strDataIn)
 	{
-		if(g_MIXPlugin == null)
+		if(null == g_MIXPlugin)
 		{
 			return null;
 		}
@@ -274,7 +237,7 @@ function MIXCore(obj){
 
 	this.SOF_VerifySignedData = function(strCert, strDataIn, strDataOut)
 	{
-		if(g_MIXPlugin == null)
+		if(null == g_MIXPlugin)
 		{
 			return null;
 		}
@@ -283,7 +246,7 @@ function MIXCore(obj){
 
 	this.SOF_SignFile = function(strContainerName, strFileIn)
 	{
-		if(g_MIXPlugin == null)
+		if(null == g_MIXPlugin)
 		{
 			return null;
 		}
@@ -292,7 +255,7 @@ function MIXCore(obj){
 
 	this.SOF_VerifySignedFile = function(strCert, strFileIn, strDataOut)
 	{
-		if(g_MIXPlugin == null)
+		if(null == g_MIXPlugin)
 		{
 			return null;
 		}
@@ -301,7 +264,7 @@ function MIXCore(obj){
 
 	this.SOF_EncryptData = function(strCert,strDataIn)
 	{
-		if(g_MIXPlugin == null)
+		if(null == g_MIXPlugin)
 		{
 			return null;
 		}
@@ -310,7 +273,7 @@ function MIXCore(obj){
 
 	this.SOF_DecryptData = function(strContainerName,strDataIn)
 	{
-		if(g_MIXPlugin == null)
+		if(null == g_MIXPlugin)
 		{
 			return null;
 		}
@@ -319,7 +282,7 @@ function MIXCore(obj){
 
 	this.SOF_EncryptFile = function(strCert, strFileIn, strFileOut)
 	{
-		if(g_MIXPlugin == null)
+		if(null == g_MIXPlugin)
 		{
 			return null;
 		}
@@ -328,7 +291,7 @@ function MIXCore(obj){
 
 	this.SOF_DecryptFile = function(strContainerName, strFileIn, strFileOut)
 	{
-		if(g_MIXPlugin == null)
+		if(null == g_MIXPlugin)
 		{
 			return null;
 		}
@@ -337,7 +300,7 @@ function MIXCore(obj){
 
 	this.SOF_SignMessage = function(u16Flag,strContainerName, strDataIn)
 	{
-		if(g_MIXPlugin == null)
+		if(null == g_MIXPlugin)
 		{
 			return null;
 		}
@@ -346,7 +309,7 @@ function MIXCore(obj){
 
 	this.SOF_VerifySignedMessage = function(strDataOut, strDataIn)
 	{
-		if(g_MIXPlugin == null)
+		if(null == g_MIXPlugin)
 		{
 			return null;
 		}
@@ -355,7 +318,7 @@ function MIXCore(obj){
 
 	this.SOF_GetInfoFromSignedMessage = function(strMessageData, u16Type)
 	{
-		if(g_MIXPlugin == null)
+		if(null == g_MIXPlugin)
 		{
 			return null;
 		}
@@ -364,7 +327,7 @@ function MIXCore(obj){
 
 	this.SOF_SignDataXML = function(strContainerName,strDataIn)
 	{
-		if(g_MIXPlugin == null)
+		if(null == g_MIXPlugin)
 		{
 			return null;
 		}
@@ -373,7 +336,7 @@ function MIXCore(obj){
 
 	this.SOF_VerifySignedDataXML = function(strDataIn)
 	{
-		if(g_MIXPlugin == null)
+		if(null == g_MIXPlugin)
 		{
 			return null;
 		}
@@ -382,7 +345,7 @@ function MIXCore(obj){
 
 	this.SOF_GetXMLSignatureInfo = function(strDataIn, u16Type)
 	{
-		if(g_MIXPlugin == null)
+		if(null == g_MIXPlugin)
 		{
 			return null;
 		}
@@ -391,7 +354,7 @@ function MIXCore(obj){
 
 	this.SOF_GenRandom = function(u16Type)
 	{
-		if(g_MIXPlugin == null)
+		if(null == g_MIXPlugin)
 		{
 			return null;
 		}
@@ -400,7 +363,7 @@ function MIXCore(obj){
 
 	this.SOF_PubKeyEncrypt = function(strCert,strDataIn)
 	{
-		if(g_MIXPlugin == null)
+		if(null == g_MIXPlugin)
 		{
 			return null;
 		}
@@ -409,7 +372,7 @@ function MIXCore(obj){
 
 	this.SOF_PriKeyDecrypt = function(strContainerName,strDataIn)
 	{
-		if(g_MIXPlugin == null)
+		if(null == g_MIXPlugin)
 		{
 			return null;
 		}
@@ -418,7 +381,7 @@ function MIXCore(obj){
 
 	this.SOF_PubKeyEncryptLongData = function(strCert,strDataIn)
 	{
-		if(g_MIXPlugin == null)
+		if(null == g_MIXPlugin)
 		{
 			return null;
 		}
@@ -427,7 +390,7 @@ function MIXCore(obj){
 
 	this.SOF_PriKeyDecryptLongData = function(strContainerName,strDataIn)
 	{
-		if(g_MIXPlugin == null)
+		if(null == g_MIXPlugin)
 		{
 			return null;
 		}
@@ -436,7 +399,7 @@ function MIXCore(obj){
 
 	this.SOF_Logout = function()
 	{
-		if(g_MIXPlugin == null)
+		if(null == g_MIXPlugin)
 		{
 			return null;
 		}
@@ -445,7 +408,7 @@ function MIXCore(obj){
 
 	this.SOF_GetLastError = function()
 	{
-		if(g_MIXPlugin == null)
+		if(null == g_MIXPlugin)
 		{
 			return null;
 		}
@@ -455,37 +418,23 @@ function MIXCore(obj){
 	this.SOF_InitializeLibraryNative = function(strLibrary)
 	{
 		var ret;
-		if(g_MIXPlugin == null)
+		if(null == g_MIXPlugin)
 		{
-			if(isIe() )
-			{	//IE
-				if(!-[1,])
-				{	//IE678
-					g_MIXPlugin = document.getElementById(obj);
-					g_MIXPlugin.setAttribute("type", "application/x-fbwtsofplugin");
-					
-				}
-				else
-				{	//IE9+
-					if(!!window.ActiveXObject)
-					{
-						g_MIXPlugin = document.getElementById(obj);
-						g_MIXPlugin.setAttribute("type", "application/x-fbwtsofplugin");
-					}
-					else
-					{
-						g_MIXPlugin = new MIXCorePlugin();
-					}
-					
-				}
-
-			}else {
+			g_MIXPlugin = document.getElementById(object);
+			g_MIXPlugin.setAttribute("type", "application/x-fbwtsofplugin");
+			
+			if("1.0.0.0" == g_MIXPlugin.version)
+			{
+				//console.log(g_MIXPlugin.version);
+				//alert(g_MIXPlugin.version);
+			}
+			else
+			{
 				g_MIXPlugin = new MIXCorePlugin();
 			}
-			
 		}
 		
-		if(g_MIXPlugin == null)
+		if(null == g_MIXPlugin)
 		{
 			return null;
 		}
@@ -494,7 +443,7 @@ function MIXCore(obj){
 
 	this.SOF_FinalizeLibraryNative = function()
 	{
-		if(g_MIXPlugin == null)
+		if(null == g_MIXPlugin)
 		{
 			return null;
 		}
@@ -510,15 +459,13 @@ function MIXCorePlugin(){
 	var xhr ;
 	
 	function MixProcess(json) {
-		
-		if(xhr == null) {
-			if (window.XMLHttpRequest) {// code for IE7+, Firefox, Chrome, Opera, Safari
+		if(null == xhr) {
+			if (window.XMLHttpRequest) {
 				xhr = new XMLHttpRequest();
-			} else {// code for IE6, IE5
+			} else {
 				xhr = new ActiveXObject("Microsoft.XMLHTTP");
 			}
 		}
-
 		xhr.open("POST", url, false);
 		xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
 		xhr.send(json);
@@ -540,9 +487,9 @@ function MIXCorePlugin(){
 			return -3;
 		}
 		
-		if(xhr.readyState == 4 && xhr.status == 200) {
-			var obj = eval("(" + xhr.responseText + ")");
-			return obj.exec_result;
+		if(4 == xhr.readyState && 200 == xhr.status) {
+			var object = eval("(" + xhr.responseText + ")");
+			return object.exec_result;
 		}else{
 			return -2;
 		}
@@ -565,9 +512,9 @@ function MIXCorePlugin(){
 			return -3;
 		}
 		
-		if(xhr.readyState == 4 && xhr.status == 200) {
-			var obj = eval("(" + xhr.responseText + ")");
-			return obj.exec_result;
+		if(4 == xhr.readyState && 200 == xhr.status) {
+			var object = eval("(" + xhr.responseText + ")");
+			return object.exec_result;
 		}else{
 			return -2;
 		}
@@ -589,9 +536,9 @@ function MIXCorePlugin(){
 			return -3;
 		}
 		
-		if(xhr.readyState == 4 && xhr.status == 200) {
-			var obj = eval("(" + xhr.responseText + ")");
-			return obj.exec_result;
+		if(4 == xhr.readyState && 200 == xhr.status) {
+			var object = eval("(" + xhr.responseText + ")");
+			return object.exec_result;
 		}else{
 			return -2;
 		}
@@ -613,9 +560,9 @@ function MIXCorePlugin(){
 			return -3;
 		}
 		
-		if(xhr.readyState == 4 && xhr.status == 200) {
-			var obj = eval("(" + xhr.responseText + ")");
-			return obj.exec_result;
+		if(4 == xhr.readyState && 200 == xhr.status) {
+			var object = eval("(" + xhr.responseText + ")");
+			return object.exec_result;
 		}else{
 			return -2;
 		}
@@ -637,9 +584,9 @@ function MIXCorePlugin(){
 			return -3;
 		}
 		
-		if(xhr.readyState == 4 && xhr.status == 200) {
-			var obj = eval("(" + xhr.responseText + ")");
-			return obj.exec_result;
+		if(4 == xhr.readyState && 200 == xhr.status) {
+			var object = eval("(" + xhr.responseText + ")");
+			return object.exec_result;
 		}else{
 			return -2;
 		}
@@ -661,9 +608,9 @@ function MIXCorePlugin(){
 			return -3;
 		}
 		
-		if(xhr.readyState == 4 && xhr.status == 200) {
-			var obj = eval("(" + xhr.responseText + ")");
-			return obj.exec_result;
+		if(4 == xhr.readyState && 200 == xhr.status) {
+			var object = eval("(" + xhr.responseText + ")");
+			return object.exec_result;
 		}else{
 			return -2;
 		}
@@ -685,9 +632,9 @@ function MIXCorePlugin(){
 			return -3;
 		}
 		
-		if(xhr.readyState == 4 && xhr.status == 200) {
-			var obj = eval("(" + xhr.responseText + ")");
-			return obj.exec_result;
+		if(4 == xhr.readyState && 200 == xhr.status) {
+			var object = eval("(" + xhr.responseText + ")");
+			return object.exec_result;
 		}else{
 			return -2;
 		}
@@ -709,9 +656,9 @@ function MIXCorePlugin(){
 			return -3;
 		}
 		
-		if(xhr.readyState == 4 && xhr.status == 200) {
-			var obj = eval("(" + xhr.responseText + ")");
-			return obj.exec_result;
+		if(4 == xhr.readyState && 200 == xhr.status) {
+			var object = eval("(" + xhr.responseText + ")");
+			return object.exec_result;
 		}else{
 			return -2;
 		}
@@ -733,9 +680,9 @@ function MIXCorePlugin(){
 			return -3;
 		}
 		
-		if(xhr.readyState == 4 && xhr.status == 200) {
-			var obj = eval("(" + xhr.responseText + ")");
-			return obj.exec_result;
+		if(4 == xhr.readyState && 200 == xhr.status) {
+			var object = eval("(" + xhr.responseText + ")");
+			return object.exec_result;
 		}else{
 			return -2;
 		}
@@ -757,9 +704,9 @@ function MIXCorePlugin(){
 			return -3;
 		}
 		
-		if(xhr.readyState == 4 && xhr.status == 200) {
-			var obj = eval("(" + xhr.responseText + ")");
-			return obj.exec_result;
+		if(4 == xhr.readyState && 200 == xhr.status) {
+			var object = eval("(" + xhr.responseText + ")");
+			return object.exec_result;
 		}else{
 			return -2;
 		}
@@ -781,9 +728,9 @@ function MIXCorePlugin(){
 			return -3;
 		}
 		
-		if(xhr.readyState == 4 && xhr.status == 200) {
-			var obj = eval("(" + xhr.responseText + ")");
-			return obj.exec_result;
+		if(4 == xhr.readyState && 200 == xhr.status) {
+			var object = eval("(" + xhr.responseText + ")");
+			return object.exec_result;
 		}else{
 			return -2;
 		}
@@ -805,9 +752,9 @@ function MIXCorePlugin(){
 			return -3;
 		}
 		
-		if(xhr.readyState == 4 && xhr.status == 200) {
-			var obj = eval("(" + xhr.responseText + ")");
-			return obj.exec_result;
+		if(4 == xhr.readyState && 200 == xhr.status) {
+			var object = eval("(" + xhr.responseText + ")");
+			return object.exec_result;
 		}else{
 			return -2;
 		}
@@ -829,9 +776,9 @@ function MIXCorePlugin(){
 			return -3;
 		}
 		
-		if(xhr.readyState == 4 && xhr.status == 200) {
-			var obj = eval("(" + xhr.responseText + ")");
-			return obj.exec_result;
+		if(4 == xhr.readyState && 200 == xhr.status) {
+			var object = eval("(" + xhr.responseText + ")");
+			return object.exec_result;
 		}else{
 			return -2;
 		}
@@ -853,9 +800,9 @@ function MIXCorePlugin(){
 			return -3;
 		}
 		
-		if(xhr.readyState == 4 && xhr.status == 200) {
-			var obj = eval("(" + xhr.responseText + ")");
-			return obj.exec_result;
+		if(4 == xhr.readyState && 200 == xhr.status) {
+			var object = eval("(" + xhr.responseText + ")");
+			return object.exec_result;
 		}else{
 			return -2;
 		}
@@ -877,9 +824,9 @@ function MIXCorePlugin(){
 			return -3;
 		}
 		
-		if(xhr.readyState == 4 && xhr.status == 200) {
-			var obj = eval("(" + xhr.responseText + ")");
-			return obj.exec_result;
+		if(4 == xhr.readyState && 200 == xhr.status) {
+			var object = eval("(" + xhr.responseText + ")");
+			return object.exec_result;
 		}else{
 			return -2;
 		}
@@ -901,9 +848,9 @@ function MIXCorePlugin(){
 			return -3;
 		}
 		
-		if(xhr.readyState == 4 && xhr.status == 200) {
-			var obj = eval("(" + xhr.responseText + ")");
-			return obj.exec_result;
+		if(4 == xhr.readyState && 200 == xhr.status) {
+			var object = eval("(" + xhr.responseText + ")");
+			return object.exec_result;
 		}else{
 			return -2;
 		}
@@ -925,9 +872,9 @@ function MIXCorePlugin(){
 			return -3;
 		}
 		
-		if(xhr.readyState == 4 && xhr.status == 200) {
-			var obj = eval("(" + xhr.responseText + ")");
-			return obj.exec_result;
+		if(4 == xhr.readyState && 200 == xhr.status) {
+			var object = eval("(" + xhr.responseText + ")");
+			return object.exec_result;
 		}else{
 			return -2;
 		}
@@ -949,9 +896,9 @@ function MIXCorePlugin(){
 			return -3;
 		}
 		
-		if(xhr.readyState == 4 && xhr.status == 200) {
-			var obj = eval("(" + xhr.responseText + ")");
-			return obj.exec_result;
+		if(4 == xhr.readyState && 200 == xhr.status) {
+			var object = eval("(" + xhr.responseText + ")");
+			return object.exec_result;
 		}else{
 			return -2;
 		}
@@ -973,9 +920,9 @@ function MIXCorePlugin(){
 			return -3;
 		}
 		
-		if(xhr.readyState == 4 && xhr.status == 200) {
-			var obj = eval("(" + xhr.responseText + ")");
-			return obj.exec_result;
+		if(4 == xhr.readyState && 200 == xhr.status) {
+			var object = eval("(" + xhr.responseText + ")");
+			return object.exec_result;
 		}else{
 			return -2;
 		}
@@ -997,9 +944,9 @@ function MIXCorePlugin(){
 			return -3;
 		}
 		
-		if(xhr.readyState == 4 && xhr.status == 200) {
-			var obj = eval("(" + xhr.responseText + ")");
-			return obj.exec_result;
+		if(4 == xhr.readyState && 200 == xhr.status) {
+			var object = eval("(" + xhr.responseText + ")");
+			return object.exec_result;
 		}else{
 			return -2;
 		}
@@ -1021,9 +968,9 @@ function MIXCorePlugin(){
 			return -3;
 		}
 		
-		if(xhr.readyState == 4 && xhr.status == 200) {
-			var obj = eval("(" + xhr.responseText + ")");
-			return obj.exec_result;
+		if(4 == xhr.readyState && 200 == xhr.status) {
+			var object = eval("(" + xhr.responseText + ")");
+			return object.exec_result;
 		}else{
 			return -2;
 		}
@@ -1045,9 +992,9 @@ function MIXCorePlugin(){
 			return -3;
 		}
 		
-		if(xhr.readyState == 4 && xhr.status == 200) {
-			var obj = eval("(" + xhr.responseText + ")");
-			return obj.exec_result;
+		if(4 == xhr.readyState && 200 == xhr.status) {
+			var object = eval("(" + xhr.responseText + ")");
+			return object.exec_result;
 		}else{
 			return -2;
 		}
@@ -1069,9 +1016,9 @@ function MIXCorePlugin(){
 			return -3;
 		}
 		
-		if(xhr.readyState == 4 && xhr.status == 200) {
-			var obj = eval("(" + xhr.responseText + ")");
-			return obj.exec_result;
+		if(4 == xhr.readyState && 200 == xhr.status) {
+			var object = eval("(" + xhr.responseText + ")");
+			return object.exec_result;
 		}else{
 			return -2;
 		}
@@ -1093,9 +1040,9 @@ function MIXCorePlugin(){
 			return -3;
 		}
 		
-		if(xhr.readyState == 4 && xhr.status == 200) {
-			var obj = eval("(" + xhr.responseText + ")");
-			return obj.exec_result;
+		if(4 == xhr.readyState && 200 == xhr.status) {
+			var object = eval("(" + xhr.responseText + ")");
+			return object.exec_result;
 		}else{
 			return -2;
 		}
@@ -1117,9 +1064,9 @@ function MIXCorePlugin(){
 			return -3;
 		}
 		
-		if(xhr.readyState == 4 && xhr.status == 200) {
-			var obj = eval("(" + xhr.responseText + ")");
-			return obj.exec_result;
+		if(4 == xhr.readyState && 200 == xhr.status) {
+			var object = eval("(" + xhr.responseText + ")");
+			return object.exec_result;
 		}else{
 			return -2;
 		}
@@ -1141,9 +1088,9 @@ function MIXCorePlugin(){
 			return -3;
 		}
 		
-		if(xhr.readyState == 4 && xhr.status == 200) {
-			var obj = eval("(" + xhr.responseText + ")");
-			return obj.exec_result;
+		if(4 == xhr.readyState && 200 == xhr.status) {
+			var object = eval("(" + xhr.responseText + ")");
+			return object.exec_result;
 		}else{
 			return -2;
 		}
@@ -1165,9 +1112,9 @@ function MIXCorePlugin(){
 			return -3;
 		}
 		
-		if(xhr.readyState == 4 && xhr.status == 200) {
-			var obj = eval("(" + xhr.responseText + ")");
-			return obj.exec_result;
+		if(4 == xhr.readyState && 200 == xhr.status) {
+			var object = eval("(" + xhr.responseText + ")");
+			return object.exec_result;
 		}else{
 			return -2;
 		}
@@ -1189,9 +1136,9 @@ function MIXCorePlugin(){
 			return -3;
 		}
 		
-		if(xhr.readyState == 4 && xhr.status == 200) {
-			var obj = eval("(" + xhr.responseText + ")");
-			return obj.exec_result;
+		if(4 == xhr.readyState && 200 == xhr.status) {
+			var object = eval("(" + xhr.responseText + ")");
+			return object.exec_result;
 		}else{
 			return -2;
 		}
@@ -1213,9 +1160,9 @@ function MIXCorePlugin(){
 			return -3;
 		}
 		
-		if(xhr.readyState == 4 && xhr.status == 200) {
-			var obj = eval("(" + xhr.responseText + ")");
-			return obj.exec_result;
+		if(4 == xhr.readyState && 200 == xhr.status) {
+			var object = eval("(" + xhr.responseText + ")");
+			return object.exec_result;
 		}else{
 			return -2;
 		}
@@ -1237,9 +1184,9 @@ function MIXCorePlugin(){
 			return -3;
 		}
 		
-		if(xhr.readyState == 4 && xhr.status == 200) {
-			var obj = eval("(" + xhr.responseText + ")");
-			return obj.exec_result;
+		if(4 == xhr.readyState && 200 == xhr.status) {
+			var object = eval("(" + xhr.responseText + ")");
+			return object.exec_result;
 		}else{
 			return -2;
 		}
@@ -1261,9 +1208,9 @@ function MIXCorePlugin(){
 			return -3;
 		}
 		
-		if(xhr.readyState == 4 && xhr.status == 200) {
-			var obj = eval("(" + xhr.responseText + ")");
-			return obj.exec_result;
+		if(4 == xhr.readyState && 200 == xhr.status) {
+			var object = eval("(" + xhr.responseText + ")");
+			return object.exec_result;
 		}else{
 			return -2;
 		}
@@ -1286,9 +1233,9 @@ function MIXCorePlugin(){
 			return -3;
 		}
 		
-		if(xhr.readyState == 4 && xhr.status == 200) {
-			var obj = eval("(" + xhr.responseText + ")");
-			return obj.exec_result;
+		if(4 == xhr.readyState && 200 == xhr.status) {
+			var object = eval("(" + xhr.responseText + ")");
+			return object.exec_result;
 		}else{
 			return -2;
 		}
@@ -1310,9 +1257,9 @@ function MIXCorePlugin(){
 			return -3;
 		}
 		
-		if(xhr.readyState == 4 && xhr.status == 200) {
-			var obj = eval("(" + xhr.responseText + ")");
-			return obj.exec_result;
+		if(4 == xhr.readyState && 200 == xhr.status) {
+			var object = eval("(" + xhr.responseText + ")");
+			return object.exec_result;
 		}else{
 			return -2;
 		}
@@ -1334,9 +1281,9 @@ function MIXCorePlugin(){
 			return -3;
 		}
 		
-		if(xhr.readyState == 4 && xhr.status == 200) {
-			var obj = eval("(" + xhr.responseText + ")");
-			return obj.exec_result;
+		if(4 == xhr.readyState && 200 == xhr.status) {
+			var object = eval("(" + xhr.responseText + ")");
+			return object.exec_result;
 		}else{
 			return -2;
 		}
@@ -1358,9 +1305,9 @@ function MIXCorePlugin(){
 			return -3;
 		}
 		
-		if(xhr.readyState == 4 && xhr.status == 200) {
-			var obj = eval("(" + xhr.responseText + ")");
-			return obj.exec_result;
+		if(4 == xhr.readyState && 200 == xhr.status) {
+			var object = eval("(" + xhr.responseText + ")");
+			return object.exec_result;
 		}else{
 			return -2;
 		}
@@ -1382,9 +1329,9 @@ function MIXCorePlugin(){
 			return -3;
 		}
 		
-		if(xhr.readyState == 4 && xhr.status == 200) {
-			var obj = eval("(" + xhr.responseText + ")");
-			return obj.exec_result;
+		if(4 == xhr.readyState && 200 == xhr.status) {
+			var object = eval("(" + xhr.responseText + ")");
+			return object.exec_result;
 		}else{
 			return -2;
 		}
@@ -1406,9 +1353,9 @@ function MIXCorePlugin(){
 			return -3;
 		}
 
-		if(xhr.readyState == 4 && xhr.status == 200) {
-			var obj = eval("(" + xhr.responseText + ")");
-			return obj.exec_result;
+		if(4 == xhr.readyState && 200 == xhr.status) {
+			var object = eval("(" + xhr.responseText + ")");
+			return object.exec_result;
 
 		}else{
 			return -2;
@@ -1433,9 +1380,9 @@ function MIXCorePlugin(){
 			return -3;
 		}
 		
-		if(xhr.readyState == 4 && xhr.status == 200) {
-			var obj = eval("(" + xhr.responseText + ")");
-			return obj.exec_result;
+		if(4 == xhr.readyState && 200 == xhr.status) {
+			var object = eval("(" + xhr.responseText + ")");
+			return object.exec_result;
 		}else{
 			return -2;
 		}
