@@ -832,7 +832,7 @@ BOOL FBWTSofPluginAPI::SOF_VerifySignedMessage(std::string strMessageData, std::
 		this->SOF_GetDefaultContainer();
 	}
 
-	ulResult = ::SOF_VerifySignedMessage(ckpFunctions, (BYTE *)mix_b64_decode(strMessageData).c_str(), mix_b64_decode(strMessageData).size(), (BYTE*)strPlaintext.c_str(), strPlaintext.size());
+	ulResult = ::SOF_VerifySignedMessage(ckpFunctions, (BYTE *)mix_b64_decode(strMessageData).c_str(), mix_b64_decode(strMessageData).size(), (BYTE *)mix_b64_decode(strPlaintext).c_str(), mix_b64_decode(strPlaintext).size());
 	if (SOR_OK != ulResult)
 	{
 		goto end;

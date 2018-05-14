@@ -115,7 +115,44 @@ int main(int argc, char * argv[])
 	}
 
 
-	ulResult = SOF_SetSignMethod(ckpFunctions, SGD_SM3_RSA);
+	ulResult = SOF_SetSignMethod(ckpFunctions, SGD_SM3_SM2);
+	if (ulResult)
+	{
+		goto end;
+	}
+
+
+	signature_len = 1024 * 8;
+	ulResult = SOF_SignMessage(ckpFunctions, container_used, 0, plain, plain_len, signature, &signature_len);
+	if (ulResult)
+	{
+		goto end;
+	}
+
+	ulResult = SOF_VerifySignedMessage(ckpFunctions, signature, signature_len, NULL, 0);
+	if (ulResult)
+	{
+		goto end;
+	}
+
+	for (i = 1; i < 4; i++)
+	{
+		info_len = sizeof(info);
+		ulResult = SOF_GetInfoFromSignedMessage(ckpFunctions, i, signature, signature_len, info, &info_len);
+		if (ulResult)
+		{
+			goto end;
+		}
+	}
+
+	signature_len = 1024 * 8;
+	ulResult = SOF_SignMessage(ckpFunctions, container_used, 1, plain, plain_len, signature, &signature_len);
+	if (ulResult)
+	{
+		goto end;
+	}
+
+	ulResult = SOF_VerifySignedMessage(ckpFunctions, signature, signature_len, plain, plain_len);
 	if (ulResult)
 	{
 		goto end;
@@ -146,43 +183,6 @@ int main(int argc, char * argv[])
 	}
 	
 
-	signature_len = 1024 * 8;
-	ulResult = SOF_SignMessage(ckpFunctions, container_used, 0, plain, plain_len, signature, &signature_len);
-	if (ulResult)
-	{
-		goto end;
-	}
-
-	ulResult = SOF_VerifySignedMessage(ckpFunctions, signature, signature_len, NULL, 0);
-	if (ulResult)
-	{
-		goto end;
-	}
-
-	for (i = 1; i < 4; i++)
-	{
-		info_len = sizeof(info);
-		ulResult = SOF_GetInfoFromSignedMessage(ckpFunctions, i, signature, signature_len, info, &info_len);
-		if (ulResult)
-		{
-			goto end;
-		}
-	}
-	
-
-
-	signature_len = 1024 * 8;
-	ulResult = SOF_SignMessage(ckpFunctions, container_used, 1, plain, plain_len, signature, &signature_len);
-	if (ulResult)
-	{
-		goto end;
-	}
-
-	ulResult = SOF_VerifySignedMessage(ckpFunctions, signature, signature_len, plain, plain_len);
-	if (ulResult)
-	{
-		goto end;
-	}
 
 	//ulResult = SOF_SignData(ckpFunctions, container_used, plain, plain_len, signature, &signature_len);
 	//if (ulResult)
