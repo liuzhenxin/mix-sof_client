@@ -800,7 +800,7 @@ std::string FBWTSofPluginAPI::SOF_SignMessage(UINT16 u16Flag, std::string strCon
 
 	data_info_len = strDataIn.size()+4096;
 	data_info_value = new BYTE[data_info_len];
-	ulResult = ::SOF_SignMessage(ckpFunctions, (LPSTR)strContainerName.c_str(), u16Flag, (BYTE*)strDataIn.c_str(), strDataIn.size(), data_info_value, &data_info_len);
+	ulResult = ::SOF_SignMessage(ckpFunctions, (LPSTR)strContainerName.c_str(), u16Flag, (BYTE *)mix_b64_decode(strDataIn).c_str(), mix_b64_decode(strDataIn).size(), data_info_value, &data_info_len);
 	if (SOR_OK != ulResult)
 	{
 		goto end;
@@ -1157,7 +1157,7 @@ BOOL FBWTSofPluginAPI::SOF_Logout()
 {
 	ULONG ulResult = 0;
 
-	ulResult =  ::SOF_FinalizeLibraryNative(ckpFunctions);
+	ulResult =  ::SOF_Logout(ckpFunctions);
 	ckpFunctions = NULL;
 
 	return !ulResult;
@@ -1170,7 +1170,7 @@ BOOL FBWTSofPluginAPI::SOF_InitializeLibraryNative(std::string strLibrary)
 
 	if (NULL != ckpFunctions)
 	{
-		ulResult =  ::SOF_FinalizeLibraryNative(ckpFunctions);
+		ulResult =  ::SOF_FinalizeLibraryNative(&ckpFunctions);
 		ckpFunctions = NULL;
 	}
 	
@@ -1193,7 +1193,7 @@ BOOL FBWTSofPluginAPI::SOF_FinalizeLibraryNative()
 {
 	ULONG ulResult = 0;
 
-	ulResult =  ::SOF_FinalizeLibraryNative(ckpFunctions);
+	ulResult =  ::SOF_FinalizeLibraryNative(&ckpFunctions);
 	ckpFunctions = NULL;
 
 	return !ulResult;

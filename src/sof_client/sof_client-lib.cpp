@@ -5352,29 +5352,31 @@ end:
 	}
 
 
-	ULONG CALL_CONVENTION SOF_FinalizeLibraryNative(CK_SKF_FUNCTION_LIST_PTR p_ckpFunctions) {
+	ULONG CALL_CONVENTION SOF_FinalizeLibraryNative(CK_SKF_FUNCTION_LIST_PTR *pp_ckpFunctions) {
 		ULONG ulResult = SOR_OK;
 
 		FILE_LOG_FMT(file_log_name, "\n%s %d %s", __FUNCTION__, __LINE__, "entering");
-		if (p_ckpFunctions) {
+		if (*pp_ckpFunctions) {
 			// add code here
 
 			if (global_data.hAppHandle)
 			{
-				p_ckpFunctions->SKF_CloseApplication(global_data.hAppHandle);
+				(*pp_ckpFunctions)->SKF_CloseApplication(global_data.hAppHandle);
 				global_data.hAppHandle = 0;
 			}
 
 			if (global_data.hDevHandle)
 			{
-				p_ckpFunctions->SKF_DisConnectDev(global_data.hDevHandle);
+				(*pp_ckpFunctions)->SKF_DisConnectDev(global_data.hDevHandle);
 				global_data.hDevHandle = 0;
 			}
 
-			MYFreeLibrary(p_ckpFunctions->hHandle);
-			p_ckpFunctions->hHandle = NULL;
+			MYFreeLibrary((*pp_ckpFunctions)->hHandle);
+			(*pp_ckpFunctions)->hHandle = NULL;
 
-			delete (p_ckpFunctions);
+			delete (*pp_ckpFunctions);
+
+			*pp_ckpFunctions = NULL;
 		}
 		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting\n");
 		return ulResult;
@@ -5607,6 +5609,30 @@ end:
 		return ulResult;
 	}
 
+	ULONG CALL_CONVENTION SOF_Logout(void *p_ckpFunctions)
+	{
+		CK_SKF_FUNCTION_LIST_PTR ckpFunctions = (CK_SKF_FUNCTION_LIST_PTR)p_ckpFunctions;
+		HANDLE hContainer = NULL;
+
+		ULONG ulResult = 0;
+		ULONG ulContainerType = 0;
+
+		FILE_LOG_FMT(file_log_name, "\n%s %d %s", __FUNCTION__, __LINE__, "entering");
+
+		ulResult = ckpFunctions->SKF_ClearSecureState(global_data.hAppHandle);
+		if (ulResult)
+		{
+			goto end;
+		}
+	end:
+
+		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting\n");
+
+		ulResult = ErrorCodeConvert(ulResult);
+
+		return ulResult;
+	}
+
 #if 1
 
 	ULONG CALL_CONVENTION SOF_PubKeyEncrypt(void * p_ckpFunctions, BYTE *pbCert, ULONG ulCertLen, BYTE *pbDataIn, ULONG ulDataInLen, BYTE *pbDataOut, ULONG *pulDataOutLen)
@@ -5793,6 +5819,11 @@ end:
 	}
 
 #endif
+
+
+
+	
+
 
 	
 

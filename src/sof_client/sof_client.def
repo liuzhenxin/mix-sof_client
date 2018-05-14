@@ -53,6 +53,7 @@ EXPORTS
     SOF_InitializeLibraryNative  
 	SOF_PriKeyDecrypt
 	SOF_PubKeyEncrypt
+	SOF_Logout
 
 	MYLoadLibrary
     MYFreeLibrary

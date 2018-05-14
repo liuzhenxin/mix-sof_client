@@ -221,7 +221,7 @@ CK_SOF_CLIENT_FUNCTION_INFO(SOF_GetLastError)
 CK_SOF_CLIENT_FUNCTION_INFO(SOF_FinalizeLibraryNative)
 #ifdef CK_NEED_ARG_LIST
 (
-	CK_SKF_FUNCTION_LIST *p_ckpFunctions
+	CK_SKF_FUNCTION_LIST **p_ckpFunctions
 	);
 #endif
 
@@ -256,4 +256,11 @@ CK_SOF_CLIENT_FUNCTION_INFO(SOF_PubKeyEncrypt)
 	ULONG ulDataInLen,
 	BYTE *pbDataOut,
 	ULONG *pulDataOutLen);
+#endif 
+
+CK_SOF_CLIENT_FUNCTION_INFO(SOF_Logout)
+#ifdef CK_NEED_ARG_LIST
+(
+	void * p_ckpFunctions
+);
 #endif 

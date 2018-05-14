@@ -48,7 +48,7 @@ public:
     ///         the plugin is released.
     ///////////////////////////////////////////////////////////////////////////////
     virtual ~FBWTSofPluginAPI() {
-		::SOF_FinalizeLibraryNative(ckpFunctions);
+		::SOF_FinalizeLibraryNative(&ckpFunctions);
 	};
 
     // Read/Write property ${PROPERTY.ident}
