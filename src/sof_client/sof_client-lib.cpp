@@ -5395,6 +5395,16 @@ end:
 		int mult_string_count = 10;
 
 		FILE_LOG_FMT(file_log_name, "\n%s %d %s", __FUNCTION__, __LINE__, "entering");
+
+#if defined(SKF_SUPPORT_WT)
+		if (0 != memcmp(pSKFLibraryPath, "WTSKFInterface.dll", strlen("WTSKFInterface.dll")))
+		{
+			ulResult = SOR_LOADPROVIDERERR;
+			goto end;
+		}
+#else
+
+#endif
 		
 		hHandle = MYLoadLibrary(pSKFLibraryPath);
 		if (NULL == hHandle) {
