@@ -11,11 +11,8 @@
 		var slectType = document.getElementById("SKFInterface").value;
 		var result = 0;
 		
-		if(slectType == "WTSKFInterface.dll")
-		{
-			result = mixCore.SOF_InitializeLibraryNative("WTSKFInterface.dll");
-		}	
-		
+		result = mixCore.SOF_InitializeLibraryNative(slectType);
+	
 		if(mixCore.TRUE == result)
 		{
 			alert("加载控件成功!");
