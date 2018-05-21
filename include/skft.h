@@ -148,8 +148,8 @@ typedef struct Struct_DEVINFO{
     ULONG		DevAuthAlgId;				//设备认证使用的分组密码算法标识
     ULONG		TotalSpace;					//设备总空间大小
     ULONG		FreeSpace;					//用户可用空间大小
-    //ULONG		MaxECCBufferSize;			// 能够处理的 ECC 加密数据大小
-    //ULONG		MaxBufferSize;				//能够处理的分组运算和杂凑运算的数据大小
+    ULONG		MaxECCBufferSize;			// 能够处理的 ECC 加密数据大小
+    ULONG		MaxBufferSize;				//能够处理的分组运算和杂凑运算的数据大小
     BYTE  		Reserved[64];				//保留扩展
 }DEVINFO,*PDEVINFO;
 

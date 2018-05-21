@@ -5,8 +5,8 @@ include_directories(../../include/xmlsec_inc/)
 include_directories(../../include/xmlsec_inc/)
 include_directories(../../include/xmlsec_inc/)
 
-#add_definitions(-DUNICODE -D_UNICODE -DNOCRYPT -DMIX_BORINGSSL -DXMLSEC_CRYPTO_DYNAMIC_LOADING)
-add_definitions(-DUNICODE -D_UNICODE -DNOCRYPT -DMIX_BORINGSSL -DXMLSEC_CRYPTO_DYNAMIC_LOADING -DSKF_SUPPORT_WT)
+add_definitions(-DUNICODE -D_UNICODE -DNOCRYPT -DMIX_BORINGSSL -DXMLSEC_CRYPTO_DYNAMIC_LOADING)
+#add_definitions(-DUNICODE -D_UNICODE -DNOCRYPT -DMIX_BORINGSSL -DXMLSEC_CRYPTO_DYNAMIC_LOADING -DSKF_SUPPORT_WT)
 
 
 
