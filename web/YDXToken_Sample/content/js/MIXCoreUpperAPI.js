@@ -78,7 +78,7 @@
 	
 			alert("验证用户密码失败,错误码:" + mixCore.SOF_GetLastError());
 			
-			var relabel_retryCount = mixCore.SOF_GetPinRelabel_retryCount(document.getElementById("select_container").value);	
+			var relabel_retryCount = mixCore.SOF_GetPinRetryCount(document.getElementById("select_container").value);	
 			
 			document.getElementById("label_retryCount").innerText = "剩余次数：" + relabel_retryCount;
 			
