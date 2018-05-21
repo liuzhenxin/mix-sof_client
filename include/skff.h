@@ -907,3 +907,53 @@ CK_SKF_FUNCTION_INFO(SKF_RSAPriKeyOperation)
 	BOOL bSignFlag
 );
 #endif
+
+
+// add from ÁúÂö
+
+CK_SKF_FUNCTION_INFO(SKF_RSAPrivateOperation)
+#ifdef CK_NEED_ARG_LIST
+(
+	HCONTAINER hContainer,
+	BYTE *pbIn,
+	ULONG ulInLen,
+	BYTE *pbOut,
+	ULONG *pulOutLen,
+	ULONG bSignFlag
+);
+#endif
+
+CK_SKF_FUNCTION_INFO(SKF_RSAPrvKeyDecrypt)
+#ifdef CK_NEED_ARG_LIST
+(
+	HCONTAINER hContainer,
+	BYTE *pbIn,
+	ULONG ulInLen,
+	BYTE *pbOut,
+	ULONG *pulOutLen,
+	ULONG bSignFlag
+);
+#endif
+
+CK_SKF_FUNCTION_INFO(SKF_RSADecrypt)
+#ifdef CK_NEED_ARG_LIST
+(
+	HCONTAINER hContainer,
+	BYTE *pbIn,
+	ULONG ulInLen,
+	BYTE *pbOut,
+	ULONG *pulOutLen,
+	ULONG bSignFlag
+);
+#endif
+
+
+CK_SKF_FUNCTION_INFO(SKF_RunXXX)
+#ifdef CK_NEED_ARG_LIST
+(
+	...
+);
+#endif
+
+
+

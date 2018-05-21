@@ -11,8 +11,9 @@
 
 #include "modp_b64.h"
 
-#define DEFAULT_CON_RSA "11-rsa"
-#define DEFAULT_CON_SM2 "RT_SM_CON"
+#define DEFAULT_CON_RSA "d249e49c-340e-446a-8adb-4e3d1ac1c129"
+//#define DEFAULT_CON_SM2 "RT_SM_CON"
+#define DEFAULT_CON_SM2  "d249e49c-340e-446a-8adb-4e3d1ac1c129"
 
 int main(int argc, char * argv[])
 {
@@ -21,7 +22,7 @@ int main(int argc, char * argv[])
 
 	ULONG ulUserListLen = 1024;
 
-	unsigned char plain[32] = { 0 };
+	unsigned char plain[4096] = { 0 };
 	unsigned char * signature = new unsigned char[1024 * 8];
 	unsigned char * sign_cert = new unsigned char[1024 * 8];
 	unsigned char * crypt_cert = new unsigned char[1024 * 8];
@@ -39,7 +40,7 @@ int main(int argc, char * argv[])
 	unsigned char info[2048] = { 0 };
 	ULONG info_len  = sizeof(info);
 	
-	char * container_used = DEFAULT_CON_SM2;
+	char * container_used = DEFAULT_CON_RSA;
 
 	CK_SKF_FUNCTION_LIST *ckpFunctions = NULL;
 
@@ -70,7 +71,7 @@ int main(int argc, char * argv[])
 		"</Envelope>\n";
 
 
-	ulResult = SOF_InitializeLibraryNative("WTSKFInterface.dll", &ckpFunctions);
+	ulResult = SOF_InitializeLibraryNative("mtoken_gm3000.dll", &ckpFunctions);
 	if (ulResult)
 	{
 		goto end;
@@ -101,27 +102,27 @@ int main(int argc, char * argv[])
 	}
 
 
-	ulResult = SOF_PubKeyEncrypt(ckpFunctions, crypt_cert, crypt_cert_len, (BYTE*)"D:/test.txt", 5, crypt_data, & crypt_data_len);
+	ulResult = SOF_PubKeyEncrypt(ckpFunctions, crypt_cert, crypt_cert_len, (BYTE*)sign_cert, 256, crypt_data, & crypt_data_len);
 	if (ulResult)
 	{
 		goto end;
 	}
 
 
-	ulResult = SOF_PriKeyDecrypt(ckpFunctions, container_used, crypt_data, crypt_data_len, plain_data, & plain_len);
+	//ulResult = SOF_PriKeyDecrypt(ckpFunctions, container_used, crypt_data, crypt_data_len, plain_data, & plain_len);
 	if (ulResult)
 	{
 		goto end;
 	}
 
 
-	ulResult = SOF_SetSignMethod(ckpFunctions, SGD_SM3_SM2);
+	ulResult = SOF_SetSignMethod(ckpFunctions, SGD_SHA1_RSA);
 	if (ulResult)
 	{
 		goto end;
 	}
 
-
+	plain_len = 4;
 	signature_len = 1024 * 8;
 	ulResult = SOF_SignMessage(ckpFunctions, container_used, 0, plain, plain_len, signature, &signature_len);
 	if (ulResult)
@@ -144,7 +145,7 @@ int main(int argc, char * argv[])
 			goto end;
 		}
 	}
-
+	plain_len = 4;
 	signature_len = 1024 * 8;
 	ulResult = SOF_SignMessage(ckpFunctions, container_used, 1, plain, plain_len, signature, &signature_len);
 	if (ulResult)
@@ -157,7 +158,7 @@ int main(int argc, char * argv[])
 	{
 		goto end;
 	}
-
+	signature_len = 1024 * 8;
 	ulResult = SOF_SignDataXML(ckpFunctions, container_used, (BYTE*)xmlData, strlen(xmlData), signature, &signature_len);
 	if (ulResult)
 	{
@@ -198,18 +199,18 @@ int main(int argc, char * argv[])
 
 	
 
-	//signature_len = 1024 * 8;
-	//ulResult = SOF_SignFile(ckpFunctions, container_used, "D:/test.txt", signature, &signature_len);
-	//if (ulResult)
-	//{
-	//	goto end;
-	//}
+	signature_len = 1024 * 8;
+	ulResult = SOF_SignFile(ckpFunctions, container_used, "D:/test.txt", signature, &signature_len);
+	if (ulResult)
+	{
+		goto end;
+	}
 
-	//ulResult = SOF_VerifySignedFile(ckpFunctions, sign_cert, sign_cert_len, "D:/test.txt", signature, signature_len);
-	//if (ulResult)
-	//{
-	//	goto end;
-	//}
+	ulResult = SOF_VerifySignedFile(ckpFunctions, sign_cert, sign_cert_len, "D:/test.txt", signature, signature_len);
+	if (ulResult)
+	{
+		goto end;
+	}
 
 
 	ulResult = SOF_SetEncryptMethod(ckpFunctions, SGD_SM1_ECB);

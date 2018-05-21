@@ -2073,7 +2073,7 @@ end:
 			memcpy(rsaPublicKeyBlob.Modulus + 256 - ulModulusLen, pbModulus, ulModulusLen);
 
 			ulResult = ckpFunctions->SKF_RSAExportSessionKey(hContainer, global_data.encrypt_method, &rsaPublicKeyBlob, wrapper_key_value, &wrapper_key_len,  &hKey);
-			if (ulResult)
+			if (ulResult && SAR_BUFFER_TOO_SMALL != ulResult)
 			{
 				goto end;
 			}
@@ -5572,6 +5572,16 @@ end:
 		ckpFunctions->SKF_RSAPriKeyOperation = (CK_SKF_RSAPriKeyOperation)MYGetProcAddress(hHandle,
 			"SKF_RSAPriKeyOperation");
 
+		ckpFunctions->SKF_RSAPrivateOperation = (CK_SKF_RSAPrivateOperation)MYGetProcAddress(hHandle,
+			"SKF_RSAPrivateOperation");
+
+		ckpFunctions->SKF_RSAPrvKeyDecrypt = (CK_SKF_RSAPrvKeyDecrypt)MYGetProcAddress(hHandle,
+			"SKF_RSAPrvKeyDecrypt");
+
+		ckpFunctions->SKF_RSADecrypt = (CK_SKF_RSADecrypt)MYGetProcAddress(hHandle,
+			"SKF_RSADecrypt");
+
+
 		*pp_ckpFunctions = ckpFunctions;
 
 		ulResult = ckpFunctions->SKF_EnumDev(TRUE, buffer_devs, &buffer_devs_len);
@@ -5766,6 +5776,11 @@ end:
 		return ulResult;
 	}
 
+	typedef ULONG (*C_SKF_RunXXX)
+	(
+		...
+	);
+
 	ULONG CALL_CONVENTION SOF_PriKeyDecrypt(void * p_ckpFunctions, LPSTR pContainerName, BYTE *pbDataIn, ULONG ulDataInLen, BYTE *pbDataOut, ULONG *pulDataOutLen)
 	{
 		CK_SKF_FUNCTION_LIST_PTR ckpFunctions = (CK_SKF_FUNCTION_LIST_PTR)p_ckpFunctions;
@@ -5794,7 +5809,18 @@ end:
 
 		if (ulContainerType == 1)
 		{
-			ulResult = ckpFunctions->SKF_RSAPriKeyOperation(hContainer, pbDataIn, ulDataInLen, pbDataOut, pulDataOutLen, FALSE);
+			if (NULL != ckpFunctions->SKF_RSAPriKeyOperation)
+			{
+				ulResult = ckpFunctions->SKF_RSAPriKeyOperation(hContainer, pbDataIn, ulDataInLen, pbDataOut, pulDataOutLen, FALSE);
+			}
+			else
+			{
+
+				ulResult = ckpFunctions->SKF_RSAPrvKeyDecrypt(hContainer, pbDataIn, ulDataInLen, pbDataOut, pulDataOutLen, FALSE);
+
+			}
+				
+			
 
 		}
 		else if (ulContainerType == 2)
