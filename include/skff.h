@@ -886,6 +886,8 @@ CK_SKF_FUNCTION_INFO(SKF_CloseHandle)
 );
 #endif
 
+// standard function end . those function are not standard behind
+
 CK_SKF_FUNCTION_INFO(SKF_ECCDecrypt)
 #ifdef CK_NEED_ARG_LIST
 (
@@ -910,6 +912,17 @@ CK_SKF_FUNCTION_INFO(SKF_RSAPriKeyOperation)
 
 
 // add from ÁúÂö
+
+
+CK_SKF_FUNCTION_INFO(SKF_ECCPrvKeyDecrypt)
+#ifdef CK_NEED_ARG_LIST
+(
+	HCONTAINER hContainer,
+	BYTE *pbCiphertext,
+	ULONG ulCiphertextLen,
+	BYTE *pbPlaintext,
+	ULONG *pulPlaintextLen);
+#endif
 
 CK_SKF_FUNCTION_INFO(SKF_RSAPrivateOperation)
 #ifdef CK_NEED_ARG_LIST
@@ -942,8 +955,7 @@ CK_SKF_FUNCTION_INFO(SKF_RSADecrypt)
 	BYTE *pbIn,
 	ULONG ulInLen,
 	BYTE *pbOut,
-	ULONG *pulOutLen,
-	ULONG bSignFlag
+	ULONG *pulOutLen
 );
 #endif
 
