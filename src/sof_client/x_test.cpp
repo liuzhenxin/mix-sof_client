@@ -109,7 +109,7 @@ int main(int argc, char * argv[])
 	}
 
 
-	//ulResult = SOF_PriKeyDecrypt(ckpFunctions, container_used, crypt_data, crypt_data_len, plain_data, & plain_len);
+	ulResult = SOF_PriKeyDecrypt(ckpFunctions, container_used, crypt_data, crypt_data_len, plain_data, & plain_len);
 	if (ulResult)
 	{
 		goto end;

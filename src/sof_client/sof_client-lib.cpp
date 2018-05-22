@@ -5569,6 +5569,13 @@ end:
 		ckpFunctions->SKF_ECCDecrypt = (CK_SKF_ECCDecrypt)MYGetProcAddress(hHandle,
 			"SKF_ECCDecrypt");
 
+
+		ckpFunctions->SKF_ECCPrvKeyDecrypt = (CK_SKF_ECCPrvKeyDecrypt)MYGetProcAddress(hHandle,
+			"SKF_ECCPrvKeyDecrypt");
+
+		
+
+
 		ckpFunctions->SKF_RSAPriKeyOperation = (CK_SKF_RSAPriKeyOperation)MYGetProcAddress(hHandle,
 			"SKF_RSAPriKeyOperation");
 
@@ -5815,9 +5822,7 @@ end:
 			}
 			else
 			{
-
-				ulResult = ckpFunctions->SKF_RSAPrvKeyDecrypt(hContainer, pbDataIn, ulDataInLen, pbDataOut, pulDataOutLen, FALSE);
-
+				ulResult = ckpFunctions->SKF_RSADecrypt(hContainer, pbDataIn, ulDataInLen, pbDataOut, pulDataOutLen);
 			}
 				
 			
