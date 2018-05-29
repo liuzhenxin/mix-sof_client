@@ -102,7 +102,7 @@ int main(int argc, char * argv[])
 	}
 
 
-	ulResult = SOF_PubKeyEncrypt(ckpFunctions, crypt_cert, crypt_cert_len, (BYTE*)sign_cert, 256, crypt_data, & crypt_data_len);
+	ulResult = SOF_PubKeyEncrypt(ckpFunctions, crypt_cert, crypt_cert_len, (BYTE*)sign_cert, 100, crypt_data, & crypt_data_len);
 	if (ulResult)
 	{
 		goto end;

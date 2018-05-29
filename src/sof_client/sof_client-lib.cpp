@@ -76,7 +76,7 @@ static const uint8_t kPKCS7EnvelopedDataSM2[] = { 0x2a , 0x81 , 0x1c , 0xcf , 0x
 static const uint8_t kDataSM3[] = { 0x2a , 0x81 , 0x1c , 0xcf , 0x55 , 0x01, 0x83, 0x11 };
 
 // 1.2.156.10197.1.301.1
-static const uint8_t kDataSM2Sign[] = { 0x2a , 0x81 , 0x1c , 0xcf , 0x55 , 0x01, 0x82, 0x2d, 0x01};
+static const uint8_t kDataSM2Sign[] = { 0x2a , 0x81 , 0x1c , 0xcf , 0x55 , 0x01, 0x82, 0x2d, 0x01 };
 
 // 2.16.840.1.101.3.4.2.1 
 static const uint8_t kDataSHA256[] = { 0x60, 0x86 , 0x48 , 0x01 , 0x65 , 0x03, 0x04, 0x02, 0x01 };
@@ -170,7 +170,7 @@ extern "C" {
 		}
 		else
 		{
-			switch(errCode)
+			switch (errCode)
 			{
 			case SAR_FAIL:
 			case SAR_UNKNOWNERR:
@@ -306,7 +306,7 @@ extern "C" {
 
 		FILE_LOG_FMT(file_log_name, "\n%s %d %s", __FUNCTION__, __LINE__, "entering");
 
-		ulResult = ckpFunctions->SKF_GetDevInfo(global_data.hDevHandle,&devinfo);
+		ulResult = ckpFunctions->SKF_GetDevInfo(global_data.hDevHandle, &devinfo);
 		FILE_LOG_FMT(file_log_name, "SKF_GetDevInfo ulResult: %d", ulResult);
 		if (ulResult)
 		{
@@ -374,7 +374,7 @@ extern "C" {
 		char data_info_value[1024] = { 0 };
 		ULONG buffer_containers_len = sizeof(buffer_containers);
 
-		unsigned char buffer_cert[1024 *4] = { 0 };
+		unsigned char buffer_cert[1024 * 4] = { 0 };
 		ULONG buffer_cert_len = sizeof(buffer_cert);
 
 		int data_info_len = sizeof(data_info_value);
@@ -391,7 +391,7 @@ extern "C" {
 			goto end;
 		}
 
-		for (ptr = buffer_containers; *ptr !=0 && (ptr < buffer_containers + buffer_containers_len); )
+		for (ptr = buffer_containers; *ptr != 0 && (ptr < buffer_containers + buffer_containers_len); )
 		{
 			ulResult = ckpFunctions->SKF_OpenContainer(global_data.hAppHandle, ptr, &hContainer);
 			if (ulResult)
@@ -402,7 +402,7 @@ extern "C" {
 
 			buffer_cert_len = sizeof(buffer_cert);
 
-			ulResult = ckpFunctions->SKF_ExportCertificate(hContainer,TRUE, buffer_cert, &buffer_cert_len);
+			ulResult = ckpFunctions->SKF_ExportCertificate(hContainer, TRUE, buffer_cert, &buffer_cert_len);
 			if (ulResult)
 			{
 				goto end;
@@ -422,7 +422,7 @@ extern "C" {
 
 			}
 
-			strUserList.append(strstr(data_info_value, "=") == NULL ? "" : strstr(data_info_value, "=")+1);
+			strUserList.append(strstr(data_info_value, "=") == NULL ? "" : strstr(data_info_value, "=") + 1);
 			strUserList.append("||");
 			strUserList.append(ptr);
 			ckpFunctions->SKF_CloseContainer(hContainer);
@@ -438,7 +438,7 @@ extern "C" {
 			*pulUserListLen = strUserList.size();
 			ulResult = SOR_OK;
 		}
-		else if (strUserList.size() >  *pulUserListLen)
+		else if (strUserList.size() > *pulUserListLen)
 		{
 			*pulUserListLen = strUserList.size();
 			ulResult = SOR_MEMORYERR;
@@ -483,14 +483,14 @@ extern "C" {
 
 		ulCertLen = *pulCertLen;
 		ulResult = ckpFunctions->SKF_ExportCertificate(hContainer, TRUE, pbCert, &ulCertLen);
-		if(ulResult == SAR_CERTNOTFOUNTERR)
+		if (ulResult == SAR_CERTNOTFOUNTERR)
 		{
 			ulCertLen = *pulCertLen;
 			ulResult = ckpFunctions->SKF_ExportCertificate(hContainer, FALSE, pbCert, &ulCertLen);
 		}
 		if (ulResult)
 		{
-			if(ulResult == SAR_BUFFER_TOO_SMALL)
+			if (ulResult == SAR_BUFFER_TOO_SMALL)
 				*pulCertLen = ulCertLen;
 			goto end;
 		}
@@ -547,15 +547,15 @@ extern "C" {
 
 		FILE_LOG_FMT(file_log_name, "\n%s %d %s", __FUNCTION__, __LINE__, "entering");
 
-//		*pulRetryCount = global_data.retry;
+		//		*pulRetryCount = global_data.retry;
 		ulResult = ckpFunctions->SKF_GetPINInfo(global_data.hAppHandle, USER_TYPE, &ulMaxRetryCount, &ulRemainRetryCount, &bDefaultPin);
 		if (ulResult)
 		{
 			goto end;
 		}
 		*pulRetryCount = ulRemainRetryCount;
-		
-end:
+
+	end:
 		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting\n");
 		ulResult = ErrorCodeConvert(ulResult);
 
@@ -636,8 +636,8 @@ end:
 		CertificateItemParse certParse;
 
 		certParse.setCertificate(pbCert, ulCertLen);
-		
-		if ( 0 != certParse.parse())
+
+		if (0 != certParse.parse())
 		{
 			ulResult = SOR_INDATAERR;
 			goto end;
@@ -676,8 +676,8 @@ end:
 		{
 			memcpy(data_info_value, certParse.m_strNotBefore.c_str(), certParse.m_strNotBefore.size());
 			memcpy(data_info_value + certParse.m_strNotBefore.size(), "~", 1);
-			memcpy(data_info_value + certParse.m_strNotBefore.size() +1, certParse.m_strNotAfter.c_str(), certParse.m_strNotAfter.size());
-			data_info_len = certParse.m_strNotBefore.size()+1+certParse.m_strNotAfter.size();
+			memcpy(data_info_value + certParse.m_strNotBefore.size() + 1, certParse.m_strNotAfter.c_str(), certParse.m_strNotAfter.size());
+			data_info_len = certParse.m_strNotBefore.size() + 1 + certParse.m_strNotAfter.size();
 		}
 		break;
 
@@ -699,7 +699,7 @@ end:
 			WT_ClearCert();
 		}
 		break;
-		
+
 		case  SGD_EXT_AUTHORITYKEYIDENTIFIER_INFO:
 		{
 			memcpy(data_info_value, certParse.m_strIssueKeyID.c_str(), certParse.m_strIssueKeyID.size());
@@ -761,7 +761,7 @@ end:
 			WT_ClearCert();
 		}
 		break;
-		
+
 		case  SGD_CERT_SUBJECT_O:
 		{
 			WT_SetMyCert(pbCert, ulCertLen);
@@ -808,10 +808,10 @@ end:
 		}
 		break;
 
-		
-			
 
-			
+
+
+
 
 
 
@@ -837,7 +837,7 @@ end:
 			*pulInfoLen = data_info_len;
 			ulResult = SOR_OK;
 		}
-		else if (data_info_len >  *pulInfoLen)
+		else if (data_info_len > *pulInfoLen)
 		{
 			*pulInfoLen = data_info_len;
 			ulResult = SOR_MEMORYERR;
@@ -866,41 +866,41 @@ end:
 		FILE_LOG_HEX(file_log_name, pbCert, ulCertLen);
 		FILE_LOG_FMT(file_log_name, "pOidString: %s", pOidString);
 
-		unsigned char buf[256] = {0};
-		char szTmp[5] = {0};
-		int len=0;
+		unsigned char buf[256] = { 0 };
+		char szTmp[5] = { 0 };
+		int len = 0;
 		int ext_count;
 		int k;
 		BIO *bio = NULL;
 		char *pszUserID = pOidString;//(char*)"2.16.840.1.113732.2";		
 
-		const unsigned char *p=NULL;
+		const unsigned char *p = NULL;
 		X509 *pX509 = NULL;
 
 		p = pbCert;
 		pX509 = d2i_X509(NULL, &p, ulCertLen);
-		if(NULL == pX509)
+		if (NULL == pX509)
 		{
 			ulResult = SOR_UNKNOWNERR;
 			goto end;
 		}
 
-		ext_count = X509_get_ext_count(pX509);	
+		ext_count = X509_get_ext_count(pX509);
 		FILE_LOG_FMT(file_log_name, "ext_count: %d", ext_count);
-		for (k=0; k<ext_count; k++ )
+		for (k = 0; k < ext_count; k++)
 		{
 			X509_EXTENSION* ex = X509_get_ext(pX509, k);
-			if( ex == NULL )
+			if (ex == NULL)
 				continue;
 			memset(buf, 0, sizeof(buf));
 			OBJ_obj2txt((char *)buf, sizeof(buf), ex->object, 0);
 
 			FILE_LOG_FMT(file_log_name, "ext name: %s", (char*)buf);
 
-			if(0 == memcmp(buf, pszUserID, strlen(pszUserID))) {
+			if (0 == memcmp(buf, pszUserID, strlen(pszUserID))) {
 				bio = BIO_new(BIO_s_mem());
-				if(!X509V3_EXT_print(bio, ex, 0, 0)) // read the text of this      extention
-					M_ASN1_OCTET_STRING_print(bio,ex->value);
+				if (!X509V3_EXT_print(bio, ex, 0, 0)) // read the text of this      extention
+					M_ASN1_OCTET_STRING_print(bio, ex->value);
 
 				memset(buf, 0, sizeof(buf));
 				len = BIO_read(bio, buf, sizeof(buf));// here buffer contain          the text, len the lenght of it.
@@ -908,7 +908,7 @@ end:
 				BIO_free(bio);
 
 				memset(pbInfo, 0x00, *pulInfoLen);
-				memcpy(pbInfo, buf+2, buf[1]);
+				memcpy(pbInfo, buf + 2, buf[1]);
 				*pulInfoLen = buf[1];
 
 				break;
@@ -920,7 +920,7 @@ end:
 			goto end;
 		}
 	end:
-		if(NULL != pX509)
+		if (NULL != pX509)
 			X509_free(pX509);
 
 		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting\n");
@@ -1029,7 +1029,7 @@ end:
 			data_info_len = strlen(data_info_value);
 		}
 		break;
-		
+
 		case SGD_DEVICE_MANAGER_INFO:// 设备管理者信息
 		{
 			sprintf(data_info_value, "%s", devinfo.Issuer);
@@ -1059,7 +1059,7 @@ end:
 			*pulInfoLen = data_info_len;
 			ulResult = SOR_OK;
 		}
-		else if (data_info_len >  *pulInfoLen)
+		else if (data_info_len > *pulInfoLen)
 		{
 			*pulInfoLen = data_info_len;
 			ulResult = SOR_MEMORYERR;
@@ -1103,7 +1103,7 @@ end:
 			goto end;
 		}
 
-		if (ECertificate_KEY_ALG_RSA==certParse.m_iKeyAlg || ECertificate_KEY_ALG_EC==certParse.m_iKeyAlg)
+		if (ECertificate_KEY_ALG_RSA == certParse.m_iKeyAlg || ECertificate_KEY_ALG_EC == certParse.m_iKeyAlg)
 		{
 			int res = SMB_CS_VerifyCert(SMB_CERT_VERIFY_FLAG_TIME | SMB_CERT_VERIFY_FLAG_CHAIN | SMB_CERT_VERIFY_FLAG_CRL, pbCert, ulCertLen);
 			*pulValidate = 0;
@@ -1124,8 +1124,8 @@ end:
 			default:
 				*pulValidate = -6;
 				break;
-			} 
-			
+			}
+
 		}
 		else
 		{
@@ -1276,7 +1276,7 @@ end:
 			*pulDataOutLen = data_info_len;
 			ulResult = SOR_OK;
 		}
-		else if (data_info_len >  *pulDataOutLen)
+		else if (data_info_len > *pulDataOutLen)
 		{
 			*pulDataOutLen = data_info_len;
 			ulResult = SOR_MEMORYERR;
@@ -1284,7 +1284,7 @@ end:
 		else
 		{
 			*pulDataOutLen = data_info_len;
-			memcpy(pbDataOut, data_info_value,data_info_len);
+			memcpy(pbDataOut, data_info_value, data_info_len);
 			ulResult = SOR_OK;
 		}
 
@@ -1448,7 +1448,7 @@ end:
 			*pulDataOutLen = hash_len;
 			ulResult = SOR_OK;
 		}
-		else if (hash_len >  *pulDataOutLen)
+		else if (hash_len > *pulDataOutLen)
 		{
 			*pulDataOutLen = hash_len;
 			ulResult = SOR_MEMORYERR;
@@ -1530,12 +1530,12 @@ end:
 			if (x509)
 			{
 				RSA *rsa = EVP_PKEY_get1_RSA(X509_get_pubkey(x509));
-				
+
 				if (rsa != NULL)
 				{
 					ulModulusLen = BN_bn2bin(rsa->n, pbModulus);
 				}
-				
+
 				rsaPublicKeyBlob.BitLen = ulModulusLen * 8;
 
 				memcpy(rsaPublicKeyBlob.PublicExponent, "\x00\x01\x00\x01", 4);
@@ -1581,14 +1581,14 @@ end:
 			unsigned char tmp_data[32 * 2 + 1] = { 0 };
 			unsigned int tmp_len = 65;
 
-			ECCSIGNATUREBLOB blob = {0};
-			
+			ECCSIGNATUREBLOB blob = { 0 };
+
 			eccPublicKeyBlob.BitLen = 256;
 
 			OpenSSL_CertGetPubkey(pbCert, ulCertLen, tmp_data, &tmp_len);
 
 			memcpy(eccPublicKeyBlob.XCoordinate + 32, tmp_data + 1, 32);
-			memcpy(eccPublicKeyBlob.YCoordinate + 32, tmp_data + 1 +32, 32);
+			memcpy(eccPublicKeyBlob.YCoordinate + 32, tmp_data + 1 + 32, 32);
 
 			FILE_LOG_HEX(file_log_name, eccPublicKeyBlob.XCoordinate + 32, 32);
 			FILE_LOG_HEX(file_log_name, eccPublicKeyBlob.YCoordinate + 32, 32);
@@ -1614,7 +1614,7 @@ end:
 			}
 
 			memcpy(blob.r + 32, tmp_data, 32);
-			memcpy(blob.s + 32, tmp_data+32, 32);
+			memcpy(blob.s + 32, tmp_data + 32, 32);
 			FILE_LOG_HEX(file_log_name, blob.r + 32, 32);
 			FILE_LOG_HEX(file_log_name, blob.s + 32, 32);
 
@@ -1774,7 +1774,7 @@ end:
 			*pulDataOutLen = hash_len;
 			ulResult = SOR_OK;
 		}
-		else if (hash_len >  *pulDataOutLen)
+		else if (hash_len > *pulDataOutLen)
 		{
 			*pulDataOutLen = hash_len;
 			ulResult = SOR_MEMORYERR;
@@ -1817,7 +1817,7 @@ end:
 
 		if (_fileIn)
 		{
-			
+
 		}
 		else
 		{
@@ -1877,7 +1877,7 @@ end:
 
 	ULONG CALL_CONVENTION SOF_VerifySignedFile(void * p_ckpFunctions, BYTE *pbCert, ULONG ulCertLen, LPSTR pFileIn, BYTE *pbDataOut, ULONG ulDataOutLen)
 	{
-		std::fstream _fileIn; 
+		std::fstream _fileIn;
 		ULONG ulResult = 0;
 		std::ios::pos_type ulFileInDataLen;
 		char * pbFileInData = NULL;
@@ -1900,7 +1900,7 @@ end:
 			goto end;
 		}
 
-		
+
 		// get length of file:
 		_fileIn.seekg(0, std::ios::end);
 		ulFileInDataLen = _fileIn.tellg();
@@ -1924,7 +1924,7 @@ end:
 			pos += block;
 		}
 
-		ulResult = SOF_VerifySignedData(p_ckpFunctions, pbCert, ulCertLen,(BYTE *)pbFileInData, (ULONG)ulFileInDataLen, pbDataOut, ulDataOutLen);
+		ulResult = SOF_VerifySignedData(p_ckpFunctions, pbCert, ulCertLen, (BYTE *)pbFileInData, (ULONG)ulFileInDataLen, pbDataOut, ulDataOutLen);
 
 		if (ulResult)
 		{
@@ -1969,7 +1969,7 @@ end:
 
 		int len = 0;
 
-		CBB out, outer_seq, oid, data_oid, sym_seq , sym_iv, ciphertext, wrapped_seq, seq, version_bytes, asym_oid, content_info, wrap_key, asym_alg, issue_and_sn, null_asn1, recipInfo, recipInfos, version_bytes1;
+		CBB out, outer_seq, oid, data_oid, sym_seq, sym_iv, ciphertext, wrapped_seq, seq, version_bytes, asym_oid, content_info, wrap_key, asym_alg, issue_and_sn, null_asn1, recipInfo, recipInfos, version_bytes1;
 
 		size_t result_len = 1024 * 1024 * 1024;
 
@@ -1991,7 +1991,7 @@ end:
 
 		CertificateItemParse certParse;
 
-		BLOCKCIPHERPARAM blockCipherParam = {0};
+		BLOCKCIPHERPARAM blockCipherParam = { 0 };
 
 		RSAPUBLICKEYBLOB rsaPublicKeyBlob = { 0 };
 		ECCPUBLICKEYBLOB eccPublicKeyBlob = { 0 };
@@ -2072,7 +2072,7 @@ end:
 
 			memcpy(rsaPublicKeyBlob.Modulus + 256 - ulModulusLen, pbModulus, ulModulusLen);
 
-			ulResult = ckpFunctions->SKF_RSAExportSessionKey(hContainer, global_data.encrypt_method, &rsaPublicKeyBlob, wrapper_key_value, &wrapper_key_len,  &hKey);
+			ulResult = ckpFunctions->SKF_RSAExportSessionKey(hContainer, global_data.encrypt_method, &rsaPublicKeyBlob, wrapper_key_value, &wrapper_key_len, &hKey);
 			if (ulResult && SAR_BUFFER_TOO_SMALL != ulResult)
 			{
 				goto end;
@@ -2112,34 +2112,34 @@ end:
 			memcpy(eccPublicKeyBlob.YCoordinate + 32, pk_data + 1 + 32, 32);
 
 			wrapper_key_value = new BYTE[32 + sizeof(ECCCIPHERBLOB)];
-			
+
 			memset(wrapper_key_value, 0x00, 32 + sizeof(ECCCIPHERBLOB));
 
 			ulResult = ckpFunctions->SKF_ECCExportSessionKey(
-					hContainer,
-					global_data.encrypt_method,
-					&eccPublicKeyBlob,
-					(PECCCIPHERBLOB)wrapper_key_value,
-					&hKey
-					);
+				hContainer,
+				global_data.encrypt_method,
+				&eccPublicKeyBlob,
+				(PECCCIPHERBLOB)wrapper_key_value,
+				&hKey
+			);
 
 			if (ulResult)
 			{
 				goto end;
 			}
 
-			wrapper_key_len = ((PECCCIPHERBLOB)wrapper_key_value)->CipherLen + sizeof(ECCCIPHERBLOB)-1;
+			wrapper_key_len = ((PECCCIPHERBLOB)wrapper_key_value)->CipherLen + sizeof(ECCCIPHERBLOB) - 1;
 
 
 			wrapper_key_len_fmt = wrapper_key_len + 1024;
 			wrapper_key_value_fmt = new BYTE[wrapper_key_len_fmt];
 
-			SM2EncryptAsn1Convert(((PECCCIPHERBLOB)wrapper_key_value)->XCoordinate + 32, 32, 
+			SM2EncryptAsn1Convert(((PECCCIPHERBLOB)wrapper_key_value)->XCoordinate + 32, 32,
 				((PECCCIPHERBLOB)wrapper_key_value)->YCoordinate + 32, 32,
 				((PECCCIPHERBLOB)wrapper_key_value)->HASH, 32,
-				((PECCCIPHERBLOB)wrapper_key_value)->Cipher, ((PECCCIPHERBLOB)wrapper_key_value)->CipherLen, 
+				((PECCCIPHERBLOB)wrapper_key_value)->Cipher, ((PECCCIPHERBLOB)wrapper_key_value)->CipherLen,
 				wrapper_key_value_fmt, (int *)&wrapper_key_len_fmt
-				);
+			);
 		}
 		else
 		{
@@ -2155,7 +2155,7 @@ end:
 		switch (global_data.encrypt_method)
 		{
 		case SGD_SM1_ECB:
-		{ 
+		{
 			blockCipherParam.IVLen = 0;
 			memset(blockCipherParam.IV, 0, 32);
 			blockCipherParam.FeedBitLen = 0;
@@ -2359,14 +2359,14 @@ end:
 			goto end;
 		}
 
-		if (!CBB_add_asn1(&content_info, &data_oid, CBS_ASN1_OBJECT) ||  
+		if (!CBB_add_asn1(&content_info, &data_oid, CBS_ASN1_OBJECT) ||
 			!CBB_add_bytes(&data_oid, kPKCS7Data, kPKCS7Len) ||
 			!CBB_add_asn1(&content_info, &sym_seq, CBS_ASN1_SEQUENCE)
 			) {
 			ulResult = SOR_UNKNOWNERR;
 			goto end;
 		}
-		
+
 
 		switch (global_data.encrypt_method)
 		{
@@ -2382,7 +2382,7 @@ end:
 				ulResult = SOR_UNKNOWNERR;
 				goto end;
 			}
-			
+
 
 			if (
 				!CBB_add_asn1(&sym_seq, &sym_iv, CBS_ASN1_OCTETSTRING))
@@ -2705,7 +2705,7 @@ end:
 			ulResult = SOR_UNKNOWNERR;
 			goto end;
 		}
-		
+
 
 		// end
 		if (!CBB_flush(&out))
@@ -2731,7 +2731,7 @@ end:
 			ulResult = SOR_OK;
 			goto end;
 		}
-		else if (require_len >  *pulDataOutLen)
+		else if (require_len > *pulDataOutLen)
 		{
 			*pulDataOutLen = require_len;
 			ulResult = SOR_MEMORYERR;
@@ -2770,7 +2770,7 @@ end:
 
 		if (cipher_value)
 		{
-			delete []cipher_value;
+			delete[]cipher_value;
 		}
 
 		if (hContainer)
@@ -2797,12 +2797,12 @@ end:
 		BLOCKCIPHERPARAM blockCipherParam = { 0 };
 		uint8_t *der_bytes = NULL;
 		size_t der_len;
-		CBS in, content_info, content, sym_seq, sym_iv, sym_alg, content_type, oid,  ciphertext, wrapped_seq, seq, wrap_key, recipInfo, recipInfos;
+		CBS in, content_info, content, sym_seq, sym_iv, sym_alg, content_type, oid, ciphertext, wrapped_seq, seq, wrap_key, recipInfo, recipInfos;
 		uint64_t version;
 
-		ECCCIPHERBLOB *cipherBlob = (ECCCIPHERBLOB*)malloc(sizeof (ECCCIPHERBLOB) + 1024);
+		ECCCIPHERBLOB *cipherBlob = (ECCCIPHERBLOB*)malloc(sizeof(ECCCIPHERBLOB) + 1024);
 		BYTE wrapper_key_value[97 + 32] = { 0 };
-		int	wrapper_key_len = 97 +32;
+		int	wrapper_key_len = 97 + 32;
 
 		ULONG ulSymAlg = 0;
 
@@ -2868,7 +2868,7 @@ end:
 			goto end;
 		}
 
-		
+
 		if (
 			!CBS_get_asn1(&recipInfo, NULL, CBS_ASN1_INTEGER) ||
 			!CBS_get_asn1(&recipInfo, NULL, CBS_ASN1_SEQUENCE) ||
@@ -2929,7 +2929,7 @@ end:
 		{
 			ulSymAlg = SGD_SSF33_OFB;
 		}
-		
+
 		else if (0 == memcmp(CBS_data(&sym_alg), kDataSMS4_ECB, sizeof(kDataSMS4_ECB)))
 		{
 			ulSymAlg = SGD_SMS4_ECB;
@@ -2971,17 +2971,17 @@ end:
 
 			cipherBlob->CipherLen = wrapper_key_len - 97;
 			memcpy(cipherBlob->HASH, wrapper_key_value + wrapper_key_len - 32, 32);
-			memcpy(cipherBlob->XCoordinate+32, wrapper_key_value  +1, 32);
-			memcpy(cipherBlob->YCoordinate+32, wrapper_key_value + 32+1, 32);
+			memcpy(cipherBlob->XCoordinate + 32, wrapper_key_value + 1, 32);
+			memcpy(cipherBlob->YCoordinate + 32, wrapper_key_value + 32 + 1, 32);
 			memcpy(cipherBlob->Cipher, wrapper_key_value + 64 + 1, wrapper_key_len - 97);
 
-			ulResult = ckpFunctions->SKF_ImportSessionKey(hContainer, ulSymAlg, (BYTE*)cipherBlob, sizeof(ECCCIPHERBLOB) -1 + cipherBlob->CipherLen, &hKey);
+			ulResult = ckpFunctions->SKF_ImportSessionKey(hContainer, ulSymAlg, (BYTE*)cipherBlob, sizeof(ECCCIPHERBLOB) - 1 + cipherBlob->CipherLen, &hKey);
 
 			if (ulResult)
 			{
 				goto end;
 			}
-			
+
 		}
 
 
@@ -3342,7 +3342,7 @@ end:
 	}
 
 
-	ULONG CALL_CONVENTION SOF_SignMessage(void * p_ckpFunctions, LPSTR pContainerName, UINT16 u16Flag, BYTE *pbDataIn,  ULONG ulDataInLen, BYTE *pbSignedMessage, ULONG *pulSignedMessageLen)
+	ULONG CALL_CONVENTION SOF_SignMessage(void * p_ckpFunctions, LPSTR pContainerName, UINT16 u16Flag, BYTE *pbDataIn, ULONG ulDataInLen, BYTE *pbSignedMessage, ULONG *pulSignedMessageLen)
 	{
 		const unsigned char *ptr = NULL;
 		ASN1_INTEGER *serial_number = NULL;
@@ -3379,7 +3379,7 @@ end:
 		ULONG hash_len = sizeof(hash_value);
 
 		const uint8_t *kHashData = 0;
-		size_t kHashLen =0;
+		size_t kHashLen = 0;
 
 		const uint8_t *kPKCS7SignedData = 0;
 		size_t kPKCS7SignedLen = 0;
@@ -3441,7 +3441,7 @@ end:
 				kHashData = kDataSM3;
 				kHashLen = sizeof(kDataSM3);
 
-				ulResult = ckpFunctions->SKF_DigestInit(global_data.hDevHandle,SGD_SM3, 0,0,0, &hHash);
+				ulResult = ckpFunctions->SKF_DigestInit(global_data.hDevHandle, SGD_SM3, 0, 0, 0, &hHash);
 
 			}
 			else if (global_data.sign_method == SGD_SHA1_RSA)
@@ -3473,7 +3473,7 @@ end:
 			{
 				goto end;
 			}
-			
+
 			ulResult = ckpFunctions->SKF_Digest(hHash, pbDataIn, ulDataInLen, hash_value, &hash_len);
 			if (ulResult)
 			{
@@ -3491,7 +3491,7 @@ end:
 		}
 		else if (ulContainerType == 2)
 		{
-			ECCPUBLICKEYBLOB pubkeyBlob = {0};
+			ECCPUBLICKEYBLOB pubkeyBlob = { 0 };
 			ULONG ulBlobLen = sizeof(pubkeyBlob);
 
 			kPKCS7SignedData = kPKCS7SignedDataSM2;
@@ -3512,8 +3512,8 @@ end:
 					goto end;
 				}
 				FILE_LOG_FMT(file_log_name, "%s", "PublicKey:");
-				FILE_LOG_HEX(file_log_name, pubkeyBlob.XCoordinate+32, 32);
-				FILE_LOG_HEX(file_log_name, pubkeyBlob.YCoordinate+32, 32);
+				FILE_LOG_HEX(file_log_name, pubkeyBlob.XCoordinate + 32, 32);
+				FILE_LOG_HEX(file_log_name, pubkeyBlob.YCoordinate + 32, 32);
 
 				ulResult = ckpFunctions->SKF_DigestInit(global_data.hDevHandle, SGD_SM3, &pubkeyBlob, (unsigned char *)"1234567812345678", 16, &hHash);
 				if (ulResult)
@@ -3539,8 +3539,8 @@ end:
 				goto end;
 			}
 			FILE_LOG_FMT(file_log_name, "%s", "SignData:");
-			FILE_LOG_HEX(file_log_name, blob.r+32, 32);
-			FILE_LOG_HEX(file_log_name, blob.s+32, 32);
+			FILE_LOG_HEX(file_log_name, blob.r + 32, 32);
+			FILE_LOG_HEX(file_log_name, blob.s + 32, 32);
 
 			ulResult = SM2SignAsn1Convert(blob.r + 32, 32, blob.s + 32, 32, (unsigned char *)data_info_value, &data_info_len);
 			if (ulResult)
@@ -3594,12 +3594,12 @@ end:
 
 		// See https://tools.ietf.org/html/rfc2315#section-9.1
 		if (!CBB_add_asn1(&seq, &certificates, CBS_ASN1_CONTEXT_SPECIFIC | CBS_ASN1_CONSTRUCTED | 0) ||     // 证书
-			!CBB_add_bytes(&certificates, (uint8_t *)pbCert, ulCertLen) 
-			
-		) {
+			!CBB_add_bytes(&certificates, (uint8_t *)pbCert, ulCertLen)
+
+			) {
 			ulResult = SOR_UNKNOWNERR;
 			goto end;
-//			return 0;
+			//			return 0;
 		}
 
 		// signerInfos
@@ -3607,7 +3607,7 @@ end:
 			!CBB_add_asn1(&signerInfos, &signerInfo, CBS_ASN1_SEQUENCE) ||
 			!CBB_add_asn1(&signerInfo, &version_bytes1, CBS_ASN1_INTEGER) ||
 			!CBB_add_u8(&version_bytes1, 1) ||
-			!CBB_add_asn1(&signerInfo, &issue_and_sn, CBS_ASN1_SEQUENCE) 
+			!CBB_add_asn1(&signerInfo, &issue_and_sn, CBS_ASN1_SEQUENCE)
 			)
 		{
 			ulResult = SOR_UNKNOWNERR;
@@ -3628,7 +3628,7 @@ end:
 		serial_number = X509_get_serialNumber(x509);
 		len = i2d_ASN1_INTEGER(serial_number, NULL);
 		if (len < 0 || !CBB_add_space(&issue_and_sn, &buf, len) ||
-			i2d_ASN1_INTEGER(serial_number, &buf) < 0 
+			i2d_ASN1_INTEGER(serial_number, &buf) < 0
 			)
 		{
 			ulResult = SOR_UNKNOWNERR;
@@ -3688,7 +3688,7 @@ end:
 			ulResult = SOR_OK;
 			goto end;
 		}
-		else if (require_len >  *pulSignedMessageLen)
+		else if (require_len > *pulSignedMessageLen)
 		{
 			*pulSignedMessageLen = require_len;
 			ulResult = SOR_MEMORYERR;
@@ -3728,7 +3728,7 @@ end:
 		return ulResult;
 	}
 
-	
+
 
 	ULONG CALL_CONVENTION SOF_VerifySignedMessage(void * p_ckpFunctions, BYTE *pbMessageData, ULONG ulMessageDataLen, BYTE *pbPlaintext, ULONG ulPlaintextLen)
 	{
@@ -3762,7 +3762,7 @@ end:
 
 		int hashAlg = 0;
 
-		BYTE *pbDataIn=NULL;
+		BYTE *pbDataIn = NULL;
 		ULONG ulDataInLen;
 
 		FILE_LOG_FMT(file_log_name, "\n%s %d %s", __FUNCTION__, __LINE__, "entering");
@@ -3856,8 +3856,8 @@ end:
 			goto end;
 		}
 		FILE_LOG_FMT(file_log_name, "%s", "222");
-		
-		if (!CBS_get_asn1(&signerInfos, &signerInfo, CBS_ASN1_SEQUENCE) || 
+
+		if (!CBS_get_asn1(&signerInfos, &signerInfo, CBS_ASN1_SEQUENCE) ||
 			!CBS_get_asn1(&signerInfo, NULL, CBS_ASN1_INTEGER) ||
 			!CBS_get_asn1(&signerInfo, NULL, CBS_ASN1_SEQUENCE) ||
 			!CBS_get_asn1(&signerInfo, NULL, CBS_ASN1_SEQUENCE) ||
@@ -3900,7 +3900,7 @@ end:
 		FILE_LOG_FMT(file_log_name, "%s", "555");
 
 
-		if (!CBS_get_asn1( &content, &content_type1, CBS_ASN1_OBJECT) 
+		if (!CBS_get_asn1(&content, &content_type1, CBS_ASN1_OBJECT)
 			)
 		{
 			ulResult = SOR_UNKNOWNERR;
@@ -3909,11 +3909,11 @@ end:
 		FILE_LOG_FMT(file_log_name, "%s", "666");
 
 		if (!CBS_get_asn1(&content, &wrapped_plain_text, CBS_ASN1_CONSTRUCTED | CBS_ASN1_CONTEXT_SPECIFIC) ||
-			!CBS_get_asn1(&wrapped_plain_text, &plain_text, CBS_ASN1_OCTETSTRING) || 
+			!CBS_get_asn1(&wrapped_plain_text, &plain_text, CBS_ASN1_OCTETSTRING) ||
 			CBS_len(&plain_text) < 0)
 		{
 			// 无明文
-			if(pbPlaintext==NULL || ulPlaintextLen==0)
+			if (pbPlaintext == NULL || ulPlaintextLen == 0)
 			{
 				ulResult = SOR_PARAMETERNOTSUPPORTEERR;
 				goto end;
@@ -3935,7 +3935,7 @@ end:
 			goto end;
 		}
 
-		
+
 
 		certParse.setCertificate(pbCert, ulCertLen);
 
@@ -3973,7 +3973,7 @@ end:
 			}
 
 			ulResult = ckpFunctions->SKF_DigestInit(global_data.hDevHandle, hashAlg, 0, 0, 0, &hHash);
-			
+
 			if (ulResult)
 			{
 				goto end;
@@ -4031,7 +4031,7 @@ end:
 			ulResult = SOR_NOTSUPPORTYETERR;
 			goto end;
 		}
-end:
+	end:
 
 		if (der_bytes) {
 			OPENSSL_free(der_bytes);
@@ -4235,7 +4235,7 @@ end:
 			data_info_value = (unsigned char *)CBS_data(&plain_text);
 			data_info_len = CBS_len(&plain_text);
 		}
-		else if(u16Type == 2) // cert
+		else if (u16Type == 2) // cert
 		{
 			data_info_value = pbCert;
 			data_info_len = ulCertLen;
@@ -4256,7 +4256,7 @@ end:
 			*pulInfoLen = data_info_len;
 			ulResult = SOR_OK;
 		}
-		else if (data_info_len >  *pulInfoLen)
+		else if (data_info_len > *pulInfoLen)
 		{
 			*pulInfoLen = data_info_len;
 			ulResult = SOR_MEMORYERR;
@@ -4287,7 +4287,7 @@ end:
 
 	int cb_digest_simple(void *args, unsigned char *in, int in_len, unsigned char *out, int *out_len)
 	{
-		FILE_WRITE("D:/digest_ori.o", "",in,in_len);
+		FILE_WRITE("D:/digest_ori.o", "", in, in_len);
 
 		return SOF_DigestData(global_data.p_ckpFunctions, global_data.p_contanier, in, in_len, out, (ULONG *)out_len);
 	}
@@ -4368,7 +4368,7 @@ end:
 			"hvcNAQEFBQADQQAOXBj0yICp1RmHXqnUlsppryLCW3pKBD1dkb4HWarO7RjA1yJJ\n" \
 			"fBjXssrERn05kpBcrRfzou4r3DCgQFPhjxga\n" \
 			"-----END CERTIFICATE-----";
-						
+
 		FILE_LOG_FMT(file_log_name, "\n%s %d %s", __FUNCTION__, __LINE__, "entering");
 		FILE_LOG_FMT(file_log_name, "ContainerName: %s", pContainerName);
 		FILE_LOG_FMT(file_log_name, "%s", "DataIn: ");
@@ -4397,10 +4397,10 @@ end:
 		global_data.p_ckpFunctions = p_ckpFunctions;
 		global_data.p_contanier = pContainerName;
 
-		
 
 
-		ulResult = SOF_ExportUserCert(p_ckpFunctions, pContainerName ,data_info_cert, &data_info_cert_len);
+
+		ulResult = SOF_ExportUserCert(p_ckpFunctions, pContainerName, data_info_cert, &data_info_cert_len);
 		if (ulResult)
 		{
 			goto end;
@@ -4604,7 +4604,7 @@ end:
 			*pulDataOutLen = xml_len;
 			ulResult = SOR_OK;
 		}
-		else if (xml_len >  *pulDataOutLen)
+		else if (xml_len > *pulDataOutLen)
 		{
 			*pulDataOutLen = xml_len;
 			ulResult = SOR_MEMORYERR;
@@ -4678,7 +4678,7 @@ end:
 		std::string str_cert;
 
 		ULONG sign_method = global_data.sign_method;
-		
+
 		const char * kRSAKeyTmp = "-----BEGIN PUBLIC KEY-----\n" \
 			"MFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBANPQbQ92nlbeg1Q5JNHSO1Yey46nZ7GJ\n" \
 			"ltLWw1ccSvp7pnvmfUm+M521CpFpfr4EAE3UVBMoU9j/hqq3dFAc2H0CAwEAAQ==\n" \
@@ -4695,7 +4695,7 @@ end:
 
 		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "entering");
 
-		for ( i = 1; i < 7; i++)
+		for (i = 1; i < 7; i++)
 		{
 			if (4 == i || 6 == i)
 			{
@@ -4836,7 +4836,7 @@ end:
 		}
 
 		/* load public key */
-		dsigCtx->signKey = xmlSecCryptoAppKeyLoadMemory( (unsigned char *)kRSAKeyTmp, strlen(kRSAKeyTmp), xmlSecKeyDataFormatPem, NULL, NULL, NULL);
+		dsigCtx->signKey = xmlSecCryptoAppKeyLoadMemory((unsigned char *)kRSAKeyTmp, strlen(kRSAKeyTmp), xmlSecKeyDataFormatPem, NULL, NULL, NULL);
 		if (dsigCtx->signKey == NULL) {
 			ulResult = SOR_UNKNOWNERR;
 			goto end;
@@ -5235,9 +5235,9 @@ end:
 			}
 			ptr = (char *)xmlNodeGetContent(node);
 		}
-			
 
-			break;
+
+		break;
 		case 3:
 		{
 			/* find start node */
@@ -5248,7 +5248,7 @@ end:
 			}
 			ptr = (char *)xmlNodeGetContent(node);
 		}
-			break;
+		break;
 		case 4:
 		{
 			/* find start node */
@@ -5260,7 +5260,7 @@ end:
 
 			ptr = (char *)xmlNodeGetContent(node);
 		}
-			break;
+		break;
 		case 5:
 		{
 			/* find start node */
@@ -5272,7 +5272,7 @@ end:
 
 			ptr = (char *)xmlGetProp(node, xmlSecAttrAlgorithm);
 		}
-			break;
+		break;
 		case 6:
 		{
 			/* find start node */
@@ -5284,18 +5284,18 @@ end:
 
 			ptr = (char *)xmlGetProp(node, xmlSecAttrAlgorithm);
 		}
-			break;
+		break;
 		default:
 			break;
 		}
 
-	
+
 		if (NULL == pbInfo)
 		{
 			*pulInfoLen = strlen(ptr);
 			ulResult = SOR_OK;
 		}
-		else if (strlen(ptr) >  *pulInfoLen)
+		else if (strlen(ptr) > *pulInfoLen)
 		{
 			*pulInfoLen = strlen(ptr);
 			ulResult = SOR_MEMORYERR;
@@ -5330,7 +5330,7 @@ end:
 		FILE_LOG_FMT(file_log_name, "\n%s %d %s", __FUNCTION__, __LINE__, "entering");
 
 		ulResult = ckpFunctions->SKF_GenRandom(global_data.hDevHandle, pbDataIn, ulDataInLen);
-		if(ulResult != SAR_OK)
+		if (ulResult != SAR_OK)
 			ulResult = SOR_GENRANDERR;
 
 		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting\n");
@@ -5405,165 +5405,167 @@ end:
 #else
 
 #endif
-		
+
 		hHandle = MYLoadLibrary(pSKFLibraryPath);
 		if (NULL == hHandle) {
 			ulResult = SOR_LOADPROVIDERERR;
 			goto end;
 		}
 
+		memset(ckpFunctions, 0, sizeof(CK_SKF_FUNCTION_LIST));
+
 		ckpFunctions->hHandle = hHandle;
 
 		// load
-		ckpFunctions->SKF_SetPackageName = (CK_SKF_SetPackageName) MYGetProcAddress(hHandle,
+		ckpFunctions->SKF_SetPackageName = (CK_SKF_SetPackageName)MYGetProcAddress(hHandle,
 			"SKF_SetPackageName");
-		ckpFunctions->SKF_WaitForDevEvent = (CK_SKF_WaitForDevEvent) MYGetProcAddress(hHandle,
+		ckpFunctions->SKF_WaitForDevEvent = (CK_SKF_WaitForDevEvent)MYGetProcAddress(hHandle,
 			"SKF_WaitForDevEvent");
-		ckpFunctions->SKF_CancelWaitForDevEvent = (CK_SKF_CancelWaitForDevEvent) MYGetProcAddress(
+		ckpFunctions->SKF_CancelWaitForDevEvent = (CK_SKF_CancelWaitForDevEvent)MYGetProcAddress(
 			hHandle, "SKF_CancelWaitForDevEvent");
-		ckpFunctions->SKF_EnumDev = (CK_SKF_EnumDev) MYGetProcAddress(hHandle, "SKF_EnumDev");
-		ckpFunctions->SKF_ConnectDev = (CK_SKF_ConnectDev) MYGetProcAddress(hHandle,
+		ckpFunctions->SKF_EnumDev = (CK_SKF_EnumDev)MYGetProcAddress(hHandle, "SKF_EnumDev");
+		ckpFunctions->SKF_ConnectDev = (CK_SKF_ConnectDev)MYGetProcAddress(hHandle,
 			"SKF_ConnectDev");
-		ckpFunctions->SKF_DisConnectDev = (CK_SKF_DisConnectDev) MYGetProcAddress(hHandle,
+		ckpFunctions->SKF_DisConnectDev = (CK_SKF_DisConnectDev)MYGetProcAddress(hHandle,
 			"SKF_DisConnectDev");
-		ckpFunctions->SKF_GetDevState = (CK_SKF_GetDevState) MYGetProcAddress(hHandle,
+		ckpFunctions->SKF_GetDevState = (CK_SKF_GetDevState)MYGetProcAddress(hHandle,
 			"SKF_GetDevState");
-		ckpFunctions->SKF_SetLabel = (CK_SKF_SetLabel) MYGetProcAddress(hHandle,
+		ckpFunctions->SKF_SetLabel = (CK_SKF_SetLabel)MYGetProcAddress(hHandle,
 			"SKF_SetLabel");
-		ckpFunctions->SKF_GetDevInfo = (CK_SKF_GetDevInfo) MYGetProcAddress(hHandle,
+		ckpFunctions->SKF_GetDevInfo = (CK_SKF_GetDevInfo)MYGetProcAddress(hHandle,
 			"SKF_GetDevInfo");
-		ckpFunctions->SKF_LockDev = (CK_SKF_LockDev) MYGetProcAddress(hHandle, "SKF_LockDev");
-		ckpFunctions->SKF_UnlockDev = (CK_SKF_UnlockDev) MYGetProcAddress(hHandle,
+		ckpFunctions->SKF_LockDev = (CK_SKF_LockDev)MYGetProcAddress(hHandle, "SKF_LockDev");
+		ckpFunctions->SKF_UnlockDev = (CK_SKF_UnlockDev)MYGetProcAddress(hHandle,
 			"SKF_UnlockDev");
-		ckpFunctions->SKF_Transmit = (CK_SKF_Transmit) MYGetProcAddress(hHandle,
+		ckpFunctions->SKF_Transmit = (CK_SKF_Transmit)MYGetProcAddress(hHandle,
 			"SKF_Transmit");
-		ckpFunctions->SKF_ChangeDevAuthKey = (CK_SKF_ChangeDevAuthKey) MYGetProcAddress(hHandle,
+		ckpFunctions->SKF_ChangeDevAuthKey = (CK_SKF_ChangeDevAuthKey)MYGetProcAddress(hHandle,
 			"SKF_ChangeDevAuthKey");
-		ckpFunctions->SKF_DevAuth = (CK_SKF_DevAuth) MYGetProcAddress(hHandle, "SKF_DevAuth");
-		ckpFunctions->SKF_ChangePIN = (CK_SKF_ChangePIN) MYGetProcAddress(hHandle,
+		ckpFunctions->SKF_DevAuth = (CK_SKF_DevAuth)MYGetProcAddress(hHandle, "SKF_DevAuth");
+		ckpFunctions->SKF_ChangePIN = (CK_SKF_ChangePIN)MYGetProcAddress(hHandle,
 			"SKF_ChangePIN");
-		ckpFunctions->SKF_GetPINInfo = (CK_SKF_GetPINInfo) MYGetProcAddress(hHandle,
+		ckpFunctions->SKF_GetPINInfo = (CK_SKF_GetPINInfo)MYGetProcAddress(hHandle,
 			"SKF_GetPINInfo");
-		ckpFunctions->SKF_VerifyPIN = (CK_SKF_VerifyPIN) MYGetProcAddress(hHandle,
+		ckpFunctions->SKF_VerifyPIN = (CK_SKF_VerifyPIN)MYGetProcAddress(hHandle,
 			"SKF_VerifyPIN");
-		ckpFunctions->SKF_UnblockPIN = (CK_SKF_UnblockPIN) MYGetProcAddress(hHandle,
+		ckpFunctions->SKF_UnblockPIN = (CK_SKF_UnblockPIN)MYGetProcAddress(hHandle,
 			"SKF_UnblockPIN");
-		ckpFunctions->SKF_ClearSecureState = (CK_SKF_ClearSecureState) MYGetProcAddress(hHandle,
+		ckpFunctions->SKF_ClearSecureState = (CK_SKF_ClearSecureState)MYGetProcAddress(hHandle,
 			"SKF_ClearSecureState");
-		ckpFunctions->SKF_CreateApplication = (CK_SKF_CreateApplication) MYGetProcAddress(
+		ckpFunctions->SKF_CreateApplication = (CK_SKF_CreateApplication)MYGetProcAddress(
 			hHandle, "SKF_CreateApplication");
-		ckpFunctions->SKF_EnumApplication = (CK_SKF_EnumApplication) MYGetProcAddress(hHandle,
+		ckpFunctions->SKF_EnumApplication = (CK_SKF_EnumApplication)MYGetProcAddress(hHandle,
 			"SKF_EnumApplication");
-		ckpFunctions->SKF_DeleteApplication = (CK_SKF_DeleteApplication) MYGetProcAddress(
+		ckpFunctions->SKF_DeleteApplication = (CK_SKF_DeleteApplication)MYGetProcAddress(
 			hHandle, "SKF_DeleteApplication");
-		ckpFunctions->SKF_OpenApplication = (CK_SKF_OpenApplication) MYGetProcAddress(hHandle,
+		ckpFunctions->SKF_OpenApplication = (CK_SKF_OpenApplication)MYGetProcAddress(hHandle,
 			"SKF_OpenApplication");
-		ckpFunctions->SKF_CloseApplication = (CK_SKF_CloseApplication) MYGetProcAddress(hHandle,
+		ckpFunctions->SKF_CloseApplication = (CK_SKF_CloseApplication)MYGetProcAddress(hHandle,
 			"SKF_CloseApplication");
-		ckpFunctions->SKF_CreateFile = (CK_SKF_CreateFile) MYGetProcAddress(hHandle,
+		ckpFunctions->SKF_CreateFile = (CK_SKF_CreateFile)MYGetProcAddress(hHandle,
 			"SKF_CreateFile");
-		ckpFunctions->SKF_DeleteFile = (CK_SKF_DeleteFile) MYGetProcAddress(hHandle,
+		ckpFunctions->SKF_DeleteFile = (CK_SKF_DeleteFile)MYGetProcAddress(hHandle,
 			"SKF_DeleteFile");
-		ckpFunctions->SKF_EnumFiles = (CK_SKF_EnumFiles) MYGetProcAddress(hHandle,
+		ckpFunctions->SKF_EnumFiles = (CK_SKF_EnumFiles)MYGetProcAddress(hHandle,
 			"SKF_EnumFiles");
-		ckpFunctions->SKF_GetFileInfo = (CK_SKF_GetFileInfo) MYGetProcAddress(hHandle,
+		ckpFunctions->SKF_GetFileInfo = (CK_SKF_GetFileInfo)MYGetProcAddress(hHandle,
 			"SKF_GetFileInfo");
-		ckpFunctions->SKF_ReadFile = (CK_SKF_ReadFile) MYGetProcAddress(hHandle,
+		ckpFunctions->SKF_ReadFile = (CK_SKF_ReadFile)MYGetProcAddress(hHandle,
 			"SKF_ReadFile");
-		ckpFunctions->SKF_WriteFile = (CK_SKF_WriteFile) MYGetProcAddress(hHandle,
+		ckpFunctions->SKF_WriteFile = (CK_SKF_WriteFile)MYGetProcAddress(hHandle,
 			"SKF_WriteFile");
-		ckpFunctions->SKF_CreateContainer = (CK_SKF_CreateContainer) MYGetProcAddress(hHandle,
+		ckpFunctions->SKF_CreateContainer = (CK_SKF_CreateContainer)MYGetProcAddress(hHandle,
 			"SKF_CreateContainer");
-		ckpFunctions->SKF_DeleteContainer = (CK_SKF_DeleteContainer) MYGetProcAddress(hHandle,
+		ckpFunctions->SKF_DeleteContainer = (CK_SKF_DeleteContainer)MYGetProcAddress(hHandle,
 			"SKF_DeleteContainer");
-		ckpFunctions->SKF_OpenContainer = (CK_SKF_OpenContainer) MYGetProcAddress(hHandle,
+		ckpFunctions->SKF_OpenContainer = (CK_SKF_OpenContainer)MYGetProcAddress(hHandle,
 			"SKF_OpenContainer");
-		ckpFunctions->SKF_CloseContainer = (CK_SKF_CloseContainer) MYGetProcAddress(hHandle,
+		ckpFunctions->SKF_CloseContainer = (CK_SKF_CloseContainer)MYGetProcAddress(hHandle,
 			"SKF_CloseContainer");
-		ckpFunctions->SKF_EnumContainer = (CK_SKF_EnumContainer) MYGetProcAddress(hHandle,
+		ckpFunctions->SKF_EnumContainer = (CK_SKF_EnumContainer)MYGetProcAddress(hHandle,
 			"SKF_EnumContainer");
-		ckpFunctions->SKF_GetContainerType = (CK_SKF_GetContainerType) MYGetProcAddress(hHandle,
+		ckpFunctions->SKF_GetContainerType = (CK_SKF_GetContainerType)MYGetProcAddress(hHandle,
 			"SKF_GetContainerType");
-		ckpFunctions->SKF_ImportCertificate = (CK_SKF_ImportCertificate) MYGetProcAddress(
+		ckpFunctions->SKF_ImportCertificate = (CK_SKF_ImportCertificate)MYGetProcAddress(
 			hHandle, "SKF_ImportCertificate");
-		ckpFunctions->SKF_ExportCertificate = (CK_SKF_ExportCertificate) MYGetProcAddress(
+		ckpFunctions->SKF_ExportCertificate = (CK_SKF_ExportCertificate)MYGetProcAddress(
 			hHandle, "SKF_ExportCertificate");
-		ckpFunctions->SKF_GenRandom = (CK_SKF_GenRandom) MYGetProcAddress(hHandle,
+		ckpFunctions->SKF_GenRandom = (CK_SKF_GenRandom)MYGetProcAddress(hHandle,
 			"SKF_GenRandom");
-		ckpFunctions->SKF_GenExtRSAKey = (CK_SKF_GenExtRSAKey) MYGetProcAddress(hHandle,
+		ckpFunctions->SKF_GenExtRSAKey = (CK_SKF_GenExtRSAKey)MYGetProcAddress(hHandle,
 			"SKF_GenExtRSAKey");
-		ckpFunctions->SKF_GenRSAKeyPair = (CK_SKF_GenRSAKeyPair) MYGetProcAddress(hHandle,
+		ckpFunctions->SKF_GenRSAKeyPair = (CK_SKF_GenRSAKeyPair)MYGetProcAddress(hHandle,
 			"SKF_GenRSAKeyPair");
-		ckpFunctions->SKF_ImportRSAKeyPair = (CK_SKF_ImportRSAKeyPair) MYGetProcAddress(hHandle,
+		ckpFunctions->SKF_ImportRSAKeyPair = (CK_SKF_ImportRSAKeyPair)MYGetProcAddress(hHandle,
 			"SKF_ImportRSAKeyPair");
-		ckpFunctions->SKF_RSASignData = (CK_SKF_RSASignData) MYGetProcAddress(hHandle,
+		ckpFunctions->SKF_RSASignData = (CK_SKF_RSASignData)MYGetProcAddress(hHandle,
 			"SKF_RSASignData");
-		ckpFunctions->SKF_RSAVerify = (CK_SKF_RSAVerify) MYGetProcAddress(hHandle,
+		ckpFunctions->SKF_RSAVerify = (CK_SKF_RSAVerify)MYGetProcAddress(hHandle,
 			"SKF_RSAVerify");
-		ckpFunctions->SKF_RSAExportSessionKey = (CK_SKF_RSAExportSessionKey) MYGetProcAddress(
+		ckpFunctions->SKF_RSAExportSessionKey = (CK_SKF_RSAExportSessionKey)MYGetProcAddress(
 			hHandle, "SKF_RSAExportSessionKey");
-		ckpFunctions->SKF_ExtRSAPubKeyOperation = (CK_SKF_ExtRSAPubKeyOperation) MYGetProcAddress(
+		ckpFunctions->SKF_ExtRSAPubKeyOperation = (CK_SKF_ExtRSAPubKeyOperation)MYGetProcAddress(
 			hHandle, "SKF_ExtRSAPubKeyOperation");
-		ckpFunctions->SKF_ExtRSAPriKeyOperation = (CK_SKF_ExtRSAPriKeyOperation) MYGetProcAddress(
+		ckpFunctions->SKF_ExtRSAPriKeyOperation = (CK_SKF_ExtRSAPriKeyOperation)MYGetProcAddress(
 			hHandle, "SKF_ExtRSAPriKeyOperation");
-		ckpFunctions->SKF_GenECCKeyPair = (CK_SKF_GenECCKeyPair) MYGetProcAddress(hHandle,
+		ckpFunctions->SKF_GenECCKeyPair = (CK_SKF_GenECCKeyPair)MYGetProcAddress(hHandle,
 			"SKF_GenECCKeyPair");
-		ckpFunctions->SKF_ImportECCKeyPair = (CK_SKF_ImportECCKeyPair) MYGetProcAddress(hHandle,
+		ckpFunctions->SKF_ImportECCKeyPair = (CK_SKF_ImportECCKeyPair)MYGetProcAddress(hHandle,
 			"SKF_ImportECCKeyPair");
-		ckpFunctions->SKF_ECCSignData = (CK_SKF_ECCSignData) MYGetProcAddress(hHandle,
+		ckpFunctions->SKF_ECCSignData = (CK_SKF_ECCSignData)MYGetProcAddress(hHandle,
 			"SKF_ECCSignData");
-		ckpFunctions->SKF_ECCVerify = (CK_SKF_ECCVerify) MYGetProcAddress(hHandle,
+		ckpFunctions->SKF_ECCVerify = (CK_SKF_ECCVerify)MYGetProcAddress(hHandle,
 			"SKF_ECCVerify");
-		ckpFunctions->SKF_ECCExportSessionKey = (CK_SKF_ECCExportSessionKey) MYGetProcAddress(
+		ckpFunctions->SKF_ECCExportSessionKey = (CK_SKF_ECCExportSessionKey)MYGetProcAddress(
 			hHandle, "SKF_ECCExportSessionKey");
-		ckpFunctions->SKF_ExtECCEncrypt = (CK_SKF_ExtECCEncrypt) MYGetProcAddress(hHandle,
+		ckpFunctions->SKF_ExtECCEncrypt = (CK_SKF_ExtECCEncrypt)MYGetProcAddress(hHandle,
 			"SKF_ExtECCEncrypt");
-		ckpFunctions->SKF_ExtECCDecrypt = (CK_SKF_ExtECCDecrypt) MYGetProcAddress(hHandle,
+		ckpFunctions->SKF_ExtECCDecrypt = (CK_SKF_ExtECCDecrypt)MYGetProcAddress(hHandle,
 			"SKF_ExtECCDecrypt");
-		ckpFunctions->SKF_ExtECCSign = (CK_SKF_ExtECCSign) MYGetProcAddress(hHandle,
+		ckpFunctions->SKF_ExtECCSign = (CK_SKF_ExtECCSign)MYGetProcAddress(hHandle,
 			"SKF_ExtECCSign");
-		ckpFunctions->SKF_ExtECCVerify = (CK_SKF_ExtECCVerify) MYGetProcAddress(hHandle,
+		ckpFunctions->SKF_ExtECCVerify = (CK_SKF_ExtECCVerify)MYGetProcAddress(hHandle,
 			"SKF_ExtECCVerify");
-		ckpFunctions->SKF_GenerateAgreementDataWithECC = (CK_SKF_GenerateAgreementDataWithECC) MYGetProcAddress(
+		ckpFunctions->SKF_GenerateAgreementDataWithECC = (CK_SKF_GenerateAgreementDataWithECC)MYGetProcAddress(
 			hHandle, "SKF_GenerateAgreementDataWithECC");
-		ckpFunctions->SKF_GenerateAgreementDataAndKeyWithECC = (CK_SKF_GenerateAgreementDataAndKeyWithECC) MYGetProcAddress(
+		ckpFunctions->SKF_GenerateAgreementDataAndKeyWithECC = (CK_SKF_GenerateAgreementDataAndKeyWithECC)MYGetProcAddress(
 			hHandle, "SKF_GenerateAgreementDataAndKeyWithECC");
-		ckpFunctions->SKF_GenerateKeyWithECC = (CK_SKF_GenerateKeyWithECC) MYGetProcAddress(
+		ckpFunctions->SKF_GenerateKeyWithECC = (CK_SKF_GenerateKeyWithECC)MYGetProcAddress(
 			hHandle, "SKF_GenerateKeyWithECC");
-		ckpFunctions->SKF_ExportPublicKey = (CK_SKF_ExportPublicKey) MYGetProcAddress(hHandle,
+		ckpFunctions->SKF_ExportPublicKey = (CK_SKF_ExportPublicKey)MYGetProcAddress(hHandle,
 			"SKF_ExportPublicKey");
-		ckpFunctions->SKF_ImportSessionKey = (CK_SKF_ImportSessionKey) MYGetProcAddress(hHandle,
+		ckpFunctions->SKF_ImportSessionKey = (CK_SKF_ImportSessionKey)MYGetProcAddress(hHandle,
 			"SKF_ImportSessionKey");
-		ckpFunctions->SKF_SetSymmKey = (CK_SKF_SetSymmKey) MYGetProcAddress(hHandle,
+		ckpFunctions->SKF_SetSymmKey = (CK_SKF_SetSymmKey)MYGetProcAddress(hHandle,
 			"SKF_SetSymmKey");
-		ckpFunctions->SKF_EncryptInit = (CK_SKF_EncryptInit) MYGetProcAddress(hHandle,
+		ckpFunctions->SKF_EncryptInit = (CK_SKF_EncryptInit)MYGetProcAddress(hHandle,
 			"SKF_EncryptInit");
-		ckpFunctions->SKF_Encrypt = (CK_SKF_Encrypt) MYGetProcAddress(hHandle, "SKF_Encrypt");
-		ckpFunctions->SKF_EncryptUpdate = (CK_SKF_EncryptUpdate) MYGetProcAddress(hHandle,
+		ckpFunctions->SKF_Encrypt = (CK_SKF_Encrypt)MYGetProcAddress(hHandle, "SKF_Encrypt");
+		ckpFunctions->SKF_EncryptUpdate = (CK_SKF_EncryptUpdate)MYGetProcAddress(hHandle,
 			"SKF_EncryptUpdate");
-		ckpFunctions->SKF_EncryptFinal = (CK_SKF_EncryptFinal) MYGetProcAddress(hHandle,
+		ckpFunctions->SKF_EncryptFinal = (CK_SKF_EncryptFinal)MYGetProcAddress(hHandle,
 			"SKF_EncryptFinal");
-		ckpFunctions->SKF_DecryptInit = (CK_SKF_DecryptInit) MYGetProcAddress(hHandle,
+		ckpFunctions->SKF_DecryptInit = (CK_SKF_DecryptInit)MYGetProcAddress(hHandle,
 			"SKF_DecryptInit");
-		ckpFunctions->SKF_Decrypt = (CK_SKF_Decrypt) MYGetProcAddress(hHandle, "SKF_Decrypt");
-		ckpFunctions->SKF_DecryptUpdate = (CK_SKF_DecryptUpdate) MYGetProcAddress(hHandle,
+		ckpFunctions->SKF_Decrypt = (CK_SKF_Decrypt)MYGetProcAddress(hHandle, "SKF_Decrypt");
+		ckpFunctions->SKF_DecryptUpdate = (CK_SKF_DecryptUpdate)MYGetProcAddress(hHandle,
 			"SKF_DecryptUpdate");
-		ckpFunctions->SKF_DecryptFinal = (CK_SKF_DecryptFinal) MYGetProcAddress(hHandle,
+		ckpFunctions->SKF_DecryptFinal = (CK_SKF_DecryptFinal)MYGetProcAddress(hHandle,
 			"SKF_DecryptFinal");
-		ckpFunctions->SKF_DigestInit = (CK_SKF_DigestInit) MYGetProcAddress(hHandle,
+		ckpFunctions->SKF_DigestInit = (CK_SKF_DigestInit)MYGetProcAddress(hHandle,
 			"SKF_DigestInit");
-		ckpFunctions->SKF_Digest = (CK_SKF_Digest) MYGetProcAddress(hHandle, "SKF_Digest");
-		ckpFunctions->SKF_DigestUpdate = (CK_SKF_DigestUpdate) MYGetProcAddress(hHandle,
+		ckpFunctions->SKF_Digest = (CK_SKF_Digest)MYGetProcAddress(hHandle, "SKF_Digest");
+		ckpFunctions->SKF_DigestUpdate = (CK_SKF_DigestUpdate)MYGetProcAddress(hHandle,
 			"SKF_DigestUpdate");
-		ckpFunctions->SKF_DigestFinal = (CK_SKF_DigestFinal) MYGetProcAddress(hHandle,
+		ckpFunctions->SKF_DigestFinal = (CK_SKF_DigestFinal)MYGetProcAddress(hHandle,
 			"SKF_DigestFinal");
-		ckpFunctions->SKF_MacInit = (CK_SKF_MacInit) MYGetProcAddress(hHandle, "SKF_MacInit");
-		ckpFunctions->SKF_Mac = (CK_SKF_Mac) MYGetProcAddress(hHandle, "SKF_Mac");
-		ckpFunctions->SKF_MacUpdate = (CK_SKF_MacUpdate) MYGetProcAddress(hHandle,
+		ckpFunctions->SKF_MacInit = (CK_SKF_MacInit)MYGetProcAddress(hHandle, "SKF_MacInit");
+		ckpFunctions->SKF_Mac = (CK_SKF_Mac)MYGetProcAddress(hHandle, "SKF_Mac");
+		ckpFunctions->SKF_MacUpdate = (CK_SKF_MacUpdate)MYGetProcAddress(hHandle,
 			"SKF_MacUpdate");
-		ckpFunctions->SKF_MacFinal = (CK_SKF_MacFinal) MYGetProcAddress(hHandle,
+		ckpFunctions->SKF_MacFinal = (CK_SKF_MacFinal)MYGetProcAddress(hHandle,
 			"SKF_MacFinal");
-		ckpFunctions->SKF_CloseHandle = (CK_SKF_CloseHandle) MYGetProcAddress(hHandle,
+		ckpFunctions->SKF_CloseHandle = (CK_SKF_CloseHandle)MYGetProcAddress(hHandle,
 			"SKF_CloseHandle");
 
 		ckpFunctions->SKF_ECCDecrypt = (CK_SKF_ECCDecrypt)MYGetProcAddress(hHandle,
@@ -5586,7 +5588,7 @@ end:
 			goto end;
 		}
 
-		CAPI_GetMulStringCount( buffer_devs, &mult_string_count);
+		CAPI_GetMulStringCount(buffer_devs, &mult_string_count);
 		if (mult_string_count < 1)
 		{
 			ulResult = SOR_LOADPROVIDERERR;
@@ -5662,6 +5664,7 @@ end:
 		BYTE *pbTmp = NULL;
 		ULONG ulTmpLen;
 
+		X509 * x509 = NULL;
 		RSA *rsa = NULL;
 
 		FILE_LOG_FMT(file_log_name, "\n%s %d %s", __FUNCTION__, __LINE__, "entering");
@@ -5686,7 +5689,7 @@ end:
 
 		if (ECertificate_KEY_ALG_RSA == certParse.m_iKeyAlg)
 		{
-			X509 * x509 = NULL;
+
 			unsigned char pbModulus[256];
 			int ulModulusLen = 0;
 			const unsigned char *ptr = NULL;
@@ -5696,7 +5699,8 @@ end:
 
 			if (x509)
 			{
-				RSA *rsa = EVP_PKEY_get1_RSA(X509_get_pubkey(x509));
+				rsa = EVP_PKEY_get1_RSA(X509_get_pubkey(x509));
+				int ulTmpLen = 0;
 
 				if (rsa != NULL)
 				{
@@ -5708,10 +5712,49 @@ end:
 				memcpy(rsaPublicKeyBlob.PublicExponent, "\x00\x01\x00\x01", 4);
 
 				memcpy(rsaPublicKeyBlob.Modulus + 256 - ulModulusLen, pbModulus, ulModulusLen);
-				X509_free(x509);
+
+				pbTmp = (BYTE*)malloc(ulDataInLen + rsaPublicKeyBlob.BitLen);
+				if (pbTmp == NULL)
+				{
+					ulResult = SOR_MEMORYERR;
+					goto end;
+				}
+
+				ulTmpLen = RSA_public_encrypt(ulDataInLen, pbDataIn, pbTmp, rsa, RSA_PKCS1_PADDING);
+
+				if (ulTmpLen < 0)
+				{
+					ulResult = SOR_INDATALENERR;
+					goto end;
+				}
+
+				if (NULL == pbDataOut)
+				{
+					*pulDataOutLen = ulTmpLen;
+					ulResult = SOR_OK;
+					goto end;
+				}
+				else if (ulTmpLen > *pulDataOutLen)
+				{
+					*pulDataOutLen = ulTmpLen;
+					ulResult = SOR_MEMORYERR;
+					goto end;
+				}
+				else
+				{
+					*pulDataOutLen = ulTmpLen;
+					memcpy(pbDataOut, pbTmp, ulTmpLen);
+				}
 			}
 
-			ulResult = ckpFunctions->SKF_ExtRSAPubKeyOperation(global_data.hDevHandle, &rsaPublicKeyBlob, pbDataIn, ulDataInLen, pbDataOut, pulDataOutLen);
+			//if (ckpFunctions->SKF_RSAEncrypt != NULL)
+			//{
+			//	//ulResult = ckpFunctions->SKF_RSAEncrypt(global_data.hDevHandle,FALSE, &rsaPublicKeyBlob, pbDataIn, ulDataInLen, pbDataOut, pulDataOutLen);
+			//}
+			//else
+			//{
+			//	ulResult = ckpFunctions->SKF_ExtRSAPubKeyOperation(global_data.hDevHandle, &rsaPublicKeyBlob, pbDataIn, ulDataInLen, pbDataOut, pulDataOutLen);
+			//}
 		}
 		else if (ECertificate_KEY_ALG_EC == certParse.m_iKeyAlg)
 		{
@@ -5741,7 +5784,7 @@ end:
 				ulResult = SOR_OK;
 				goto end;
 			}
-			else if (ulTmpLen >  *pulDataOutLen)
+			else if (ulTmpLen > *pulDataOutLen)
 			{
 				*pulDataOutLen = ulTmpLen;
 				ulResult = SOR_MEMORYERR;
@@ -5763,6 +5806,17 @@ end:
 
 	end:
 
+		if (rsa)
+		{
+			RSA_free(rsa);
+		}
+
+		if (x509)
+		{
+			X509_free(x509);
+		}
+
+
 		if (pbTmp != NULL)
 			free(pbTmp);
 		FILE_LOG_FMT(file_log_name, "%s %d %s", __FUNCTION__, __LINE__, "exiting\n");
@@ -5772,10 +5826,6 @@ end:
 		return ulResult;
 	}
 
-	typedef ULONG (*C_SKF_RunXXX)
-	(
-		...
-	);
 
 	ULONG CALL_CONVENTION SOF_PriKeyDecrypt(void * p_ckpFunctions, LPSTR pContainerName, BYTE *pbDataIn, ULONG ulDataInLen, BYTE *pbDataOut, ULONG *pulDataOutLen)
 	{
@@ -5810,7 +5860,7 @@ end:
 				ulResult = ckpFunctions->SKF_RSAPriKeyOperation(hContainer, pbDataIn, ulDataInLen, pbDataOut, pulDataOutLen, FALSE);
 			}
 			else if (NULL != ckpFunctions->SKF_RSADecrypt)
-			{e
+			{
 				ulResult = ckpFunctions->SKF_RSADecrypt(hContainer, FALSE, pbDataIn, ulDataInLen, pbDataOut, pulDataOutLen);
 			}
 
@@ -5821,7 +5871,7 @@ end:
 			{
 				ulResult = ckpFunctions->SKF_ECCDecrypt(hContainer, pbDataIn, ulDataInLen, pbDataOut, pulDataOutLen);
 			}
-			else if(NULL != ckpFunctions->SKF_ECCPrvKeyDecryptEx)
+			else if (NULL != ckpFunctions->SKF_ECCPrvKeyDecryptEx)
 			{
 				ulResult = ckpFunctions->SKF_ECCPrvKeyDecryptEx(hContainer, FALSE, (PECCCIPHERBLOB)pbDataIn, pbDataOut, pulDataOutLen);
 			}
@@ -5857,10 +5907,10 @@ end:
 
 
 
-	
 
 
-	
+
+
 
 #ifdef __cplusplus
 }
