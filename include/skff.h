@@ -914,58 +914,26 @@ CK_SKF_FUNCTION_INFO(SKF_RSAPriKeyOperation)
 // add from ÁúÂö
 
 
-CK_SKF_FUNCTION_INFO(SKF_ECCPrvKeyDecrypt)
-#ifdef CK_NEED_ARG_LIST
-(
-	HCONTAINER hContainer,
-	BYTE *pbCiphertext,
-	ULONG ulCiphertextLen,
-	BYTE *pbPlaintext,
-	ULONG *pulPlaintextLen);
-#endif
-
-CK_SKF_FUNCTION_INFO(SKF_RSAPrivateOperation)
-#ifdef CK_NEED_ARG_LIST
-(
-	HCONTAINER hContainer,
-	BYTE *pbIn,
-	ULONG ulInLen,
-	BYTE *pbOut,
-	ULONG *pulOutLen,
-	ULONG bSignFlag
-);
-#endif
-
-CK_SKF_FUNCTION_INFO(SKF_RSAPrvKeyDecrypt)
-#ifdef CK_NEED_ARG_LIST
-(
-	HCONTAINER hContainer,
-	BYTE *pbIn,
-	ULONG ulInLen,
-	BYTE *pbOut,
-	ULONG *pulOutLen,
-	ULONG bSignFlag
-);
-#endif
 
 CK_SKF_FUNCTION_INFO(SKF_RSADecrypt)
 #ifdef CK_NEED_ARG_LIST
 (
-	HCONTAINER hContainer,
-	BYTE *pbIn,
-	ULONG ulInLen,
-	BYTE *pbOut,
-	ULONG *pulOutLen
+	HCONTAINER hContainer, 
+	BYTE bSignFlag, 
+	BYTE * pbInput, 
+	ULONG ulInputLen, 
+	BYTE * pbOutput, 
+	ULONG * pulOutputLen
 );
 #endif
 
-
-CK_SKF_FUNCTION_INFO(SKF_RunXXX)
+CK_SKF_FUNCTION_INFO(SKF_ECCPrvKeyDecryptEx)
 #ifdef CK_NEED_ARG_LIST
 (
-	...
+	HCONTAINER hContainer, 
+	BYTE bSignFlag, 
+	PECCCIPHERBLOB pCipherText, 
+	BYTE *pbData, 
+	ULONG *pbDataLen
 );
 #endif
-
-
-

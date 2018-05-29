@@ -5569,25 +5569,14 @@ end:
 		ckpFunctions->SKF_ECCDecrypt = (CK_SKF_ECCDecrypt)MYGetProcAddress(hHandle,
 			"SKF_ECCDecrypt");
 
-
-		ckpFunctions->SKF_ECCPrvKeyDecrypt = (CK_SKF_ECCPrvKeyDecrypt)MYGetProcAddress(hHandle,
-			"SKF_ECCPrvKeyDecrypt");
-
-		
-
-
 		ckpFunctions->SKF_RSAPriKeyOperation = (CK_SKF_RSAPriKeyOperation)MYGetProcAddress(hHandle,
 			"SKF_RSAPriKeyOperation");
-
-		ckpFunctions->SKF_RSAPrivateOperation = (CK_SKF_RSAPrivateOperation)MYGetProcAddress(hHandle,
-			"SKF_RSAPrivateOperation");
-
-		ckpFunctions->SKF_RSAPrvKeyDecrypt = (CK_SKF_RSAPrvKeyDecrypt)MYGetProcAddress(hHandle,
-			"SKF_RSAPrvKeyDecrypt");
 
 		ckpFunctions->SKF_RSADecrypt = (CK_SKF_RSADecrypt)MYGetProcAddress(hHandle,
 			"SKF_RSADecrypt");
 
+		ckpFunctions->SKF_ECCPrvKeyDecryptEx = (CK_SKF_ECCPrvKeyDecryptEx)MYGetProcAddress(hHandle,
+			"SKF_ECCPrvKeyDecryptEx");
 
 		*pp_ckpFunctions = ckpFunctions;
 
@@ -5820,17 +5809,22 @@ end:
 			{
 				ulResult = ckpFunctions->SKF_RSAPriKeyOperation(hContainer, pbDataIn, ulDataInLen, pbDataOut, pulDataOutLen, FALSE);
 			}
-			else
-			{
-				ulResult = ckpFunctions->SKF_RSADecrypt(hContainer, pbDataIn, ulDataInLen, pbDataOut, pulDataOutLen);
+			else if (NULL != ckpFunctions->SKF_RSADecrypt)
+			{e
+				ulResult = ckpFunctions->SKF_RSADecrypt(hContainer, FALSE, pbDataIn, ulDataInLen, pbDataOut, pulDataOutLen);
 			}
-				
-			
 
 		}
 		else if (ulContainerType == 2)
 		{
-			ulResult = ckpFunctions->SKF_ECCDecrypt(hContainer, pbDataIn, ulDataInLen, pbDataOut, pulDataOutLen);
+			if (NULL != ckpFunctions->SKF_ECCDecrypt)
+			{
+				ulResult = ckpFunctions->SKF_ECCDecrypt(hContainer, pbDataIn, ulDataInLen, pbDataOut, pulDataOutLen);
+			}
+			else if(NULL != ckpFunctions->SKF_ECCPrvKeyDecryptEx)
+			{
+				ulResult = ckpFunctions->SKF_ECCPrvKeyDecryptEx(hContainer, FALSE, (PECCCIPHERBLOB)pbDataIn, pbDataOut, pulDataOutLen);
+			}
 			FILE_LOG_FMT(file_log_name, "ulResult: %d", ulResult);
 		}
 		else

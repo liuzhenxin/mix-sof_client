@@ -25,8 +25,8 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 1,0,2018,0208
- PRODUCTVERSION 1,0,2018,0208
+ FILEVERSION 1,0,2018,601
+ PRODUCTVERSION 1,0,2018,601
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -44,12 +44,12 @@ BEGIN
             VALUE "Comments", "lock"
             VALUE "CompanyName", "mix"
             VALUE "FileDescription", "sof_client"
-            VALUE "FileVersion", "1.0.2018.0208"
+            VALUE "FileVersion", "1.0.2018.601"
             VALUE "InternalName", "sof_client.dll"
             VALUE "LegalCopyright", "Copyright @ 2018"
             VALUE "OriginalFilename", "sof_client.dll"
             VALUE "ProductName", "sof_client+lock"
-            VALUE "ProductVersion", "1.0.2018.0208"
+            VALUE "ProductVersion", "1.0.2018.601"
         END
     END
     BLOCK "VarFileInfo"
