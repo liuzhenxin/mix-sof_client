@@ -13,7 +13,7 @@
 
 #define DEFAULT_CON_RSA "d249e49c-340e-446a-8adb-4e3d1ac1c129"
 //#define DEFAULT_CON_SM2 "RT_SM_CON"
-#define DEFAULT_CON_SM2  "d249e49c-340e-446a-8adb-4e3d1ac1c129"
+#define DEFAULT_CON_SM2  "59702601-e6c6-40ce-a6ed-a46f5e839ba6"
 
 int main(int argc, char * argv[])
 {
@@ -40,7 +40,7 @@ int main(int argc, char * argv[])
 	unsigned char info[2048] = { 0 };
 	ULONG info_len  = sizeof(info);
 	
-	char * container_used = DEFAULT_CON_RSA;
+	char * container_used = DEFAULT_CON_SM2;
 
 	CK_SKF_FUNCTION_LIST *ckpFunctions = NULL;
 
@@ -116,7 +116,7 @@ int main(int argc, char * argv[])
 	}
 
 
-	ulResult = SOF_SetSignMethod(ckpFunctions, SGD_SHA1_RSA);
+	ulResult = SOF_SetSignMethod(ckpFunctions, SGD_SM3_SM2);
 	if (ulResult)
 	{
 		goto end;
