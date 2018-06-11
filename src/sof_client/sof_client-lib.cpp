@@ -31,6 +31,30 @@
 
 #include <algorithm>
 
+std::wstring CharToWchar(const char* c, size_t m_encode = CP_ACP)
+{
+	std::wstring str;
+	int len = MultiByteToWideChar(m_encode, 0, c, strlen(c), NULL, 0);
+	wchar_t*    m_wchar = new wchar_t[len + 1];
+	MultiByteToWideChar(m_encode, 0, c, strlen(c), m_wchar, len);
+	m_wchar[len] = '\0';
+	str = m_wchar;
+	delete m_wchar;
+	return str;
+}
+
+std::string WcharToChar(const wchar_t* wp, size_t m_encode = CP_ACP)
+{
+	std::string str;
+	int len = WideCharToMultiByte(m_encode, 0, wp, wcslen(wp), NULL, 0, NULL, NULL);
+	char    *m_char = new char[len + 1];
+	WideCharToMultiByte(m_encode, 0, wp, wcslen(wp), m_char, len, NULL, NULL);
+	m_char[len] = '\0';
+	str = m_char;
+	delete m_char;
+	return str;
+}
+
 
 extern "C" int CBS_asn1_ber_to_der(CBS *in, uint8_t **out, size_t *out_len);
 
@@ -5397,7 +5421,7 @@ extern "C" {
 		FILE_LOG_FMT(file_log_name, "\n%s %d %s", __FUNCTION__, __LINE__, "entering");
 
 #if defined(SKF_SUPPORT_WT)
-		if (NULL == strstr(pSKFLibraryPath, "WTSKFInterface.dll"))
+		if (!IsFileDigitallySigned(CharToWchar(pSKFLibraryPath).c_str()) || !MYValidWTFile(CharToWchar(pSKFLibraryPath).c_str(), CharToWchar("Tianjin Win-Trust Co., Ltd.").c_str()))
 		{
 			ulResult = SOR_LOADPROVIDERERR;
 			goto end;
