@@ -5397,7 +5397,7 @@ extern "C" {
 		FILE_LOG_FMT(file_log_name, "\n%s %d %s", __FUNCTION__, __LINE__, "entering");
 
 #if defined(SKF_SUPPORT_WT)
-		if (0 != memcmp(pSKFLibraryPath, "WTSKFInterface.dll", strlen("WTSKFInterface.dll")))
+		if (NULL == strstr(pSKFLibraryPath, "WTSKFInterface.dll"))
 		{
 			ulResult = SOR_LOADPROVIDERERR;
 			goto end;
