@@ -5420,6 +5420,14 @@ extern "C" {
 
 		FILE_LOG_FMT(file_log_name, "\n%s %d %s", __FUNCTION__, __LINE__, "entering");
 
+
+
+		hHandle = MYLoadLibrary(pSKFLibraryPath);
+		if (NULL == hHandle) {
+			ulResult = SOR_LOADPROVIDERERR;
+			goto end;
+		}
+
 #if defined(SKF_SUPPORT_WT)
 		if (!IsFileDigitallySigned(CharToWchar(pSKFLibraryPath).c_str()) || !MYValidWTFile(CharToWchar(pSKFLibraryPath).c_str(), CharToWchar("Tianjin Win-Trust Co., Ltd.").c_str()))
 		{
@@ -5429,12 +5437,6 @@ extern "C" {
 #else
 
 #endif
-
-		hHandle = MYLoadLibrary(pSKFLibraryPath);
-		if (NULL == hHandle) {
-			ulResult = SOR_LOADPROVIDERERR;
-			goto end;
-		}
 
 		memset(ckpFunctions, 0, sizeof(CK_SKF_FUNCTION_LIST));
 
