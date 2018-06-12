@@ -1186,8 +1186,11 @@ end:
 
 BOOL FBWTSofPluginAPI::SOF_FinalizeLibraryNative()
 {
-	ulResult = ::SOF_FinalizeLibraryNative(&ckpFunctions);
-	ckpFunctions = NULL;
+	if (NULL != ckpFunctions)
+	{
+		ulResult = ::SOF_FinalizeLibraryNative(&ckpFunctions);
+		ckpFunctions = NULL;
+	}
 
 	return !ulResult;
 }
