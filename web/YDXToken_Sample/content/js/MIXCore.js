@@ -454,7 +454,7 @@ function MIXCore(object){
 
 function MIXCorePlugin(){
 
-	var url = "http://127.0.0.1:8484/";
+	var url = "http://localhost:50000/npfbwtsof_plugin";
 	
 	var xhr ;
 	

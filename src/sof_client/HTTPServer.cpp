@@ -102,7 +102,7 @@ int __cdecl wmain(
 		//return -1;
 
 		argv_new[0] = argv[0];
-		argv_new[1] = L"http://127.0.0.1:8484/";
+		argv_new[1] = L"http://localhost:50000/npfbwtsof_plugin";
 		argv = argv_new;
 		argc = 2;
 	}
