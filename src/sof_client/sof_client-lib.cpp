@@ -188,7 +188,7 @@ extern "C" {
 
 	ULONG ErrorCodeConvert(ULONG errCode)
 	{
-		if (errCode >= SAR_FAIL || errCode <= SAR_REACH_MAX_CONTAINER_COUNT)
+		if (errCode >= SOR_UNKNOWNERR && errCode <= SOR_APPNOTFOUND)
 		{
 			//return errCode;
 		}
