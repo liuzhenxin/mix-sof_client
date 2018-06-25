@@ -309,7 +309,7 @@ extern "C" {
 				errCode = SOR_APPNOTFOUND;
 				break;
 			default:
-				errCode = SOR_UNKNOWNERR;
+				errCode = errCode;
 				break;
 			}
 		}
