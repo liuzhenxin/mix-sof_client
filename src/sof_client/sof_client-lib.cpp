@@ -4311,14 +4311,14 @@ extern "C" {
 
 	int cb_digest_simple(void *args, unsigned char *in, int in_len, unsigned char *out, int *out_len)
 	{
-		FILE_WRITE("D:/digest_ori.o", "", in, in_len);
+		//FILE_WRITE("D:/digest_ori.o", "", in, in_len);
 
 		return SOF_DigestData(global_data.p_ckpFunctions, global_data.p_contanier, in, in_len, out, (ULONG *)out_len);
 	}
 
 	int cb_sign_simple(void *args, unsigned char *in, int in_len, unsigned char *out, int *out_len)
 	{
-		FILE_WRITE("D:/sign_ori.o", "", in, in_len);
+		//FILE_WRITE("D:/sign_ori.o", "", in, in_len);
 
 		return SOF_SignData(global_data.p_ckpFunctions, global_data.p_contanier, in, in_len, out, (ULONG *)out_len);
 	}
