@@ -4325,14 +4325,14 @@ extern "C" {
 
 	int cb_digest_vfy(void *args, unsigned char *in, int in_len, unsigned char *out, int *out_len)
 	{
-		FILE_WRITE("D:/digest_ori.o", "", in, in_len);
+		//FILE_WRITE("D:/digest_ori.o", "", in, in_len);
 
 		return SOF_DigestDataCert(global_data.p_ckpFunctions, in, in_len, out, (ULONG *)out_len);
 	}
 
 	int cb_sign_vfy(void *args, unsigned char *in, int in_len, unsigned char *out, int *out_len)
 	{
-		FILE_WRITE("D:/sign_ori.o", "", in, in_len);
+		//FILE_WRITE("D:/sign_ori.o", "", in, in_len);
 
 		return SOF_VerifySignedData(global_data.p_ckpFunctions, global_data.p_pbCert, global_data.ulCertLen, in, in_len, out, *out_len);
 	}
