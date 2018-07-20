@@ -135,6 +135,8 @@ public:
 
 	BOOL SOF_FinalizeLibraryNative();
 
+	std::string SOF_GetSupportSKFList();
+
 	void SOF_GetDefaultContainer();
 
 private:

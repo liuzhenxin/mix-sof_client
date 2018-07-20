@@ -226,6 +226,11 @@ int http_server_command_exec(std::string pfmtCommandIn, std::string &pfmtCommand
 			exec_result = pFBWTSofPluginAPI->SOF_GetVersion();
 			values["exec_status"] = (int)pFBWTSofPluginAPI->SOF_GetLastError();
 		}
+		else if (0 == strcmp(json_value_common_call["exec_name"].asCString(), "SOF_GetSupportSKFList"))
+		{
+			exec_result = pFBWTSofPluginAPI->SOF_GetSupportSKFList();
+			values["exec_status"] = (int)pFBWTSofPluginAPI->SOF_GetLastError();
+		}
 		else
 		{
 			values["exec_status"] = SOR_UNKNOWNERR;

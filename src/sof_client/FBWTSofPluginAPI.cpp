@@ -1194,3 +1194,217 @@ BOOL FBWTSofPluginAPI::SOF_FinalizeLibraryNative()
 
 	return !ulResult;
 }
+
+
+#define REG_ROOT_KEY HKEY_LOCAL_MACHINE
+#define REG_SUB_KEY_PREFIX "SOFTWARE\\Microsoft\\Cryptography\\Defaults\\SKF"
+#define REG_VALUE_PATH_KEYNAME "path"
+#define EErr_SMC_MEM_LES 0xFF
+
+unsigned int __stdcall WTF_EnumSKF(char * pszSKFNames, unsigned int * puiSKFNamesLen)
+{
+	unsigned int ulRet = -1;
+	HKEY hKey;
+	DWORD dwIndex = 0, NameSize, NameCnt, NameMaxLen;
+	char data_value[BUFFER_LEN_1K] = { 0 };
+	LPCSTR SubKey = REG_SUB_KEY_PREFIX;
+	char * szValueName;
+	unsigned int len_out = 0;
+
+	if (RegOpenKeyExA(REG_ROOT_KEY, SubKey, 0, KEY_READ, &hKey) !=
+		ERROR_SUCCESS)
+	{
+		DEBUG("RegOpenKeyEx错误");
+		return -1;
+	}
+	//获取子键信息---------------------------------------------------------------
+	if (RegQueryInfoKeyA(hKey, NULL, NULL, NULL, &NameCnt, &NameMaxLen, NULL, NULL, NULL, NULL, NULL, NULL) != ERROR_SUCCESS)
+	{
+		DEBUG("RegQueryInfoKey错误");
+		RegCloseKey(hKey);
+		return -1;
+	}
+
+	//枚举键值信息--------------------------------------------------------------
+	for (dwIndex = 0; dwIndex<NameCnt; dwIndex++)    //枚举键
+	{
+		NameSize = NameMaxLen + 1;
+		szValueName = (char *)malloc(NameSize);
+
+		memset(szValueName, 0, NameSize);
+
+		RegEnumKeyExA(hKey, dwIndex, szValueName, &NameSize, NULL, NULL, NULL, NULL);//读取键
+
+		DEBUG("%s %s\n", szValueName, "");
+
+		memcpy(data_value + len_out, szValueName, NameSize);
+
+		len_out += NameSize + 1;
+
+		free(szValueName);
+
+		szValueName = 0;
+	}
+
+	if (len_out)
+	{
+		len_out += 1;
+	}
+
+	if (NULL == pszSKFNames)
+	{
+		*puiSKFNamesLen = len_out;
+		ulRet = 0;
+	}
+	else if (*puiSKFNamesLen < len_out)
+	{
+		*puiSKFNamesLen = len_out;
+		ulRet = EErr_SMC_MEM_LES;
+	}
+	else
+	{
+		*puiSKFNamesLen = len_out;
+		memcpy(pszSKFNames, data_value, len_out);
+		ulRet = 0;
+	}
+
+	RegCloseKey(hKey);
+
+	return ulRet;
+}
+
+unsigned int __stdcall WTF_ReadSKFPath(const char * pszSKFName, char * pszDllPath, unsigned int *puiDllPathLen)
+{
+	unsigned int ulRet = -1;
+	HKEY hKey;
+	DWORD DataSize, MaxDateLen;
+	DWORD dwIndex = 0, NameSize, NameCnt, NameMaxLen, Type;
+	char SubKey[BUFFER_LEN_1K] = { 0 };
+
+	//LPCSTR SubKey[] =  REG_SUB_KEY_PREFIX;
+
+	char * szValueName;
+	LPBYTE  szValueData;
+
+	strcat(SubKey, REG_SUB_KEY_PREFIX);
+	strcat(SubKey, "\\");
+	strcat(SubKey, pszSKFName);
+
+	if (RegOpenKeyExA(REG_ROOT_KEY, SubKey, 0, KEY_READ, &hKey) !=
+		ERROR_SUCCESS)
+	{
+		DEBUG("RegOpenKeyEx错误");
+		return -1;
+	}
+
+	//获取子键信息---------------------------------------------------------------
+	if (RegQueryInfoKey(hKey, NULL, NULL, NULL, NULL, NULL, NULL, &NameCnt, &NameMaxLen, &MaxDateLen, NULL, NULL) != ERROR_SUCCESS)
+	{
+		DEBUG("RegQueryInfoKey错误");
+		RegCloseKey(hKey);
+		return -1;
+	}
+	//枚举键值信息--------------------------------------------------------------
+	for (dwIndex = 0; dwIndex<NameCnt; dwIndex++)    //枚举键
+	{
+		DataSize = MaxDateLen + 1;
+		NameSize = NameMaxLen + 1;
+		szValueName = (char *)malloc(NameSize);
+		szValueData = (LPBYTE)malloc(DataSize);
+
+		memset(szValueName, 0, NameSize);
+		memset(szValueData, 0, DataSize);
+
+		RegEnumValueA(hKey, dwIndex, szValueName, &NameSize, NULL, &Type, szValueData, &DataSize);//读取键
+
+		DEBUG("%s %s\n", szValueName, szValueData);
+
+		if (0 == (strcmp(szValueName, REG_VALUE_PATH_KEYNAME)))
+		{
+			if (NULL == pszDllPath)
+			{
+				*puiDllPathLen = DataSize;
+				ulRet = 0;
+			}
+			else if (*puiDllPathLen < DataSize)
+			{
+				*puiDllPathLen = DataSize;
+				ulRet = EErr_SMC_MEM_LES;
+			}
+			else
+			{
+				*puiDllPathLen = DataSize;
+				memcpy(pszDllPath, szValueData, DataSize);
+				ulRet = 0;
+			}
+
+			break;
+		}
+
+		free(szValueName);
+		free(szValueData);
+		szValueName = 0;
+		szValueData = 0;
+	}
+
+	RegCloseKey(hKey);
+
+
+	return ulRet;
+}
+
+#include <json/json.h>
+
+std::string FBWTSofPluginAPI::SOF_GetSupportSKFList()
+{
+	char * szSKFAll = new char[BUFFER_LEN_1K];
+	unsigned int ulSKFAll = BUFFER_LEN_1K;
+	char * ptr_SKF = NULL;
+
+	unsigned int dllPathLen = BUFFER_LEN_1K;
+	char *  dllPathValue = new char[BUFFER_LEN_1K];
+
+	Json::Value items = Json::Value(Json::arrayValue);
+
+	WTF_EnumSKF(szSKFAll, &ulSKFAll);
+
+
+
+	int i = 0;
+
+
+	for (ptr_SKF = szSKFAll; (ptr_SKF < szSKFAll + ulSKFAll) && *ptr_SKF != 0;)
+	{
+		Json::Value item;
+
+		dllPathLen = BUFFER_LEN_1K;
+		memset(dllPathValue, 0, dllPathLen);
+
+		WTF_ReadSKFPath(ptr_SKF, dllPathValue, &dllPathLen);
+
+		item["name"] = ptr_SKF;
+		item["path"] = dllPathValue;
+
+		items[i] = item;
+
+		i++;
+		// next SKF
+		ptr_SKF += strlen(ptr_SKF) + 1;
+	}
+
+end:
+
+	if (dllPathValue)
+	{
+		delete[] dllPathValue;
+		dllPathValue = NULL;
+	}
+
+	if (szSKFAll)
+	{
+		delete[] szSKFAll;
+		szSKFAll = NULL;
+	}
+
+	return items.toStyledString();
+}
