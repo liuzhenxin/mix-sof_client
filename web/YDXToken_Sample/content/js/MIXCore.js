@@ -449,6 +449,32 @@ function MIXCore(object){
 		}
 		return g_MIXPlugin.SOF_FinalizeLibraryNative();
 	}
+	
+	this.SOF_GetSupportSKFList = function()
+	{
+		if(null == g_MIXPlugin)
+		{
+			g_MIXPlugin = document.getElementById(object);
+			g_MIXPlugin.setAttribute("type", "application/x-fbwtsofplugin");
+			
+			if("1.0.0.0" == g_MIXPlugin.version)
+			{
+				//console.log(g_MIXPlugin.version);
+				//alert(g_MIXPlugin.version);
+			}
+			else
+			{
+				g_MIXPlugin = new MIXCorePlugin();
+			}
+		}
+		
+		if(null == g_MIXPlugin)
+		{
+			return null;
+		}
+		
+		return g_MIXPlugin.SOF_GetSupportSKFList();
+	}
 }
 
 
@@ -1387,5 +1413,31 @@ function MIXCorePlugin(){
 			return -2;
 		}
 	}
+	
+	this.SOF_GetSupportSKFList = function()
+	{
+		var json = {
+			exec_name:"SOF_GetSupportSKFList",
+			exec_arg_real_list:[]
+		};
+		
+		try
+		{
+			MixProcess(JSON.stringify(json));
+		}
+		catch (e)
+		{
+			return -3;
+		}
+		
+		if(4 == xhr.readyState && 200 == xhr.status) {
+			var object = eval("(" + xhr.responseText + ")");
+			return object.exec_result;
+		}else{
+			return -2;
+		}
+	}
+	
+	
 	
 }

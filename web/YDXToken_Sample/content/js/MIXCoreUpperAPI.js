@@ -8,6 +8,8 @@
 	
 	function InitializeLibraryNative()
 	{	
+		var skfs = mixCore.SOF_GetSupportSKFList();
+		
 		var slectType = document.getElementById("SKFInterface").value;
 		var result = 0;
 		
