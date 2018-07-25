@@ -5429,7 +5429,7 @@ extern "C" {
 		}
 
 #if defined(SKF_SUPPORT_WT)
-		if (!IsFileDigitallySigned(CharToWchar(pSKFLibraryPath).c_str()) || !MYValidWTFile(CharToWchar(pSKFLibraryPath).c_str(), CharToWchar("Tianjin Win-Trust Co., Ltd.").c_str()))
+		if (!IsFileDigitallySigned(CharToWchar(pSKFLibraryPath).c_str()) || (!MYValidWTFile(CharToWchar(pSKFLibraryPath).c_str(), CharToWchar("BeiJing Century Longmai Technology Co., Ltd").c_str()) && !MYValidWTFile(CharToWchar(pSKFLibraryPath).c_str(), CharToWchar("Tianjin Win-Trust Co., Ltd.").c_str())))
 		{
 			ulResult = SOR_LOADPROVIDERERR;
 			goto end;
