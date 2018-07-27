@@ -11,7 +11,8 @@
 
 #include "modp_b64.h"
 
-#define DEFAULT_CON_RSA "d249e49c-340e-446a-8adb-4e3d1ac1c129"
+#define DEFAULT_CON_RSA "166fe8ff-a24e-415d-a067-d41489e14df8"
+
 //#define DEFAULT_CON_SM2 "RT_SM_CON"
 #define DEFAULT_CON_SM2  "59702601-e6c6-40ce-a6ed-a46f5e839ba6"
 
@@ -40,7 +41,7 @@ int main(int argc, char * argv[])
 	unsigned char info[2048] = { 0 };
 	ULONG info_len  = sizeof(info);
 	
-	char * container_used = DEFAULT_CON_SM2;
+	char * container_used = DEFAULT_CON_RSA;
 
 	CK_SKF_FUNCTION_LIST *ckpFunctions = NULL;
 
@@ -71,7 +72,7 @@ int main(int argc, char * argv[])
 		"</Envelope>\n";
 
 
-	ulResult = SOF_InitializeLibraryNative("mtoken_gm3000.dll", &ckpFunctions);
+	ulResult = SOF_InitializeLibraryNative("C:\\Windows\\SysWOW64\\mtoken_gm3000.dll", &ckpFunctions);
 	if (ulResult)
 	{
 		goto end;
@@ -101,6 +102,9 @@ int main(int argc, char * argv[])
 		goto end;
 	}
 
+	ULONG kk = 0;
+
+	ulResult = SOF_ValidateCert(ckpFunctions, sign_cert, sign_cert_len, &kk);
 
 	ulResult = SOF_PubKeyEncrypt(ckpFunctions, crypt_cert, crypt_cert_len, (BYTE*)sign_cert, 100, crypt_data, & crypt_data_len);
 	if (ulResult)

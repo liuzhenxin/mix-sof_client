@@ -1455,6 +1455,12 @@ COMMON_API unsigned int CALL_CONVENTION SMB_CS_VerifyCert(unsigned int uiFlag, u
 
 			if (NULL == certContext_OUT)
 			{
+				// 查找颁发者证书
+				certContext_OUT = CertFindCertificateInStore(hCertStore, X509_ASN_ENCODING, 0, CERT_FIND_ISSUER_OF, certContext_IN, NULL);
+			}
+
+			if (NULL == certContext_OUT)
+			{
 				if (hCertStore)
 				{
 					// 关闭存储区
@@ -1479,8 +1485,7 @@ COMMON_API unsigned int CALL_CONVENTION SMB_CS_VerifyCert(unsigned int uiFlag, u
 					goto err;
 				}
 
-				// 查找颁发者证书
-				// certContext_OUT = CertFindCertificateInStore(hCertStore, X509_ASN_ENCODING, 0, CERT_FIND_ISSUER_OF, certContext_IN, NULL);
+				
 				{
 					CERT_ID id;
 
@@ -1498,6 +1503,12 @@ COMMON_API unsigned int CALL_CONVENTION SMB_CS_VerifyCert(unsigned int uiFlag, u
 
 					certContext_OUT = CertFindCertificateInStore(hCertStore, X509_ASN_ENCODING, 0, CERT_FIND_CERT_ID, &id, NULL);
 				}
+			}
+
+			if (NULL == certContext_OUT)
+			{
+				// 查找颁发者证书
+				certContext_OUT = CertFindCertificateInStore(hCertStore, X509_ASN_ENCODING, 0, CERT_FIND_ISSUER_OF, certContext_IN, NULL);
 			}
 
 			if (NULL != certContext_OUT)
