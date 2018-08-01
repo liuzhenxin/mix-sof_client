@@ -143,6 +143,11 @@ static const uint8_t kDataSMS4_CFB[] = { 0x2a, 0x81, 0x1c, 0xcf, 0x55, 0x01, 0x6
 static const uint8_t kDataSMS4_OFB[] = { 0x2a, 0x81, 0x1c, 0xcf, 0x55, 0x01, 0x68, 0x03 };
 
 
+static const uint8_t kDataHashSHA1[] = { 0x30, 0x21, 0x30, 0x09, 0x06, 0x05, 0x2b, 0x0e, 0x03, 0x02, 0x1a, 0x05, 0x00, 0x04, 0x14 };
+static const uint8_t kDataHashSHA256[] = { 0x30, 0x31, 0x30, 0x0d, 0x06, 0x09, 0x60, 0x86, 0x48, 0x01, 0x65, 0x03, 0x04, 0x02, 0x01, 0x05, 0x00, 0x04, 0x20 };
+static const uint8_t kDataHashSHA384[] = { 0x30, 0x41, 0x30, 0x0d, 0x06, 0x09, 0x60, 0x86, 0x48, 0x01, 0x65, 0x03, 0x04, 0x02, 0x02, 0x05, 0x00, 0x04, 0x30 };
+static const uint8_t kDataHashSHA512[] = { 0x30, 0x51, 0x30, 0x0d, 0x06, 0x09, 0x60, 0x86, 0x48, 0x01, 0x65, 0x03, 0x04, 0x02, 0x03, 0x05, 0x00, 0x04, 0x40 };
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -1180,11 +1185,14 @@ extern "C" {
 		BYTE hash_value[1024] = { 0 };
 		ULONG hash_len = sizeof(data_info_value);
 
+		int ulDerHashHeaderLen = 0;
 
 		FILE_LOG_FMT(file_log_name, "\n%s %d %s", __FUNCTION__, __LINE__, "entering");
 		FILE_LOG_FMT(file_log_name, "ContainerName: %s", pContainerName);
 		FILE_LOG_FMT(file_log_name, "%s", "DataIn: ");
 		FILE_LOG_HEX(file_log_name, pbDataIn, ulDataInLen);
+
+
 
 		ulResult = ckpFunctions->SKF_OpenContainer(global_data.hAppHandle, pContainerName, &hContainer);
 		if (ulResult)
@@ -1211,10 +1219,14 @@ extern "C" {
 			}
 			else if (global_data.sign_method == SGD_SHA1_RSA)
 			{
+				ulDerHashHeaderLen = sizeof(kDataHashSHA1);
+				memcpy(hash_value, kDataHashSHA1, ulDerHashHeaderLen);
 				ulResult = ckpFunctions->SKF_DigestInit(global_data.hDevHandle, SGD_SHA1, 0, 0, 0, &hHash);
 			}
 			else if (global_data.sign_method == SGD_SHA256_RSA)
 			{
+				ulDerHashHeaderLen = sizeof(kDataHashSHA256);
+				memcpy(hash_value, kDataHashSHA256, ulDerHashHeaderLen);
 				ulResult = ckpFunctions->SKF_DigestInit(global_data.hDevHandle, SGD_SHA256, 0, 0, 0, &hHash);
 			}
 			else
@@ -1228,13 +1240,13 @@ extern "C" {
 				goto end;
 			}
 
-			ulResult = ckpFunctions->SKF_Digest(hHash, pbDataIn, ulDataInLen, hash_value, &hash_len);
+			ulResult = ckpFunctions->SKF_Digest(hHash, pbDataIn, ulDataInLen, hash_value + ulDerHashHeaderLen, &hash_len);
 			if (ulResult)
 			{
 				goto end;
 			}
 
-			ulResult = ckpFunctions->SKF_RSASignData(hContainer, hash_value, hash_len, (unsigned char *)data_info_value, (ULONG *)&data_info_len);
+			ulResult = ckpFunctions->SKF_RSASignData(hContainer, hash_value, ulDerHashHeaderLen + hash_len, (unsigned char *)data_info_value, (ULONG *)&data_info_len);
 			if (ulResult)
 			{
 				goto end;
@@ -1526,6 +1538,9 @@ extern "C" {
 
 		CertificateItemParse certParse;
 
+
+		int ulDerHashHeaderLen = 0;
+
 		FILE_LOG_FMT(file_log_name, "\n%s %d %s", __FUNCTION__, __LINE__, "entering");
 		FILE_LOG_FMT(file_log_name, "%s", "Cert: ");
 		FILE_LOG_HEX(file_log_name, pbCert, ulCertLen);
@@ -1575,10 +1590,14 @@ extern "C" {
 			}
 			else if (global_data.sign_method == SGD_SHA1_RSA)
 			{
+				ulDerHashHeaderLen = sizeof(kDataHashSHA1);
+				memcpy(hash_value, kDataHashSHA1, ulDerHashHeaderLen);
 				ulResult = ckpFunctions->SKF_DigestInit(global_data.hDevHandle, SGD_SHA1, 0, 0, 0, &hHash);
 			}
 			else if (global_data.sign_method == SGD_SHA256_RSA)
 			{
+				ulDerHashHeaderLen = sizeof(kDataHashSHA256);
+				memcpy(hash_value, kDataHashSHA256, ulDerHashHeaderLen);
 				ulResult = ckpFunctions->SKF_DigestInit(global_data.hDevHandle, SGD_SHA256, 0, 0, 0, &hHash);
 			}
 			else
@@ -1592,13 +1611,13 @@ extern "C" {
 				goto end;
 			}
 
-			ulResult = ckpFunctions->SKF_Digest(hHash, pbDataIn, ulDataInLen, hash_value, &hash_len);
+			ulResult = ckpFunctions->SKF_Digest(hHash, pbDataIn, ulDataInLen, hash_value + ulDerHashHeaderLen, &hash_len);
 			if (ulResult)
 			{
 				goto end;
 			}
 
-			ulResult = ckpFunctions->SKF_RSAVerify(global_data.hDevHandle, &rsaPublicKeyBlob, hash_value, hash_len, pbDataOut, ulDataOutLen);
+			ulResult = ckpFunctions->SKF_RSAVerify(global_data.hDevHandle, &rsaPublicKeyBlob, hash_value, ulDerHashHeaderLen + hash_len, pbDataOut, ulDataOutLen);
 		}
 		else if (ECertificate_KEY_ALG_EC == certParse.m_iKeyAlg)
 		{
