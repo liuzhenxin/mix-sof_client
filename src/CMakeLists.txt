@@ -33,6 +33,18 @@ else()
      message(STATUS "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Please use a different C++ compiler.")  
 endif()  
 
+IF(WIN32)
+  IF (MSVC)
+    IF (MSVC_VERSION EQUAL 1700)
+      set(CMAKE_GENERATOR_TOOLSET "v110_xp" CACHE STRING "Platform Toolset" FORCE)
+    ELSEIF (MSVC_VERSION EQUAL 1800)
+      set(CMAKE_GENERATOR_TOOLSET "v120_xp" CACHE STRING "Platform Toolset" FORCE)
+    ELSEIF (MSVC_VERSION EQUAL 1900)
+      set(CMAKE_GENERATOR_TOOLSET "v140_xp" CACHE STRING "Platform Toolset" FORCE)
+    ENDIF()
+  ENDIF(MSVC)
+ENDIF(WIN32)
+
 ##
 add_subdirectory(sof_client)
 
