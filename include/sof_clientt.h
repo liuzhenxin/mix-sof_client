@@ -67,10 +67,10 @@
 
 
 /* packing defines */
-#include "skfp.h"
+#include "sof_clientp.h"
 
 
 /* undo packing */
-#include "skfu.h"
+#include "sof_clientu.h"
 
 #endif
