@@ -507,15 +507,21 @@ extern "C" {
 		ulResult = ckpFunctions->SKF_OpenContainer(global_data.hAppHandle, pContainerName, &hContainer);
 		if (ulResult != SAR_OK)
 		{
+			FILE_LOG_FMT(file_log_name, "\n%s %d %s", __FUNCTION__, __LINE__, "SKF_OpenContainer err");
+
 			goto end;
 		}
-
+		FILE_LOG_FMT(file_log_name, "\n%s %d %s", __FUNCTION__, __LINE__, "SKF_ExportCertificate START");
 		ulCertLen = *pulCertLen;
 		ulResult = ckpFunctions->SKF_ExportCertificate(hContainer, TRUE, pbCert, &ulCertLen);
 		if (ulResult == SAR_CERTNOTFOUNTERR)
 		{
+			FILE_LOG_FMT(file_log_name, "\n%s %d %s", __FUNCTION__, __LINE__, "SKF_ExportCertificate SIGN SAR_CERTNOTFOUNTERR");
+
 			ulCertLen = *pulCertLen;
+			FILE_LOG_FMT(file_log_name, "\n%s %d %s", __FUNCTION__, __LINE__, "SKF_ExportCertificate CRYPT START");
 			ulResult = ckpFunctions->SKF_ExportCertificate(hContainer, FALSE, pbCert, &ulCertLen);
+			FILE_LOG_FMT(file_log_name, "\n%s %d %s", __FUNCTION__, __LINE__, "SKF_ExportCertificate CRYPT END");
 		}
 		if (ulResult)
 		{
@@ -5443,13 +5449,15 @@ extern "C" {
 
 		hHandle = MYLoadLibrary(pSKFLibraryPath);
 		if (NULL == hHandle) {
+			FILE_LOG_FMT(file_log_name, "\n%s %d %s", __FUNCTION__, __LINE__, "MYLoadLibrary err");
 			ulResult = SOR_LOADPROVIDERERR;
 			goto end;
 		}
 
 #if defined(SKF_SUPPORT_WT)
-		if (!IsFileDigitallySigned(CharToWchar(pSKFLibraryPath).c_str()) || (!MYValidWTFile(CharToWchar(pSKFLibraryPath).c_str(), CharToWchar("BeiJing Century Longmai Technology Co., Ltd").c_str()) && !MYValidWTFile(CharToWchar(pSKFLibraryPath).c_str(), CharToWchar("Tianjin Win-Trust Co., Ltd.").c_str())))
+		if (/*!IsFileDigitallySigned(CharToWchar(pSKFLibraryPath).c_str()) ||*/ (!MYValidWTFile(CharToWchar(pSKFLibraryPath).c_str(), CharToWchar("BeiJing Century Longmai Technology Co., Ltd").c_str()) && !MYValidWTFile(CharToWchar(pSKFLibraryPath).c_str(), CharToWchar("Tianjin Win-Trust Co., Ltd.").c_str())))
 		{
+			FILE_LOG_FMT(file_log_name, "\n%s %d %s", __FUNCTION__, __LINE__, "IsFileDigitallySigned err");
 			ulResult = SOR_LOADPROVIDERERR;
 			goto end;
 		}
@@ -5630,12 +5638,14 @@ extern "C" {
 		ulResult = ckpFunctions->SKF_EnumDev(TRUE, buffer_devs, &buffer_devs_len);
 		if (ulResult)
 		{
+			FILE_LOG_FMT(file_log_name, "\n%s %d %s", __FUNCTION__, __LINE__, "SKF_EnumDev err");
 			goto end;
 		}
 
 		CAPI_GetMulStringCount(buffer_devs, &mult_string_count);
 		if (mult_string_count < 1)
 		{
+			FILE_LOG_FMT(file_log_name, "\n%s %d %s", __FUNCTION__, __LINE__, "SKF_EnumDev 0 err");
 			ulResult = SOR_LOADPROVIDERERR;
 			goto end;
 		}
@@ -5643,18 +5653,21 @@ extern "C" {
 		ulResult = ckpFunctions->SKF_ConnectDev(buffer_devs, &global_data.hDevHandle);
 		if (ulResult)
 		{
+			FILE_LOG_FMT(file_log_name, "\n%s %d %s", __FUNCTION__, __LINE__, "SKF_ConnectDev err");
 			goto end;
 		}
 
 		ulResult = ckpFunctions->SKF_EnumApplication(global_data.hDevHandle, buffer_apps, &buffer_apps_len);
 		if (ulResult)
 		{
+			FILE_LOG_FMT(file_log_name, "\n%s %d %s", __FUNCTION__, __LINE__, "SKF_EnumApplication err");
 			goto end;
 		}
 
 		CAPI_GetMulStringCount(buffer_apps, &mult_string_count);
 		if (mult_string_count < 1)
 		{
+			FILE_LOG_FMT(file_log_name, "\n%s %d %s", __FUNCTION__, __LINE__, "SKF_EnumApplication 0 err");
 			ulResult = SOR_LOADPROVIDERERR;
 			goto end;
 		}
@@ -5662,6 +5675,7 @@ extern "C" {
 		ulResult = ckpFunctions->SKF_OpenApplication(global_data.hDevHandle, buffer_apps, &global_data.hAppHandle);
 		if (ulResult)
 		{
+			FILE_LOG_FMT(file_log_name, "\n%s %d %s", __FUNCTION__, __LINE__, "SKF_OpenApplication err");
 			goto end;
 		}
 	end:
